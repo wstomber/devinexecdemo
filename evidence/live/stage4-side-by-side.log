@@ -1,0 +1,20 @@
+$ python3 tools/side_by_side.py --make-edge build/edge.dat
+wrote 3075 records to build/edge.dat (last record has no final newline)
+[exit 0]
+
+$ python3 tools/side_by_side.py --input build/curated.dat --name curated
+curated: records=30 mismatches=0 totals_match=True byte_identical=True
+[exit 0]
+
+$ python3 tools/side_by_side.py --input build/synthetic.dat --name synthetic
+synthetic: records=1000 mismatches=0 totals_match=True byte_identical=True
+[exit 0]
+
+$ python3 tools/side_by_side.py --input build/edge.dat --name edge
+edge: records=3075 mismatches=0 totals_match=True byte_identical=True
+[exit 0]
+
+$ python3 tools/side_by_side.py --fatal
+fatal: cases=14 mismatches=0
+[exit 0]
+

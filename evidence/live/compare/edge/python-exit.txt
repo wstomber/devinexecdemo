@@ -1,0 +1,4 @@
+command=python3 python/msp.py
+exit=0
+stdout=b''
+stderr=b''

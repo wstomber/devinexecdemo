@@ -1,0 +1,21 @@
+$ python3 tools/verify.py baseline --command 'python3 python/msp.py'
+$ python3 tools/verify.py baseline --command 'python3 python/msp.py'
+PASS: records and totals match; report=build/verification.json
+Migration comparison: NOT_RUN (baseline verification only)
+[exit 0]
+
+$ make compare CANDIDATE='python3 python/msp.py'
+$ make compare CANDIDATE='python3 python/msp.py'
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
+[exit 0]
+
+$ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat
+$ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat
+PASS: records and totals match; report=build/verification.json
+[exit 0]
+

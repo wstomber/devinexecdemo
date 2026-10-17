@@ -1,0 +1,15 @@
+case,cobol_exit,cobol_stdout_bytes,cobol_stderr_nonempty,cobol_totals_complete,python_exit,python_stdout_bytes,python_stderr_nonempty,python_totals_complete,match
+no-arguments,2,0,True,False,2,0,True,False,MATCH
+two-arguments,2,0,True,False,2,0,True,False,MATCH
+four-arguments,2,0,True,False,2,0,True,False,MATCH
+input-equals-output,2,0,True,False,2,0,True,False,MATCH
+output-equals-totals,2,0,True,False,2,0,True,False,MATCH
+missing-input,2,0,True,False,2,0,True,False,MATCH
+missing-output-directory,2,0,True,False,2,0,True,False,MATCH
+line-4097-bytes,2,0,True,False,2,0,True,False,MATCH
+line-4097-bytes-no-newline,2,0,True,False,2,0,True,False,MATCH
+line-8000-bytes-after-valid,2,0,True,False,2,0,True,False,MATCH
+records-10001,2,0,True,False,2,0,True,False,MATCH
+duplicate-valid,2,0,True,False,2,0,True,False,MATCH
+duplicate-rejected-bad-flag,2,0,True,False,2,0,True,False,MATCH
+duplicate-rejected-bad-amount,2,0,True,False,2,0,True,False,MATCH

@@ -1,0 +1,25 @@
+{
+  "batch": "synthetic",
+  "input": "/home/ubuntu/repos/devinexecdemo/build/synthetic.dat",
+  "input_bytes": 74000,
+  "records_cobol": 1000,
+  "records_python": 1000,
+  "record_mismatches": 0,
+  "totals_cobol": {
+    "records": "0000001000",
+    "paid": "0000000271",
+    "zero": "0000000729",
+    "invalid": "0000000000",
+    "payment_cents": "000514352570951"
+  },
+  "totals_python": {
+    "records": "0000001000",
+    "paid": "0000000271",
+    "zero": "0000000729",
+    "invalid": "0000000000",
+    "payment_cents": "000514352570951"
+  },
+  "totals_match": true,
+  "output_files_byte_identical": true,
+  "candidate": "python3 python/msp.py"
+}

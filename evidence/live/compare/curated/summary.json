@@ -1,0 +1,25 @@
+{
+  "batch": "curated",
+  "input": "/home/ubuntu/repos/devinexecdemo/build/curated.dat",
+  "input_bytes": 2153,
+  "records_cobol": 30,
+  "records_python": 30,
+  "record_mismatches": 0,
+  "totals_cobol": {
+    "records": "0000000030",
+    "paid": "0000000012",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010000450202"
+  },
+  "totals_python": {
+    "records": "0000000030",
+    "paid": "0000000012",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010000450202"
+  },
+  "totals_match": true,
+  "output_files_byte_identical": true,
+  "candidate": "python3 python/msp.py"
+}

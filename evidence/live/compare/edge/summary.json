@@ -1,0 +1,25 @@
+{
+  "batch": "edge",
+  "input": "/home/ubuntu/repos/devinexecdemo/build/edge.dat",
+  "input_bytes": 231706,
+  "records_cobol": 3075,
+  "records_python": 3075,
+  "record_mismatches": 0,
+  "totals_cobol": {
+    "records": "0000003075",
+    "paid": "0000000407",
+    "zero": "0000001438",
+    "invalid": "0000001230",
+    "payment_cents": "000601324402549"
+  },
+  "totals_python": {
+    "records": "0000003075",
+    "paid": "0000000407",
+    "zero": "0000001438",
+    "invalid": "0000001230",
+    "payment_cents": "000601324402549"
+  },
+  "totals_match": true,
+  "output_files_byte_identical": true,
+  "candidate": "python3 python/msp.py"
+}
