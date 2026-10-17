@@ -1,1 +1,19 @@
 session_id,timestamp_utc,actor,event,elapsed_seconds,human_intervention_seconds,human_review_seconds,command,exit_code,artifact,notes
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:00:34Z,devin,session_start (first shell command),,UNKNOWN,UNKNOWN,,,evidence/live/environment.txt,checked out origin/demo/starter-37ceca1 = 37ceca1; branch devin/1792278045-msp-python-migration-live
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:01:45Z,devin,command,0,UNKNOWN,UNKNOWN,make doctor,0,evidence/live/stage1-baseline.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:01:45Z,devin,command,1,UNKNOWN,UNKNOWN,make build baseline generate test capture-baseline,0,evidence/live/stage1-baseline.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:02:41+00:00,devin,commit a81c994,,UNKNOWN,UNKNOWN,git commit,0,,"Stage 1: live COBOL baseline capture, hash check, and legacy explanation"
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:07:41Z,devin,command,4,UNKNOWN,UNKNOWN,python3 -m unittest discover -s tests_policy -v,0,evidence/live/stage2-tests-vs-cobol.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:07:45+00:00,devin,commit d085746,,UNKNOWN,UNKNOWN,git commit,0,,"Stage 2: independent policy ledger and batch-interface tests, passing against COBOL (before any Python)"
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:34Z,devin,command,3,UNKNOWN,UNKNOWN,MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v,0,evidence/live/stage3-tests-policy-vs-python.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:37+00:00,devin,commit 57aafd3,,UNKNOWN,UNKNOWN,git commit,0,,"Stage 3: python/msp.py (stdlib, int cents) + focused unit tests; Stage 2 tests pass unchanged"
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:37Z,devin,command,0,UNKNOWN,UNKNOWN,python3 -m unittest discover -s tests_python -v,0,evidence/live/stage3-tests-python.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:43Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/verify.py baseline --command 'python3 python/msp.py',0,evidence/live/stage4-verify-commands.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:43Z,devin,command,0,UNKNOWN,UNKNOWN,make compare CANDIDATE='python3 python/msp.py',0,evidence/live/stage4-verify-commands.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:09:43Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat,0,evidence/live/stage4-verify-commands.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:34Z,devin,command,1,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --make-edge build/edge.dat,0,evidence/live/stage4-side-by-side.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --input build/curated.dat --name curated,0,evidence/live/stage4-side-by-side.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --input build/synthetic.dat --name synthetic,0,evidence/live/stage4-side-by-side.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --input build/edge.dat --name edge,0,evidence/live/stage4-side-by-side.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,2,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --fatal,0,evidence/live/stage4-side-by-side.log,
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:41+00:00,devin,commit 5bf829f,,UNKNOWN,UNKNOWN,git commit,0,,"Stage 4: COBOL vs Python comparisons (curated, synthetic, adversarial edge, fatal paths): 0 mismatches"
