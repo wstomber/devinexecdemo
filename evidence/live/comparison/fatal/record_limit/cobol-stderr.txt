@@ -1,0 +1,5 @@
+batch exceeds 10000 records
+fatal batch failure; discard outputs; file status 00/00/00
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of totals-file ('/tmp/msp-fatal-cobol-696oqelm/totals.csv')
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of results-file ('/tmp/msp-fatal-cobol-696oqelm/results.csv')
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of claims-file ('/home/ubuntu/repos/devinexecdemo/evidence/live/comparison/fatal/record_limit/input.dat')

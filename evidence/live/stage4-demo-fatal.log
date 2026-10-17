@@ -1,0 +1,3 @@
+COMMAND: python3 tools/demo_compare.py --fatal
+fatal: scenarios=9, mismatches=0, report=/home/ubuntu/repos/devinexecdemo/evidence/live/comparison/fatal/fatal-paths.csv
+exit=0

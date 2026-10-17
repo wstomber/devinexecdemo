@@ -1,0 +1,3 @@
+COMMAND: python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat --report evidence/live/curated-comparison-report.json
+PASS: records and totals match; report=evidence/live/curated-comparison-report.json
+exit=0

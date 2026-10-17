@@ -1,0 +1,5 @@
+duplicate claim ID: REJECTED    
+fatal batch failure; discard outputs; file status 00/00/00
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of totals-file ('/tmp/msp-fatal-cobol-l3e1o88q/totals.csv')
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of results-file ('/tmp/msp-fatal-cobol-l3e1o88q/results.csv')
+libcob: cobol/batch.cob:184: warning: implicit CLOSE of claims-file ('/home/ubuntu/repos/devinexecdemo/evidence/live/comparison/fatal/duplicate_rejected_first/input.dat')

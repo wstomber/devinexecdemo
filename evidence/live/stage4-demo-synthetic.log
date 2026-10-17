@@ -1,0 +1,3 @@
+COMMAND: python3 tools/demo_compare.py --input build/synthetic.dat --name synthetic
+synthetic: records=1000, record_mismatches=0, mismatches=0, results_byte_identical=yes, totals_byte_identical=yes
+exit=0

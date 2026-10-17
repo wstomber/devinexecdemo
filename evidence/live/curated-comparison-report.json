@@ -1,0 +1,25 @@
+{
+  "mode": "compare",
+  "command": "build/msp-batch",
+  "candidate": "python3 python/msp.py",
+  "result": "PASS",
+  "migration_comparison": "RUN",
+  "input": "build/curated.dat",
+  "expected": null,
+  "timeout_seconds": 10,
+  "differences": [],
+  "baseline_totals": {
+    "records": 30,
+    "paid": 12,
+    "zero": 9,
+    "invalid": 9,
+    "payment_cents": 10000450202
+  },
+  "candidate_totals": {
+    "records": 30,
+    "paid": 12,
+    "zero": 9,
+    "invalid": 9,
+    "payment_cents": 10000450202
+  }
+}

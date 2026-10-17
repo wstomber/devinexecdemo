@@ -1,0 +1,10 @@
+case,expected_exit,cobol_exit,python_exit,MATCH/MISMATCH
+usage_0_args,2,2,2,MATCH
+usage_2_args,2,2,2,MATCH
+usage_4_args,2,2,2,MATCH
+identical_paths,2,2,2,MATCH
+missing_input,2,2,2,MATCH
+oversize_line,2,2,2,MATCH
+record_limit,2,2,2,MATCH
+duplicate_valid_ids,2,2,2,MATCH
+duplicate_rejected_first,2,2,2,MATCH

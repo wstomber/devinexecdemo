@@ -1,0 +1,4 @@
+COMMAND: python3 tools/verify.py baseline --command 'python3 python/msp.py' --report evidence/live/python-baseline-report.json
+PASS: records and totals match; report=evidence/live/python-baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
+exit=0

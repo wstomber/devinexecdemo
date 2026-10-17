@@ -1,0 +1,8 @@
+{
+  "baseline_command": "build/msp-batch",
+  "candidate_command": "python3 python/msp.py",
+  "cobol_exit": 0,
+  "python_exit": 0,
+  "cobol_error": null,
+  "python_error": null
+}
