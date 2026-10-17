@@ -260,7 +260,7 @@ function devinLabel(s) {
   if (s.status === "running") return ({waiting_for_user: ["Waiting for input", "UNKNOWN"], waiting_for_approval: ["Waiting for approval", "UNKNOWN"], finished: ["Finished", "PASSED"]})[s.status_detail] || ["Working", "RUNNING"];
   return ({new: ["Starting", "RUNNING"], claimed: ["Starting", "RUNNING"], resuming: ["Resuming", "RUNNING"], suspended: ["Paused", "UNKNOWN"], exit: ["Finished", "PASSED"], error: ["Error", "FAILED"]})[s.status] || ["Unknown", "UNKNOWN"];
 }
-const devinActive = s => s && ["new", "claimed", "running", "resuming"].includes(s.status) && s.status_detail !== "finished";
+const devinActive = s => s && ["new", "claimed", "running", "resuming", "suspended"].includes(s.status) && s.status_detail !== "finished";
 function devinCard() {
   const intro = `<p>Starts a brand-new Devin session with the saved Playbook <b>MSP COBOL to Python with evidence</b>. It begins from the COBOL-only starter branch and has never seen the finished migration.</p>`;
   if (!D) return `<div class="card">${intro}<p class="muted">Checking Devin…</p></div>`;
@@ -274,7 +274,7 @@ function devinCard() {
    <p>${LIVE_DEVIN} ${badge(cls, label)} <span class="small">started ${esc(started)}</span></p>
    <p><a class="btn primary" href="${esc(s.url)}" target="_blank">Open Devin's session ↗</a> ${prs ? `&nbsp; ${prs}` : devinActive(s) ? `<span class="small muted">&nbsp; Its pull request appears here once Devin opens it.</span>` : `<span class="small muted">&nbsp; No pull request was opened.</span>`}</p>
    ${s.problem ? `<p class="small muted">Last status check: ${esc(s.problem)}</p>` : ""}
-   ${devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
+   ${s.status === "suspended" ? `<p class="small muted">Devin paused this session. Open it and send a message to resume it.</p>` : devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
 }
 async function refreshDevin() {
   if (!$("#devinslot")) { clearInterval(dpoll); dpoll = null; return; }

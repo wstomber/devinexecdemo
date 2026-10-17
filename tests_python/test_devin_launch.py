@@ -63,10 +63,30 @@ class Launcher(unittest.TestCase):
         with mock.patch.object(devin_launch, "call", return_value=CREATED):
             devin_launch.start()
         devin_launch.save({**devin_launch.load(), **finished})
-        with mock.patch.object(devin_launch, "call", return_value={**CREATED, "session_id": "new1"}):
+        with mock.patch.object(devin_launch, "call", side_effect=[finished, {**CREATED, "session_id": "new1"}]):
             code, payload = devin_launch.start()
         self.assertEqual(code, 201)
         self.assertEqual(payload["session"]["session_id"], "new1")
+
+    def test_one_click_starts_when_saved_status_is_stale_but_devin_finished(self):
+        with mock.patch.object(devin_launch, "call", return_value=CREATED):
+            devin_launch.start()
+        devin_launch.save({**devin_launch.load(), "status": "running", "status_detail": "working"})
+        exited = {**CREATED, "status": "exit"}
+        with mock.patch.object(devin_launch, "call", side_effect=[exited, {**CREATED, "session_id": "new2"}]) as call:
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 201)
+        self.assertEqual([c.args[0] for c in call.call_args_list], ["GET", "POST"])
+        self.assertEqual(payload["session"]["session_id"], "new2")
+
+    def test_paused_session_is_kept_not_replaced(self):
+        with mock.patch.object(devin_launch, "call", return_value=CREATED):
+            devin_launch.start()
+        with mock.patch.object(devin_launch, "call", return_value={**CREATED, "status": "suspended"}) as call:
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 409)
+        self.assertNotIn("POST", [c.args[0] for c in call.call_args_list])
+        self.assertEqual(payload["session"]["session_id"], "abc123")
 
     def test_status_refresh_picks_up_pull_request(self):
         with mock.patch.object(devin_launch, "call", return_value=CREATED):
