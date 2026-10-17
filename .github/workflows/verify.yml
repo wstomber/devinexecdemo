@@ -1,0 +1,25 @@
+name: Verify COBOL starter
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gnucobol
+      - run: make build baseline generate test
+      - name: Confirm missing candidate is NOT_RUN
+        run: |
+          set +e
+          make compare
+          status=$?
+          set -e
+          test "$status" -ne 0
+          python3 -c 'import json; r=json.load(open("build/comparison-report.json")); assert r["result"] == "NOT_RUN"'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verification-reports
+          path: build/*report.json
+      - name: Verify container environment
+        run: docker build -t msp-starter . && docker run --rm msp-starter

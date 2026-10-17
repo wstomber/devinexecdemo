@@ -1,0 +1,402 @@
+[
+  {
+    "input": {
+      "id": "CMS-EX1",
+      "charges": 2500000,
+      "gross": 2200000,
+      "primary": 2050000,
+      "deductible": 155600,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "CMS-EX3",
+      "charges": 1500000,
+      "gross": 1400000,
+      "primary": 1250000,
+      "deductible": 155600,
+      "coinsurance": 0,
+      "contract": 1300000,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "ORDINARY",
+      "charges": 100000,
+      "gross": 80000,
+      "primary": 20000,
+      "deductible": 10000,
+      "coinsurance": 5000,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "CHARGE-LIMIT",
+      "charges": 60000,
+      "gross": 80000,
+      "primary": 10000,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "DEDUCT-LIMIT",
+      "charges": 100000,
+      "gross": 80000,
+      "primary": 5000,
+      "deductible": 10000,
+      "coinsurance": 10000,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "CONTRACT-DED",
+      "charges": 100000,
+      "gross": 90000,
+      "primary": 1000,
+      "deductible": 20000,
+      "coinsurance": 10000,
+      "contract": 25000,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "PRIMARY-EQ",
+      "charges": 100000,
+      "gross": 80000,
+      "primary": 80000,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "PRIMARY-HIGH",
+      "charges": 100000,
+      "gross": 200000,
+      "primary": 100001,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "FULL-FIRST",
+      "charges": 100,
+      "gross": 100,
+      "primary": 100,
+      "deductible": 100,
+      "coinsurance": 100,
+      "contract": null,
+      "full": "Y"
+    }
+  },
+  {
+    "input": {
+      "id": "ALL-ZERO",
+      "charges": 0,
+      "gross": 0,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "NO-PRIMARY",
+      "charges": 100000,
+      "gross": 80000,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "ONE-CENT",
+      "charges": 2,
+      "gross": 1,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "CENT-BELOW",
+      "charges": 100000,
+      "gross": 80000,
+      "primary": 79999,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "CONTRACT-0",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": 0,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "DEDUCT-EQ",
+      "charges": 1000,
+      "gross": 500,
+      "primary": 0,
+      "deductible": 300,
+      "coinsurance": 200,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "DEDUCT-HIGH",
+      "charges": 1000,
+      "gross": 500,
+      "primary": 0,
+      "deductible": 501,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "COINS-CENT",
+      "charges": 200,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 99,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "TIE",
+      "charges": 300,
+      "gross": 200,
+      "primary": 100,
+      "deductible": 60,
+      "coinsurance": 40,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "MAX-DEDUCT",
+      "charges": 9999999999,
+      "gross": 9999999999,
+      "primary": 0,
+      "deductible": 9999999999,
+      "coinsurance": 9999999999,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "MAX-PAY",
+      "charges": 9999999999,
+      "gross": 9999999999,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  },
+  {
+    "raw_record": "SHORT"
+  },
+  {
+    "input": {
+      "id": "EXTRA",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        73,
+        0,
+        "X"
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "BADID",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        0,
+        12,
+        "            "
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "MISSING",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        22,
+        10,
+        "          "
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "SIGNED",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        12,
+        10,
+        "-000000001"
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "DECIMAL",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        32,
+        10,
+        "0000001.00"
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "BADOPTION",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        62,
+        10,
+        "---------0"
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "HIGHCONTRACT",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": 101,
+      "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "BADFLAG",
+      "charges": 100,
+      "gross": 100,
+      "primary": 0,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    },
+    "patches": [
+      [
+        72,
+        1,
+        "?"
+      ]
+    ]
+  },
+  {
+    "input": {
+      "id": "AFTER-ERROR",
+      "charges": 200,
+      "gross": 200,
+      "primary": 100,
+      "deductible": 0,
+      "coinsurance": 0,
+      "contract": null,
+      "full": "N"
+    }
+  }
+]
