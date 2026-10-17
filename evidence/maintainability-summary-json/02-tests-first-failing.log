@@ -1,0 +1,206 @@
+$ python3 -m unittest tests_python.test_summary_json -v
+test_empty_batch_summary_matches_totals (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_fatal_duplicate_does_not_write_or_replace_summary (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_integer_cents_are_exact (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_mixed_validity_counts_match_totals (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_no_flag_csv_bytes_and_flag_preserves_csv (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_option_positions_and_equals_form (tests_python.test_summary_json.SummaryJsonTests) ... test_summary_contract_matches_totals (tests_python.test_summary_json.SummaryJsonTests) ... FAIL
+test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) ... test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) ... test_unwritable_summary_destinations_fail_cleanly (tests_python.test_summary_json.SummaryJsonTests) ... 
+======================================================================
+FAIL: test_empty_batch_summary_matches_totals (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 129, in test_empty_batch_summary_matches_totals
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_fatal_duplicate_does_not_write_or_replace_summary (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 184, in test_fatal_duplicate_does_not_write_or_replace_summary
+    self.assertIn(b"discard outputs", proc.stderr)
+AssertionError: b'discard outputs' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_integer_cents_are_exact (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 117, in test_integer_cents_are_exact
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_mixed_validity_counts_match_totals (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 149, in test_mixed_validity_counts_match_totals
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_no_flag_csv_bytes_and_flag_preserves_csv (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 92, in test_no_flag_csv_bytes_and_flag_preserves_csv
+    self.assertEqual(flagged.returncode, 0, flagged.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_option_positions_and_equals_form (tests_python.test_summary_json.SummaryJsonTests) (position='before')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 173, in test_option_positions_and_equals_form
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_option_positions_and_equals_form (tests_python.test_summary_json.SummaryJsonTests) (position='between')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 173, in test_option_positions_and_equals_form
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_option_positions_and_equals_form (tests_python.test_summary_json.SummaryJsonTests) (position='after')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 173, in test_option_positions_and_equals_form
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_option_positions_and_equals_form (tests_python.test_summary_json.SummaryJsonTests) (position='equals')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 173, in test_option_positions_and_equals_form
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_summary_contract_matches_totals (tests_python.test_summary_json.SummaryJsonTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 99, in test_summary_contract_matches_totals
+    self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
+AssertionError: 2 != 0 : usage: msp-batch INPUT OUTPUT TOTALS
+
+
+======================================================================
+FAIL: test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) (error='missing-value')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 294, in test_summary_option_usage_errors
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) (error='empty-equals')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 294, in test_summary_option_usage_errors
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) (error='empty-separated')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 294, in test_summary_option_usage_errors
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) (error='repeated')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 294, in test_summary_option_usage_errors
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_option_usage_errors (tests_python.test_summary_json.SummaryJsonTests) (error='only-two-positionals')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 294, in test_summary_option_usage_errors
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) (collision='input-same')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 223, in test_summary_path_collisions_are_rejected_before_open
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) (collision='output-same')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 223, in test_summary_path_collisions_are_rejected_before_open
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) (collision='totals-same')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 223, in test_summary_path_collisions_are_rejected_before_open
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) (collision='totals-realpath')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 223, in test_summary_path_collisions_are_rejected_before_open
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_summary_path_collisions_are_rejected_before_open (tests_python.test_summary_json.SummaryJsonTests) (collision='input-symlink')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 223, in test_summary_path_collisions_are_rejected_before_open
+    self.assertIn(b"--summary-json", proc.stderr)
+AssertionError: b'--summary-json' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_unwritable_summary_destinations_fail_cleanly (tests_python.test_summary_json.SummaryJsonTests) (destination='missing-parent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 263, in test_unwritable_summary_destinations_fail_cleanly
+    self.assertIn(b"discard outputs", proc.stderr)
+AssertionError: b'discard outputs' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_unwritable_summary_destinations_fail_cleanly (tests_python.test_summary_json.SummaryJsonTests) (destination='directory-target')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 263, in test_unwritable_summary_destinations_fail_cleanly
+    self.assertIn(b"discard outputs", proc.stderr)
+AssertionError: b'discard outputs' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+======================================================================
+FAIL: test_unwritable_summary_destinations_fail_cleanly (tests_python.test_summary_json.SummaryJsonTests) (destination='readonly-parent')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/repos/devinexecdemo/tests_python/test_summary_json.py", line 263, in test_unwritable_summary_destinations_fail_cleanly
+    self.assertIn(b"discard outputs", proc.stderr)
+AssertionError: b'discard outputs' not found in b'usage: msp-batch INPUT OUTPUT TOTALS\n'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.661s
+
+FAILED (failures=23)
+exit=1

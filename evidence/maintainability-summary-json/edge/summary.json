@@ -1,0 +1,42 @@
+{
+  "title": "COBOL vs Python: edge-cases.dat",
+  "input": "evidence/maintainability-summary-json/edge/edge-cases.dat",
+  "input_sha256": "2f36675df28170a6c8100168ee5e58765787952caeb1fca23e7e1ddecfcb7e4a",
+  "verdict": "MATCH",
+  "records_compared": 24,
+  "record_mismatches": 0,
+  "totals_match": true,
+  "exit_codes": [
+    0,
+    0
+  ],
+  "byte_identical_outputs": true,
+  "cobol": {
+    "command": "build/msp-batch",
+    "results_sha256": "e15c6d4f969a4df80345ace1a235147cdc1c2e9655aa6e93ce5a5c8766e0bcec",
+    "totals_sha256": "9918112b2aa6c995d1aff07a9f586881c8a6d573398f74bebc94f8e98c7a0353",
+    "totals": [
+      {
+        "records": "0000000024",
+        "paid": "0000000005",
+        "zero": "0000000004",
+        "invalid": "0000000015",
+        "payment_cents": "000010000270000"
+      }
+    ]
+  },
+  "python": {
+    "command": "python3 python/msp.py",
+    "results_sha256": "e15c6d4f969a4df80345ace1a235147cdc1c2e9655aa6e93ce5a5c8766e0bcec",
+    "totals_sha256": "9918112b2aa6c995d1aff07a9f586881c8a6d573398f74bebc94f8e98c7a0353",
+    "totals": [
+      {
+        "records": "0000000024",
+        "paid": "0000000005",
+        "zero": "0000000004",
+        "invalid": "0000000015",
+        "payment_cents": "000010000270000"
+      }
+    ]
+  }
+}
