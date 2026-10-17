@@ -1,0 +1,37 @@
+source_commit=a81c994fd9da1ecd2b04aa2b3ef678dd4e921c10 (+ uncommitted tests_policy/ being committed in this stage)
+program=build/msp-batch (cobc (GnuCOBOL) 3.1.2.0)
+$ python3 -m unittest discover -s tests_policy -v
+test_duplicate_of_rejected_identifiable_record_aborts (test_batch_interface.Fatal) ... ok
+test_duplicate_valid_ids_abort (test_batch_interface.Fatal) ... ok
+test_line_of_4097_bytes_aborts (test_batch_interface.Fatal) ... ok
+test_repeated_unidentifiable_records_are_not_duplicates (test_batch_interface.Fatal) ... ok
+test_blank_and_cr_only_lines_are_bad_length_records (test_batch_interface.Framing) ... ok
+test_crlf_and_lf_give_identical_results (test_batch_interface.Framing) ... ok
+test_empty_input_is_a_successful_zero_record_batch (test_batch_interface.Framing) ... ok
+test_maximum_line_4096_bytes_is_one_invalid_record (test_batch_interface.Framing) ... ok
+test_missing_final_newline_still_processes_last_record (test_batch_interface.Framing) ... ok
+test_non_ascii_digits_and_control_bytes_are_rejected (test_batch_interface.Framing) ... ok
+test_only_one_trailing_cr_is_removed (test_batch_interface.Framing) ... ok
+test_10000_maximum_payments (test_batch_interface.RecordLimit) ... ok
+test_10001_records_abort (test_batch_interface.RecordLimit) ... ok
+test_argument_count (test_batch_interface.Usage) ... ok
+test_identical_paths_and_missing_input (test_batch_interface.Usage) ... ok
+test_success_writes_nothing_to_stdout (test_batch_interface.Usage) ... ok
+test_each_case (test_policy_ledger.LedgerAgainstProgram) ... ok
+test_each_case_alone (test_policy_ledger.LedgerAgainstProgram)
+Same answer when a record is the only one in its batch (no neighbour effects). ... ok
+test_exit_zero (test_policy_ledger.LedgerAgainstProgram) ... ok
+test_totals_reconcile_with_ledger (test_policy_ledger.LedgerAgainstProgram) ... ok
+test_cms_ex3_is_500_dollars (test_policy_ledger.LedgerIntegrity) ... ok
+test_every_case_is_sourced_and_unique (test_policy_ledger.LedgerIntegrity) ... ok
+test_hand_arithmetic_is_internally_consistent (test_policy_ledger.LedgerIntegrity)
+Re-add the hand-written limit lists; catches ledger typos, not program behavior. ... ok
+test_policy_and_interface_cases_are_separated (test_policy_ledger.LedgerIntegrity) ... ok
+test_sequences (test_policy_ledger.StateResetSequences) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 3.770s
+
+OK
+[exit 0]
+
