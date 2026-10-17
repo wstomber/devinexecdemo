@@ -43,6 +43,8 @@ make build
 make baseline
 make generate
 make test
+make doctor
+make capture-baseline
 ```
 
 `make baseline` checks the executable against 30 independently specified records
@@ -50,6 +52,13 @@ in `fixtures/expected.json`. It reports migration comparison as `NOT_RUN`.
 `make generate` serializes the curated inputs and creates 1,000 seeded valid
 synthetic records plus readable JSON in `build/`. The synthetic batch expands
 input coverage; it does not independently establish policy correctness.
+
+`make doctor` checks the compiler and Python. No pip packages are required.
+`make capture-baseline` retains actual input, per-claim CSV, totals, commands,
+runtime metadata, source/input/output hashes, and a verification manifest in
+`build/baseline/`. The committed starting capture is in
+`docs/evidence/cobol-baseline/`. It is observed COBOL behavior, not a new policy
+oracle. CI captures fresh baseline artifacts and also tests the Docker image.
 
 ```sh
 # Before Devin supplies a candidate: explicitly NOT_RUN, nonzero exit
@@ -73,7 +82,7 @@ defaults to 10 seconds and can be changed with `--timeout`.
 
 ```sh
 docker build -t msp-starter .
-docker run --rm -v "$PWD:/app" msp-starter make build baseline generate test
+docker run --rm -v "$PWD:/app" msp-starter make build baseline generate test capture-baseline
 # Once Devin adds the candidate:
 docker run --rm -v "$PWD:/app" msp-starter \
   make compare CANDIDATE='python3 python/msp.py'
@@ -94,6 +103,7 @@ Linux commands and the Docker image; it does not pretend a missing migration ran
 | `cobol/copybooks/claim.cpy` | Raw fields and shared parsed interface |
 | `tools/fixtures.py` | JSON-to-fixed-width serialization and seeded input generation |
 | `tools/verify.py` | Execute, validate, check curated expectations, compare implementations |
+| `tools/capture_baseline.py` | Retain real COBOL input/output and runtime provenance; no payment calculation |
 | `tests/test_verification.py` | Batch and harness fault injection; no Python policy oracle |
 
 Each implementation must accept this command-line contract:
@@ -173,3 +183,13 @@ Medicare correctness. There is no Python reference payment implementation.
 Start the demonstration with [the runbook](docs/demo-runbook.md), then give Devin
 [DEVIN_TASK.md](DEVIN_TASK.md). Actual build/test evidence and limitations are
 recorded in [verification](docs/verification.md).
+
+The [readiness and ownership checklist](docs/demo-readiness.md) separates this
+prepared starter from Devin's remaining work. The [included CMS Example 3
+excerpt](docs/cms-example-3.md) anchors the visible $500 case. Devin must create
+new substantive tests before migration, complete the policy/COBOL/test/Python
+mapping, retain dual outputs and a side-by-side report, and save/test native
+Devin Playbooks for migration and the [synthetic follow-up](docs/follow-up-exercise.md).
+Those Playbooks and completed migration examples do not exist merely because
+their specifications are checked into this repo. Use a pinned starter commit for
+fresh live runs, and record actual work plus human review/intervention time.

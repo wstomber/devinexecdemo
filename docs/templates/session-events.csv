@@ -1,0 +1,1 @@
+session_id,timestamp_utc,actor,event,elapsed_seconds,human_intervention_seconds,human_review_seconds,command,exit_code,artifact,notes

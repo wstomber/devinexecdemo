@@ -5,7 +5,7 @@ BASELINE ?= build/msp-batch
 CANDIDATE ?=
 export CANDIDATE
 
-.PHONY: build baseline generate compare test clean
+.PHONY: build baseline generate compare test doctor capture-baseline clean
 build: build/msp-batch
 
 build/msp-batch: cobol/batch.cob cobol/validate.cob cobol/payment.cob cobol/copybooks/claim.cpy
@@ -24,6 +24,12 @@ compare: build generate
 
 test: baseline
 	$(PYTHON) -m unittest discover -s tests -v
+
+doctor:
+	$(PYTHON) tools/capture_baseline.py --check-only --compiler '$(COBC)'
+
+capture-baseline: build
+	$(PYTHON) tools/capture_baseline.py --command '$(BASELINE)' --compiler '$(COBC)'
 
 clean:
 	rm -rf build tools/__pycache__ tests/__pycache__

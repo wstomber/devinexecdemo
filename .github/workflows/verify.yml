@@ -9,6 +9,17 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y gnucobol
       - run: make build baseline generate test
+      - run: make doctor capture-baseline
+      - name: Check retained baseline is reproducible
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          saved = json.loads(Path('docs/evidence/cobol-baseline/manifest.json').read_text())
+          current = json.loads(Path('build/baseline/manifest.json').read_text())
+          assert current['result'] == 'PASS'
+          assert current['files_sha256'] == saved['files_sha256'], 'baseline output/input drift'
+          PY
       - name: Confirm missing candidate is NOT_RUN
         run: |
           set +e
@@ -18,8 +29,11 @@ jobs:
           test "$status" -ne 0
           python3 -c 'import json; r=json.load(open("build/comparison-report.json")); assert r["result"] == "NOT_RUN"'
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: verification-reports
-          path: build/*report.json
+          path: |
+            build/*report.json
+            build/baseline/
       - name: Verify container environment
         run: docker build -t msp-starter . && docker run --rm msp-starter

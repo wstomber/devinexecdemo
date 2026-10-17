@@ -67,3 +67,26 @@ pages 78–84. Source retrieval metadata, exact page mapping, fixture rationales
 and the Example 4 inconsistency are recorded in rules.md. Policy coverage is
 limited to that documented scope. Generated-input parity cannot prove policy
 correctness, and no performance or production-readiness claims were measured.
+
+## Demo preparation and retained execution
+
+The preparation update adds `make doctor` and `make capture-baseline`. Executed
+both locally, reran all 17 infrastructure tests and the 30 independent curated
+expectations, and captured the full curated/synthetic input and output files.
+Two separate captures had identical input/output/report hashes. The retained
+CMS-EX3 output is exactly 50,000 cents. A deliberately failing executable made
+capture return 1 with a FAIL manifest, and a missing compiler made doctor fail.
+
+The immutable starting capture is in docs/evidence/cobol-baseline/. Its source
+commit is a964d7085bc8bb5bb0d144e2fb3dbc1964bfc540, the published COBOL source
+state before the new evidence/preparation files are committed. Source hashes
+record the actual files used. No baseline payment source, curated expectations,
+or existing verifier checks were changed for this preparation.
+
+The included CMS excerpt, seven-step runbook, readiness checklist, timing template,
+and optional synthetic follow-up are starting conditions. New policy-derived tests,
+Python, the complete migration rule map, retained dual-executable presentation
+reports, completed Devin examples, and native Devin Playbooks remain unexecuted
+Devin work. This environment has no connected Devin execution capability. CI
+checks fresh capture hashes and builds/runs the Docker environment; consult the
+preparation commit's workflow result for those remote checks.
