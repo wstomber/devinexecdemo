@@ -1,0 +1,7 @@
+COMMAND: python3 -m unittest discover -s tests_python
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.053s
+
+OK
+exit=0

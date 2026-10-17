@@ -1,0 +1,3 @@
+COMMAND: git diff --stat 08f0398..HEAD -- tests_policy
+PASS: Stage 2 tests_policy unchanged
+exit=0

@@ -1,0 +1,7 @@
+COMMAND: MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy
+.............................
+----------------------------------------------------------------------
+Ran 29 tests in 2.093s
+
+OK
+exit=0

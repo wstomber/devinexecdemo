@@ -1,0 +1,3 @@
+COMMAND: git diff --stat 37ceca1..HEAD -- cobol fixtures tools/verify.py tools/fixtures.py tools/capture_baseline.py tests docs/evidence
+PASS: no protected paths changed
+exit=0
