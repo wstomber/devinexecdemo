@@ -1,0 +1,155 @@
+
+$ make build generate
+mkdir -p build
+cobc -x -free -Wall -debug -I cobol/copybooks -o build/msp-batch cobol/batch.cob cobol/validate.cob cobol/payment.cob
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+exit=0
+
+$ make test
+python3 tools/verify.py baseline --command 'build/msp-batch' --report build/baseline-report.json
+PASS: records and totals match; report=build/baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
+python3 -m unittest discover -s tests -v
+test_blank_record_is_invalid_not_eof (test_verification.VerificationTests) ... ok
+test_candidate_can_be_verified_against_curated_expectations (test_verification.VerificationTests) ... ok
+test_comparison_detects_one_cent_and_reason_mismatch (test_verification.VerificationTests) ... ok
+test_control_bytes_and_validation_precedence (test_verification.VerificationTests) ... ok
+test_crash_missing_executable_timeout_and_missing_output (test_verification.VerificationTests) ... ok
+test_crlf_and_last_record_without_newline (test_verification.VerificationTests) ... ok
+test_duplicate_claim_id_is_fatal (test_verification.VerificationTests) ... ok
+test_empty_batch (test_verification.VerificationTests) ... ok
+test_identifiable_invalid_duplicate_is_fatal (test_verification.VerificationTests) ... ok
+test_maximum_transport_length_is_one_invalid_record (test_verification.VerificationTests) ... ok
+test_missing_candidate_is_not_a_pass (test_verification.VerificationTests) ... ok
+test_oversized_physical_line_aborts_without_splitting (test_verification.VerificationTests) ... ok
+test_rejects_output_faults (test_verification.VerificationTests) ... ok
+test_seeded_batch_and_serialization (test_verification.VerificationTests) ... ok
+test_serializer_rejects_float_negative_overflow_missing_and_bad_flag (test_verification.VerificationTests) ... ok
+test_unchanged_replay_passes_plumbing_only (test_verification.VerificationTests) ... ok
+test_usage_missing_input_unwritable_output_and_record_limit (test_verification.VerificationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.775s
+
+OK
+exit=0
+
+$ python3 -m unittest discover -s tests_policy -v
+test_10000_records_succeed_and_10001_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_crlf_and_missing_final_newline_match_lf (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_identifiable_rejected_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_valid_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_empty_input_is_zero_record_batch (test_policy.BatchInterfaceTests) ... ok
+test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_missing_input_exits_2 (test_policy.BatchInterfaceTests) ... ok
+test_state_resets_after_rejected_contract_and_payment_in_full (test_policy.BatchInterfaceTests) ... ok
+test_unidentifiable_rejections_never_collide (test_policy.BatchInterfaceTests) ... ok
+test_usage_errors_exit_2 (test_policy.BatchInterfaceTests) ... ok
+test_ledger_totals_follow_from_rows (test_policy.LedgerArithmeticAudit) ... ok
+test_stated_limits_follow_from_inputs_and_expected_payment_is_lowest (test_policy.LedgerArithmeticAudit) ... ok
+test_batch_succeeds (test_policy.PolicyLedgerTests) ... ok
+test_cms_ex3_pays_500_dollars_not_1500 (test_policy.PolicyLedgerTests) ... ok
+test_every_case_matches_hand_derived_expectation (test_policy.PolicyLedgerTests) ... ok
+test_totals_match_ledger_and_rows (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.418s
+
+OK
+exit=0
+
+$ env MSP_COMMAND=python3\ python/msp.py python3 -m unittest discover -s tests_policy -v
+test_10000_records_succeed_and_10001_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_crlf_and_missing_final_newline_match_lf (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_identifiable_rejected_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_valid_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_empty_input_is_zero_record_batch (test_policy.BatchInterfaceTests) ... ok
+test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_missing_input_exits_2 (test_policy.BatchInterfaceTests) ... ok
+test_state_resets_after_rejected_contract_and_payment_in_full (test_policy.BatchInterfaceTests) ... ok
+test_unidentifiable_rejections_never_collide (test_policy.BatchInterfaceTests) ... ok
+test_usage_errors_exit_2 (test_policy.BatchInterfaceTests) ... ok
+test_ledger_totals_follow_from_rows (test_policy.LedgerArithmeticAudit) ... ok
+test_stated_limits_follow_from_inputs_and_expected_payment_is_lowest (test_policy.LedgerArithmeticAudit) ... ok
+test_batch_succeeds (test_policy.PolicyLedgerTests) ... ok
+test_cms_ex3_pays_500_dollars_not_1500 (test_policy.PolicyLedgerTests) ... ok
+test_every_case_matches_hand_derived_expectation (test_policy.PolicyLedgerTests) ... ok
+test_totals_match_ledger_and_rows (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.613s
+
+OK
+exit=0
+
+$ python3 -m unittest discover -s tests_python -v
+test_counts_totals_and_formatting (test_msp_units.BatchTests) ... ok
+test_duplicate_identifiable_ids_are_fatal_but_reserved_ids_are_not (test_msp_units.BatchTests) ... ok
+test_no_state_carries_between_records (test_msp_units.BatchTests) ... ok
+test_record_limit (test_msp_units.BatchTests) ... ok
+test_cms_ex3_contract_replaces_charges_and_pays_500 (test_msp_units.CalculateTests) ... ok
+test_cms_ex3_without_contract_would_pay_1500 (test_msp_units.CalculateTests) ... ok
+test_larger_of_deductions_or_primary_is_subtracted (test_msp_units.CalculateTests) ... ok
+test_maximum_amounts_are_exact_integers (test_msp_units.CalculateTests) ... ok
+test_payment_cap_is_lower_of_gross_and_basis (test_msp_units.CalculateTests) ... ok
+test_zero_reason_boundaries (test_msp_units.CalculateTests) ... ok
+test_lf_crlf_blank_and_final_line (test_msp_units.FramingTests) ... ok
+test_line_spanning_read_chunks (test_msp_units.FramingTests) ... ok
+test_transport_limit (test_msp_units.FramingTests) ... ok
+test_success_writes_exact_files (test_msp_units.MainTests) ... ok
+test_usage_and_failure_exit_2 (test_msp_units.MainTests) ... usage: msp-batch INPUT OUTPUT TOTALS
+paths must be distinct
+fatal batch failure; discard outputs; cannot open input: [Errno 2] No such file or directory: '/tmp/tmp4n_9n41c/absent.dat'
+fatal batch failure; discard outputs; cannot open output: [Errno 2] No such file or directory: '/tmp/tmp4n_9n41c/missing-dir/r.csv'
+ok
+test_contract_range_and_flag (test_msp_units.ValidateTests) ... ok
+test_length_and_identity (test_msp_units.ValidateTests) ... ok
+test_numeric_class_matches_cobol (test_msp_units.ValidateTests) ... ok
+test_rejection_precedence (test_msp_units.ValidateTests) ... ok
+test_valid_record_parses_all_fields (test_msp_units.ValidateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.003s
+
+OK
+exit=0
+
+$ make compare CANDIDATE=python3\ python/msp.py
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
+exit=0
+
+$ sha256sum build/curated.dat build/synthetic.dat
+143f9cf2e83b811b972d73b870c8d03658ce01fab0b190863ba027b5373e2322  build/curated.dat
+56584f8a9c0ce83ea7f8cb002203a57c478ee7ee931e625b4d3b0f4d0f609e69  build/synthetic.dat
+exit=0
+
+$ python3 python/msp.py build/curated.dat build/pre-curated-results.csv build/pre-curated-totals.csv
+exit=0
+
+$ python3 python/msp.py build/synthetic.dat build/pre-synthetic-results.csv build/pre-synthetic-totals.csv
+exit=0
+
+$ sha256sum build/pre-curated-results.csv build/pre-curated-totals.csv build/pre-synthetic-results.csv build/pre-synthetic-totals.csv
+05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474  build/pre-curated-results.csv
+7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660  build/pre-curated-totals.csv
+9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9  build/pre-synthetic-results.csv
+7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e  build/pre-synthetic-totals.csv
+exit=0
+
+$ cp build/pre-curated-results.csv build/pre-curated-totals.csv build/pre-synthetic-results.csv build/pre-synthetic-totals.csv evidence/maintainability-summary-json/pre-change/
+exit=0
+
+$ sha256sum evidence/maintainability-summary-json/pre-change/pre-curated-results.csv evidence/maintainability-summary-json/pre-change/pre-curated-totals.csv evidence/maintainability-summary-json/pre-change/pre-synthetic-results.csv evidence/maintainability-summary-json/pre-change/pre-synthetic-totals.csv
+05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474  evidence/maintainability-summary-json/pre-change/pre-curated-results.csv
+7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660  evidence/maintainability-summary-json/pre-change/pre-curated-totals.csv
+9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9  evidence/maintainability-summary-json/pre-change/pre-synthetic-results.csv
+7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e  evidence/maintainability-summary-json/pre-change/pre-synthetic-totals.csv
+exit=0

@@ -43,3 +43,7 @@ python3 tools/demo_compare.py --edge-cases --out build/cmp/edge
 
 Timing and human involvement: `docs/templates/session-events.csv`. Human
 review time is recorded as UNKNOWN unless the reviewer reports it.
+
+The Python-only `--summary-json` maintainability exercise and its baseline,
+acceptance-test, parity, and invocation evidence are in
+`evidence/maintainability-summary-json/`.

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Medicare Secondary Payer prospective-payment batch: Python replacement for cobol/.
 
-Usage: python3 python/msp.py INPUT OUTPUT TOTALS
+Usage: python3 python/msp.py [--summary-json PATH] INPUT OUTPUT TOTALS
 
 Synthetic educational module derived from CMS Pub. 100-05 Ch. 5 §§40.8-40.8.3.
 All money is integer cents (Python int); binary floating point is never used.
 The record contract, reason codes and exit codes are the demo interface in README.md.
+A requested summary JSON is written atomically only after successful CSV output.
 """
+import json
+import os
 import sys
+import tempfile
 from dataclasses import dataclass
 from typing import Iterator, Optional
 
@@ -181,12 +185,50 @@ class Batch:
         return (f"{self.records:010d},{self.paid:010d},{self.zero:010d},"
                 f"{self.invalid:010d},{self.payment_cents:015d}")
 
+    def summary(self) -> dict:
+        return {
+            "records": self.records,
+            "paid": self.paid,
+            "zero": self.zero,
+            "invalid": self.invalid,
+            "payment_cents": self.payment_cents,
+        }
+
 
 def result_row(record_no: int, result: Result) -> str:
     return f"{record_no:010d},{result.claim_id},{result.status},{result.payment_cents:010d},{result.reason}"
 
 
-def run(input_path: str, output_path: str, totals_path: str) -> None:
+def write_summary(path: str, summary: dict) -> None:
+    temporary_path = None
+    file_descriptor = None
+    try:
+        file_descriptor, temporary_path = tempfile.mkstemp(
+            dir=os.path.dirname(os.path.abspath(path)),
+            prefix="." + os.path.basename(path) + ".",
+            suffix=".tmp",
+        )
+        with os.fdopen(file_descriptor, "w", encoding="ascii", newline="\n") as temporary:
+            file_descriptor = None
+            temporary.write(json.dumps(summary) + "\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, path)
+    except OSError as exc:
+        if file_descriptor is not None:
+            try:
+                os.close(file_descriptor)
+            except OSError:
+                pass
+        if temporary_path is not None:
+            try:
+                os.unlink(temporary_path)
+            except OSError:
+                pass
+        raise FatalBatchError(f"cannot write summary JSON: {exc}") from exc
+
+
+def run(input_path: str, output_path: str, totals_path: str, summary_path=None) -> None:
     batch = Batch()
     try:
         source = open(input_path, "rb")
@@ -203,18 +245,70 @@ def run(input_path: str, output_path: str, totals_path: str) -> None:
             for record in read_records(source):
                 output.write(result_row(batch.records + 1, batch.process(record)) + "\n")
             totals.write(TOTALS_HEADER + "\n" + batch.totals_row() + "\n")
+    if summary_path is not None:
+        write_summary(summary_path, batch.summary())
+
+
+def parse_args(args):
+    positionals = []
+    summary_path = None
+    summary_seen = False
+    index = 0
+    while index < len(args):
+        token = args[index]
+        if token == "--summary-json":
+            if summary_seen:
+                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                return 2
+            summary_seen = True
+            index += 1
+            if index >= len(args) or args[index] == "":
+                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                return 2
+            summary_path = args[index]
+        elif token.startswith("--summary-json="):
+            if summary_seen or token.partition("=")[2] == "":
+                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                return 2
+            summary_seen = True
+            summary_path = token.partition("=")[2]
+        else:
+            positionals.append(token)
+        index += 1
+    return positionals, summary_path
+
+
+def summary_path_collides(summary_path, positionals) -> bool:
+    summary_realpath = os.path.realpath(summary_path)
+    for path in positionals:
+        if summary_path == path or summary_realpath == os.path.realpath(path):
+            return True
+        if (os.path.exists(summary_path) and os.path.exists(path)
+                and os.path.samefile(summary_path, path)):
+            return True
+    return False
 
 
 def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    if len(args) != 3:
-        print("usage: msp-batch INPUT OUTPUT TOTALS", file=sys.stderr)
+    parsed = parse_args(args)
+    if parsed == 2:
         return 2
-    if len(set(args)) != 3:
+    positionals, summary_path = parsed
+    if len(positionals) != 3:
+        if summary_path is None:
+            print("usage: msp-batch INPUT OUTPUT TOTALS", file=sys.stderr)
+        else:
+            print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+        return 2
+    if len(set(positionals)) != 3:
         print("paths must be distinct", file=sys.stderr)
         return 2
+    if summary_path is not None and summary_path_collides(summary_path, positionals):
+        print("--summary-json PATH must differ from INPUT, OUTPUT and TOTALS", file=sys.stderr)
+        return 2
     try:
-        run(*args)
+        run(*positionals, summary_path=summary_path)
     except (FatalBatchError, OSError) as exc:
         print(f"fatal batch failure; discard outputs; {exc}", file=sys.stderr)
         return 2
