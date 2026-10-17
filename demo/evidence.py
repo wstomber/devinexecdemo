@@ -74,7 +74,7 @@ def unittest_summary(path):
     ok = re.search(r"^OK\b", text, re.M)
     failed = re.search(r"^FAILED \((.*)\)", text, re.M)
     names = re.findall(r"^(test_\w+) \(([\w.]+)\) \.\.\. (ok|FAIL|ERROR|skipped.*)$", text, re.M)
-    if ran and ok and not failed:
+    if ran and int(ran[-1]) > 0 and ok and not failed:
         status = "PASSED"
     elif failed or any(r in ("FAIL", "ERROR") for _, _, r in names):
         status = "FAILED"
@@ -99,6 +99,15 @@ def totals_row(path):
     return {k: cents_int(v) for k, v in rows[0].items()}
 
 
+def count_records(path):
+    """Records in a batch input file, counted independently of either program's output."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError:
+        return None
+    return data.count(b"\n") + (1 if data and not data.endswith(b"\n") else 0)
+
+
 def comparison(folder, verifier_report, label, kind):
     """Rebuild the side-by-side from both raw result files; never trust a precomputed 'MATCH' alone."""
     folder = Path(folder)
@@ -110,8 +119,13 @@ def comparison(folder, verifier_report, label, kind):
     if cerr or perr:
         return {**base, "status": "NOT_RUN" if "missing" in (cerr, perr) else "UNKNOWN",
                 "problem": f"COBOL results {cerr or 'ok'}; Python results {perr or 'ok'}", "rows": []}
-    by_no_c = {r["record_no"]: r for r in cobol}
-    by_no_p = {r["record_no"]: r for r in python}
+    try:
+        by_no_c = {r["record_no"]: r for r in cobol}
+        by_no_p = {r["record_no"]: r for r in python}
+        for r in cobol + python:
+            r["claim_id"], r["status"], r["payment_cents"], r["reason"]
+    except (KeyError, TypeError) as exc:
+        return {**base, "status": "UNKNOWN", "problem": f"result file is malformed (missing column {exc})", "rows": []}
     rows, mismatches = [], 0
     for no in sorted(set(by_no_c) | set(by_no_p)):
         c, p = by_no_c.get(no), by_no_p.get(no)
@@ -133,14 +147,18 @@ def comparison(folder, verifier_report, label, kind):
     files_identical = (sha256(folder / "cobol-results.csv") == sha256(folder / "python-results.csv")
                        and sha256(folder / "cobol-totals.csv") == sha256(folder / "python-totals.csv"))
     totals_match = ct is not None and ct == pt
-    if mismatches or duplicates or not totals_match or verifier == "FAILED":
+    input_name = (summary or {}).get("input")
+    input_records = count_records(ROOT / input_name) if input_name else None
+    complete = input_records is not None and len(cobol) == len(python) == input_records
+    if mismatches or duplicates or not totals_match or verifier == "FAILED" or (input_records is not None and not complete):
         status = "FAILED"
+    elif not verifier_report and input_records is None:
+        status = "UNKNOWN"
     elif verifier_report and verifier != "PASSED":
         status = "UNKNOWN"
     else:
         status = "PASSED"
-    input_name = (summary or {}).get("input")
-    return {**base, "status": status, "rows": rows, "records": {"cobol": len(cobol), "python": len(python)},
+    return {**base, "input_records": input_records, "status": status, "rows": rows, "records": {"cobol": len(cobol), "python": len(python)},
             "mismatches": mismatches, "duplicates": duplicates, "totals": {"cobol": ct, "python": pt},
             "totals_match": totals_match, "byte_identical": files_identical,
             "verifier": {"status": verifier, "report": rel(verifier_report) if report else None,

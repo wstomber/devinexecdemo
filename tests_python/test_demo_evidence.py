@@ -67,6 +67,23 @@ class ComparisonStatus(unittest.TestCase):
         self.report.write_text(json.dumps({"result": "FAIL"}))
         self.assertEqual(self.status(self.tmp / "b", self.report)["status"], "FAILED")
 
+    def test_missing_column_is_unknown_not_a_crash(self):
+        folder = self.tmp / "b"
+        write_batch(folder, [ROW], [ROW], TOTAL, TOTAL)
+        (folder / "python-results.csv").write_text("claim_id,status\nCMS-EX3,PAID\n")
+        self.assertEqual(self.status(folder, self.report)["status"], "UNKNOWN")
+
+    def test_both_programs_dropping_the_same_record_fails(self):
+        folder = self.tmp / "b"
+        write_batch(folder, [ROW], [ROW], TOTAL, TOTAL)
+        (self.tmp / "in.dat").write_text("one\ntwo\n")
+        (folder / "summary.json").write_text(json.dumps({"input": str(self.tmp / "in.dat")}))
+        self.assertEqual(evidence.comparison(folder, None, "TEST", "saved")["status"], "FAILED")
+
+    def test_no_verifier_and_no_input_is_unknown(self):
+        write_batch(self.tmp / "b", [ROW], [ROW], TOTAL, TOTAL)
+        self.assertEqual(evidence.comparison(self.tmp / "b", None, "TEST", "saved")["status"], "UNKNOWN")
+
 
 class TestLogStatus(unittest.TestCase):
     def check(self, text, expected):
@@ -80,6 +97,7 @@ class TestLogStatus(unittest.TestCase):
         self.check("test_a (m.T) ... ok\n\nRan 1 test in 0.1s\n\nOK\n", "PASSED")
         self.check("test_a (m.T) ... FAIL\n\nRan 1 test in 0.1s\n\nFAILED (failures=1)\n", "FAILED")
         self.check("truncated output", "UNKNOWN")
+        self.check("\nRan 0 tests in 0.000s\n\nOK\n", "UNKNOWN")
 
 
 class SavedRehearsal(unittest.TestCase):

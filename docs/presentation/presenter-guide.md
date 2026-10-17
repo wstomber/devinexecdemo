@@ -6,7 +6,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 1. Open the app (see "Starting the app" below). The first screen is "The problem".
 2. Optional: start the live Devin session now (step 7 card "Launch Devin live") so it is already working when you show it.
-3. Tick **Presenter notes** (top left) if you want timing and backup notes on screen.
+3. Keep this guide on a second screen or printed. The app itself shows nothing presenter-only, so everything on screen is fine for the audience to see.
 
 ## Colours and labels
 
@@ -19,7 +19,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | RUNNING (blue) | Still in progress. |
 | NOT_RUN / UNKNOWN (grey) | Not run yet, or the evidence is missing. Never a pass. |
 
-## 18-minute route
+## 20-minute route
 
 | Time | Screen | Do | Say (one line) |
 |---|---|---|---|
@@ -30,15 +30,17 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 9–12 | 4 · Python + unit tests | Compare the two code boxes; open "Corrections". | Same rule in readable Python, exact cents, passed the same tests first time. |
 | 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Find CMS-EX3**. | Every claim matches, and a separate strict checker confirms it. |
 | 14–16 | ★ CMS-EX3 $500 | Walk the four limits top to bottom. | $13,000 − $12,500 = $500. Missing the contract rule would pay $1,000 too much. |
-| 16–18 | 7 · Review & repeat | Open PR #2; show the Playbook card. | Everything is reviewable, and saved as a Playbook Devin can repeat. |
-| 18–20 (optional) | 7 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
+| 16–18 | 6 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition and AWS publish, and what we will confirm with Cognition. |
+| 18–20 | 7 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
+| +2 (optional) | 7 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
 
 ## 15-minute route
 
-The problem (1 min) → 1 · Baseline, press Run it live (2) → 3 · Tests came first (3) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 7 · Review & repeat (3).
+The problem (1 min) → 1 · Baseline, press Run it live (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Security & data (2) → 7 · Review & repeat (2).
 
 ## If something goes wrong
 
+- **A security question you can't answer:** say "I'll confirm that with Cognition". Rows marked "Confirm with Cognition" on screen 6 are exactly those.
 - **"Run it live" shows FAILED:** say "the live run failed; here is the saved rehearsal". Every screen still shows the purple SAVED REHEARSAL evidence. Click "steps" (top right) to show which step failed.
 - **The app will not open:** use the GitHub fallback links:
   - Order of the work: https://github.com/wstomber/devinexecdemo/pull/2/commits

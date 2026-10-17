@@ -7,6 +7,8 @@ new build/demo-runs/<UTC> folder. Saved rehearsal evidence is never written.
 import argparse
 import json
 import mimetypes
+import os
+import signal
 import subprocess
 import sys
 import threading
@@ -74,12 +76,14 @@ def live_run(run_dir=None):
         with (ROOT / step["log"]).open("w") as log:
             log.write(f"$ {step['command']}\n")
             log.flush()
+            proc = subprocess.Popen(step["command"], shell=True, cwd=ROOT, stdout=log,
+                                    stderr=subprocess.STDOUT, start_new_session=True)
             try:
-                proc = subprocess.run(step["command"], shell=True, cwd=ROOT, stdout=log,
-                                      stderr=subprocess.STDOUT, timeout=600)
-                step["exit_code"] = proc.returncode
+                step["exit_code"] = proc.wait(timeout=600)
             except subprocess.TimeoutExpired:
-                log.write("\n[timed out after 600 s]\n")
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+                log.write("\n[timed out after 600 s; the whole process group was stopped]\n")
                 step["exit_code"] = None
         step["finished_at"] = now()
         step["status"] = "PASSED" if step["exit_code"] == 0 else "FAILED"
@@ -88,6 +92,15 @@ def live_run(run_dir=None):
     state["status"] = "PASSED" if all(s["status"] == "PASSED" for s in state["steps"]) else "FAILED"
     write_state(run_dir, state)
     return state
+
+
+def raw_allowed(name):
+    """Only files git tracks (or this app's own live-run output) are served."""
+    if name.startswith("build/demo-runs/"):
+        return True
+    out = subprocess.run(["git", "ls-files", "--error-unmatch", "--", name], cwd=ROOT,
+                         capture_output=True)
+    return out.returncode == 0
 
 
 def start_live_run():
@@ -125,7 +138,8 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/raw/"):
             name = path[len("/raw/"):]
             target = (ROOT / name).resolve()
-            if (not name.startswith(RAW_PREFIXES) or ROOT not in target.parents or not target.is_file()):
+            if (not name.startswith(RAW_PREFIXES) or ROOT not in target.parents or not target.is_file()
+                    or not raw_allowed(name)):
                 return self.send(404, "not found", "text/plain")
             ctype = "text/plain; charset=utf-8"
             if target.suffix == ".json":

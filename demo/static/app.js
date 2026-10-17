@@ -11,7 +11,6 @@ const raw = (p, label) => p ? `<a href="/raw/${esc(p)}" target="_blank">${esc(la
 const gh = p => `https://github.com/wstomber/devinexecdemo/blob/${E.git.head || "main"}/${p}`;
 const commit = sha => sha ? `<a href="https://github.com/wstomber/devinexecdemo/commit/${esc(sha)}" target="_blank"><code>${esc(sha.slice(0, 7))}</code></a>` : "UNKNOWN";
 const cmd = c => `<div class="cmd"><code>${esc(c)}</code><button class="btn sm" data-copy="${esc(c)}">Copy</button></div>`;
-const say = (t) => `<div class="say"><b>Say this</b>${t}</div>`;
 const fileCache = {};
 async function file(p) { if (!(p in fileCache)) { const r = await fetch("/raw/" + p); fileCache[p] = r.ok ? await r.text() : null; } return fileCache[p]; }
 
@@ -62,18 +61,8 @@ function stepLine(key) { const s = liveStep(key); return s ? `${LIVE} ${badge(s.
 const ex3Case = () => E.expectations?.cases?.find(c => c.claim_id === "CMS-EX3");
 const findRow = (cmp, id) => cmp?.rows?.find(r => r[1] === id);
 
-const NOTES = {
-  overview: ["0:00–2:00", "CMS has payment logic in COBOL that few engineers can still read. A wrong rule pays real money. Here Devin explained an unfamiliar MSP payment module, wrote independent tests, migrated it to Python, and proved old and new pay the same.", "Point at the 4-step flow. Say: everything on screen is read from the real files Devin produced — nothing is typed in.", "Skip straight to CMS-EX3 if short on time."],
-  baseline: ["2:00–4:00", "Before touching anything, Devin ran the original COBOL and kept its exact outputs as the yardstick.", "Click “Run it live” in the top right now — it takes about 5 seconds and runs the real COBOL and Python on this machine.", "If the live run fails, the saved run (purple badge) is still shown; say that honestly."],
-  explain: ["4:00–6:00", "Nobody had to know COBOL. Devin read it and explained it — here is the exact line that applies the provider's contractual amount.", "Show the highlighted lines in payment.cob; open the DeepWiki link for the full beginner guide.", "Mention DeepWiki and move on."],
-  tests: ["6:00–9:00", "Devin wrote the expected answers from the CMS manual by hand, and ran them against the old COBOL before writing any Python. The git history proves the order.", "Point at the green “Tests came first” proof, then click the CMS-EX3 row in the ledger.", "Just show the proof card."],
-  python: ["9:00–12:00", "The new Python passed the same independent tests on its first run, plus 20 focused unit tests. Money is whole cents, never floating point.", "Show calculate() next to the COBOL; open “Corrections” to show what Devin had to fix along the way.", "Skip to the comparison."],
-  compare: ["12:00–14:00", "Old and new were run on the same claims: the 30 policy cases, 1,000 generated claims, and 24 tricky edge cases. Every row matches, and a strict verifier checks it independently of this table.", "Pick the 1,000-record batch, type CMS-EX3 in search, click “Mismatches only” to show it's empty.", "Show the headline cards only."],
-  ex3: ["14:00–16:00", "This is the case that matters: the provider's $13,000 contract caps the payment at $500. Missing that rule would pay $1,500 — $1,000 too much on one claim.", "Walk the four limits; point out that COBOL and Python both pay exactly $500.", "Say the one sentence and go to the end."],
-  review: ["16:00–18:00 (+2 optional)", "Everything is reviewable: a PR, a rule map, raw outputs, and saved Playbooks so Devin can repeat this — and keep maintaining it.", "Open the PR; then launch the Playbook live (instructions on this page). Optional: show PR #4, the maintainability change.", "Show the Playbook card and close."],
-};
 const VIEWS = [["overview", "The problem"], ["baseline", "1 · COBOL baseline"], ["explain", "2 · Devin explains COBOL"], ["tests", "3 · Tests came first"],
-  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["review", "7 · Review & repeat"]];
+  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["security", "6 · Security & data"], ["review", "7 · Review & repeat"]];
 
 const R = {};
 R.overview = async () => {
@@ -81,7 +70,6 @@ R.overview = async () => {
   const allPassed = Object.values(c).every(x => x.status === "PASSED");
   return `<h1>Can Devin safely modernize code nobody understands anymore?</h1>
   <p class="lede">A synthetic COBOL module that calculates Medicare Secondary Payer payments — when Medicare pays after another insurer. Devin had to understand it, recover the policy behind it, test it, migrate it to Python, and prove the result.</p>
-  ${say(NOTES.overview[1])}
   <div class="flow">
     <div class="card"><h3>1. Run the original</h3>${badge(s.baseline.status)}<div class="small">COBOL baseline kept as the yardstick</div></div><div class="arrow">→</div>
     <div class="card"><h3>2. Explain it</h3><div class="small">Plain-English guide + DeepWiki for new engineers</div></div><div class="arrow">→</div>
@@ -100,7 +88,6 @@ R.baseline = async () => {
   const stat = (n, l) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
   return `<h1>1 · The original COBOL program, run first</h1>
   <p class="lede">The program reads a batch of claims (one fixed-width line each) and writes one result per claim — PAID, ZERO or INVALID with a payment and a reason — plus a totals line.</p>
-  ${say(NOTES.baseline[1])}
   <h2>Curated 30-claim batch ${SAVED} ${badge(b.status)}</h2>
   <div class="grid g4">${ct ? stat(ct.records, "claims") + stat(ct.paid, "paid") + stat(ct.zero, "zero (valid, nothing owed)") + stat(ct.invalid, "rejected as malformed") + stat(money(ct.payment_cents), "total paid by COBOL") : `<div class="err">Totals file missing</div>`}</div>
   <h2>1,000-claim synthetic batch ${SAVED}</h2>
@@ -116,7 +103,6 @@ R.explain = async () => {
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /function min/);
   return `<h1>2 · Devin explains the legacy code</h1>
   <p class="lede">Four COBOL files. Devin documented what each does, in plain language, for engineers who have never seen COBOL.</p>
-  ${say(NOTES.explain[1])}
   <div class="grid g4">
    <div class="card"><h3>batch.cob — the driver</h3>Reads the file line by line, checks for duplicate claim IDs, writes each result and the totals. Stops the whole batch on fatal problems.</div>
    <div class="card"><h3>validate.cob — the gatekeeper</h3>Checks each line in a fixed order (length, ID, amounts, contract, flag) and names the first problem it finds.</div>
@@ -138,7 +124,6 @@ R.tests = async () => {
   const cases = x?.cases || [];
   return `<h1>3 · The tests came before the migration</h1>
   <p class="lede">Devin worked out the right answers by hand from the CMS manual — not by copying what the COBOL printed — and checked the COBOL against them before any Python existed.</p>
-  ${say(NOTES.tests[1])}
   <div class="grid g2"><div class="card"><h3>Tests came first ${badge(p.status, p.status === "PASSED" ? "VERIFIED FROM GIT" : p.status)}</h3>
     <p>Tests committed in ${commit(s2?.sha)} (${esc(s2?.date || "")})<br>Python first appears in ${commit(s3?.sha)} (${esc(s3?.date || "")})</p>
     <p class="small">Checked now from git history: <code>python/msp.py</code> ${p.python_absent_at_stage2 ? "did <b>not</b> exist" : "<b>existed</b>"} at the test commit; test commit ${p.stage2_before_stage3 ? "precedes" : "does <b>not</b> precede"} the Python commit.</p></div>
@@ -158,7 +143,6 @@ R.python = async () => {
   const u = E.saved.python_unit_tests;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same rule, now in readable Python. It passed the independent tests on its first run.</p>
-  ${say(NOTES.python[1])}
   <div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div>
   <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
   <h2>What had to be preserved</h2><div class="grid g4">
@@ -192,7 +176,6 @@ R.compare = async () => {
   const t = c.totals || {};
   return `<h1>5 · Old vs new, claim by claim</h1>
   <p class="lede">The original COBOL and the new Python were run on the same input. This table is rebuilt from both programs' raw output files.</p>
-  ${say(NOTES.compare[1])}
   <div class="toolbar">${src.map(([k, v]) => `<button class="btn${k === cmpKey ? " on" : ""}" data-cmp="${k}">${k.startsWith("live") ? "LIVE" : "SAVED"} · ${esc(k.split(":")[1])} (${v.records?.python ?? "?"})</button>`).join("")}</div>
   <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <span class="muted small">${esc(c.title)}</span></div>
   ${c.problem ? `<div class="err">${esc(c.problem)}</div>` : ""}
@@ -227,7 +210,6 @@ R.ex3 = async () => {
   const pay = await codeSnippet("cobol/payment.cob", /move claim-charges to charge-basis/, /function min/);
   return `<h1>★ CMS-EX3 — the contractual cap</h1>
   <p class="lede">From the CMS manual (${esc(c.source)}). The hospital agreed to accept <b>$13,000 in total</b>. The primary insurer paid $12,500. What does Medicare owe?</p>
-  ${say(NOTES.ex3[1])}
   <div class="grid g2"><div class="card"><h3>The claim</h3><table>
    <tr><td>Charges</td><td class="num">${money(i.charges)}</td></tr><tr><td>Gross Medicare payable</td><td class="num">${money(i.gross)}</td></tr>
    <tr><td>Primary insurer paid</td><td class="num">${money(i.primary)}</td></tr><tr><td><b>Provider's contractual amount (OTAF)</b></td><td class="num"><b>${money(i.contract)}</b></td></tr>
@@ -250,11 +232,13 @@ R.ex3 = async () => {
    <li>Python tests: <code>test_cms_ex3_contract_replaces_charges_and_pays_500</code>, <code>test_cms_ex3_without_contract_would_pay_1500</code></li>
    <li>Comparison row: <a href="#compare" data-goto-ex3="1">curated batch, CMS-EX3</a></li></ul></div></div>`;
 };
+R.security = async () => `<h1>6 · Security &amp; data</h1>
+  <p class="lede">What this demo touched, what Cognition and AWS publish about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
+  <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
 R.review = async () => {
   const st = E.status || {}, ev = E.session_events || [];
   return `<h1>7 · Reviewable, and repeatable</h1>
   <p class="lede">Everything a human reviewer needs is in one pull request, and the process is saved as Playbooks so Devin can do it again — or keep maintaining the code.</p>
-  ${say(NOTES.review[1])}
   ${E.status_problem ? `<div class="err">demo/status.json ${esc(E.status_problem)}</div>` : `<p class="small muted">PR / Playbook status recorded ${esc(st.recorded_at)} — click through for the current state.</p>`}
   <h2>Pull requests</h2><div class="grid g2">${(st.pull_requests || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">#${p.number}</a> ${badge(p.state)}</h3>${esc(p.title)}<div class="small muted">${esc(p.role)}</div>${p.commits_url ? `<a class="small" href="${esc(p.commits_url)}" target="_blank">See the commit-by-commit order</a>` : ""}</div>`).join("")}</div>
   <h2>Commit history (this checkout)</h2><table><tbody>${E.git.commits.slice(0, 10).map(c => `<tr><td>${commit(c.sha)}</td><td class="small">${esc(c.date)}</td><td>${esc(c.subject)}</td></tr>`).join("")}</tbody></table>
@@ -303,12 +287,9 @@ function showRow(no) {
 
 async function render() {
   route = (location.hash.slice(1) || "overview"); if (!R[route]) route = "overview";
-  $("#nav").innerHTML = VIEWS.map(([k, l]) => `<a href="#${k}" class="${k === route ? "on" : ""}${k === "ex3" ? " ex3" : ""}">${l}</a>`).join("") +
-    `<label class="tog"><input type="checkbox" id="notesTog" ${localStorage.notes === "1" ? "checked" : ""}> Presenter notes</label>`;
+  $("#nav").innerHTML = VIEWS.map(([k, l]) => `<a href="#${k}" class="${k === route ? "on" : ""}${k === "ex3" ? " ex3" : ""}">${l}</a>`).join("");
   $("#view").innerHTML = await R[route]();
-  const n = NOTES[route], idx = VIEWS.findIndex(v => v[0] === route);
-  $("#notes").hidden = localStorage.notes !== "1";
-  $("#notes").innerHTML = n ? `<b>${esc(VIEWS[idx][1])} · ${n[0]}</b><p>${esc(n[1])}</p><p><b>Do:</b> ${esc(n[2])}</p><p><b>Short on time:</b> ${esc(n[3])}</p><p class="small muted">15-minute route: The problem → 1 → 3 → 5 → ★ CMS-EX3 → 7.</p>` : "";
+  const idx = VIEWS.findIndex(v => v[0] === route);
   $("#foot").innerHTML = `<span>${idx > 0 ? `<a class="btn" href="#${VIEWS[idx - 1][0]}">← ${esc(VIEWS[idx - 1][1])}</a>` : ""}</span>
    <span class="muted">Checkout ${commit(E.git.head)} on <code>${esc(E.git.branch)}</code> · evidence read ${esc(E.generated_at)}</span>
    <span>${idx < VIEWS.length - 1 ? `<a class="btn primary" href="#${VIEWS[idx + 1][0]}">${esc(VIEWS[idx + 1][1])} →</a>` : ""}</span>`;
@@ -335,7 +316,6 @@ document.addEventListener("click", async ev => {
   if (t.dataset.jump || t.dataset.gotoEx3) { cmpQuery = "CMS-EX3"; cmpFilter = "all"; cmpPage = 0; if (t.dataset.gotoEx3) { cmpKey = E.live?.comparisons?.curated ? "live:curated" : "saved:curated"; return; } return render(); }
 });
 document.addEventListener("input", ev => { if (ev.target.id === "cmpq") { cmpQuery = ev.target.value; cmpPage = 0; clearTimeout(window._q); window._q = setTimeout(async () => { await render(); const i = $("#cmpq"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); } });
-document.addEventListener("change", ev => { if (ev.target.id === "notesTog") { localStorage.notes = ev.target.checked ? "1" : "0"; $("#notes").hidden = !ev.target.checked; } });
 document.addEventListener("toggle", async ev => { const d = ev.target; if (d.dataset?.md && d.open && !d.dataset.loaded) { d.dataset.loaded = 1; d.querySelector("div").outerHTML = md(await file(d.dataset.md)); } }, true);
 document.addEventListener("keydown", ev => { if (ev.target.tagName === "INPUT") return; const idx = VIEWS.findIndex(v => v[0] === route);
   if (ev.key === "ArrowRight" && idx < VIEWS.length - 1) location.hash = VIEWS[idx + 1][0]; if (ev.key === "ArrowLeft" && idx > 0) location.hash = VIEWS[idx - 1][0];
