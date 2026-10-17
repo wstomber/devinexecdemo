@@ -1,0 +1,31 @@
+$ python3 -m unittest discover -s tests_python -v
+test_counts_totals_and_formatting (test_msp_units.BatchTests) ... ok
+test_duplicate_identifiable_ids_are_fatal_but_reserved_ids_are_not (test_msp_units.BatchTests) ... ok
+test_no_state_carries_between_records (test_msp_units.BatchTests) ... ok
+test_record_limit (test_msp_units.BatchTests) ... ok
+test_cms_ex3_contract_replaces_charges_and_pays_500 (test_msp_units.CalculateTests) ... ok
+test_cms_ex3_without_contract_would_pay_1500 (test_msp_units.CalculateTests) ... ok
+test_larger_of_deductions_or_primary_is_subtracted (test_msp_units.CalculateTests) ... ok
+test_maximum_amounts_are_exact_integers (test_msp_units.CalculateTests) ... ok
+test_payment_cap_is_lower_of_gross_and_basis (test_msp_units.CalculateTests) ... ok
+test_zero_reason_boundaries (test_msp_units.CalculateTests) ... ok
+test_lf_crlf_blank_and_final_line (test_msp_units.FramingTests) ... ok
+test_line_spanning_read_chunks (test_msp_units.FramingTests) ... ok
+test_transport_limit (test_msp_units.FramingTests) ... ok
+test_success_writes_exact_files (test_msp_units.MainTests) ... ok
+test_usage_and_failure_exit_2 (test_msp_units.MainTests) ... usage: msp-batch INPUT OUTPUT TOTALS
+paths must be distinct
+fatal batch failure; discard outputs; cannot open input: [Errno 2] No such file or directory: '/tmp/tmprsz6fqbd/absent.dat'
+fatal batch failure; discard outputs; cannot open output: [Errno 2] No such file or directory: '/tmp/tmprsz6fqbd/missing-dir/r.csv'
+ok
+test_contract_range_and_flag (test_msp_units.ValidateTests) ... ok
+test_length_and_identity (test_msp_units.ValidateTests) ... ok
+test_numeric_class_matches_cobol (test_msp_units.ValidateTests) ... ok
+test_rejection_precedence (test_msp_units.ValidateTests) ... ok
+test_valid_record_parses_all_fields (test_msp_units.ValidateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.005s
+
+OK
+[exit 0]

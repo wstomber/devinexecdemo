@@ -1,0 +1,56 @@
+{
+  "repo_notes": [
+    {
+      "content": "Audience: new CMS engineers who have never read COBOL and have lost the historical context of legacy claims code. Explain COBOL concepts in plain language, always tied to the actual lines in cobol/, and always compare them to the Python in python/msp.py. This is a SYNTHETIC educational Medicare Secondary Payer (MSP) example modeled on CMS Pub. 100-05 Ch. 5 §40.8-40.8.3. It is not CMS production source and not the real Common Working File; do not describe CMS internal systems, staffing, history, or performance. The central business case is CMS-EX3: $13,000 obligatory contractual acceptance (OTAF) minus $12,500 primary payment = $500 Medicare secondary payment; ignoring the OTAF gives $1,500 (a $1,000 overpayment). Keep the three evidence layers distinct: (A) hand-derived policy/interface tests in tests_policy/, (B) Python unit tests in tests_python/, (C) exact COBOL-vs-Python parity in evidence/rehearsal/stage4-comparison/ and tools/verify.py. Parity proves equivalence to the COBOL on tested batches, not complete Medicare correctness. Human-written explanations in docs/migration/ (01 explanation, 02 rule map, 03 COBOL primer, 04 legacy walkthrough, 05 COBOL-to-Python guide, 06 maintaining, evidence-index) are authoritative; reuse their facts and cite file paths and line numbers."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview: a legacy MSP payment program and its Python replacement",
+      "purpose": "Explain what the repository is, the customer problem (understanding and safely migrating opaque legacy COBOL), the synthetic scope, the CMS-EX3 $500 story, the repository layout (cobol/, python/, tests/, tests_policy/, tests_python/, tools/, docs/, evidence/), and how to build and run both programs."
+    },
+    {
+      "title": "COBOL for new engineers",
+      "purpose": "A primer for someone who has never seen COBOL, taught entirely with this repository's code: the four DIVISIONs, paragraphs, PERFORM/GOBACK/STOP RUN, PIC clauses, packed decimal COMP-3 and why it means exact cents, level numbers and group items, copybooks, LINKAGE SECTION and CALL by reference, INITIALIZE, IS NUMERIC, STRING zero padding, reference modification, FILE STATUS codes, and historical gotchas (EBCDIC collating sequence, fixed-width records, implicit state, silent truncation). Every concept should show the COBOL line and the equivalent Python.",
+      "page_notes": [{"content": "Base this on docs/migration/03-cobol-primer.md and cobol/copybooks/claim.cpy."}]
+    },
+    {
+      "title": "The shared claim record (claim.cpy)",
+      "parent": "COBOL for new engineers",
+      "purpose": "Explain the copybook byte by byte: the 73-byte raw overlay, parsed packed-decimal fields, claim-has-contract as COBOL's way of expressing an optional value, and how all three programs share this block by reference. Compare with the Claim and Result dataclasses in python/msp.py."
+    },
+    {
+      "title": "How the legacy batch driver works (batch.cob)",
+      "purpose": "Line-by-line walkthrough of cobol/batch.cob: argument checks, file opens and file status, byte-at-a-time framing, CRLF and final-line handling, the 4,096-byte and 10,000-record limits, process-record (INITIALIZE, provisional @ IDs, duplicate detection, CALLs, counting), output formatting, totals, and fatal-io/STOP RUN. Map each part to read_records, finish_line, Batch, run and main in python/msp.py.",
+      "page_notes": [{"content": "Use docs/migration/04-legacy-walkthrough.md for line references."}]
+    },
+    {
+      "title": "How legacy validation works (validate.cob)",
+      "purpose": "Explain validate-record: the 'set reason, test, GOBACK' pattern that encodes rejection precedence (BAD_LENGTH, BAD_ID, BAD_AMOUNT, BAD_CONTRACT, BAD_FLAG), the ID scan loop, NUMERIC class tests before any numeric MOVE, malformed contract vs BAD_CONTRACT, and malformed vs valid zero. Compare with validate, valid_claim_id and is_numeric in python/msp.py."
+    },
+    {
+      "title": "How the legacy payment calculation works (payment.cob)",
+      "purpose": "Explain calculate-prospective-payment against CMS Pub. 100-05 Ch. 5 §40.8.2: the four limits, why min(gross, charge basis) - max(primary, deductions) equals their minimum, the claim-has-contract branch where the OTAF replaces charges, zero-reason precedence, and a step-by-step trace of CMS-EX3 to $500 (and $1,500 without the OTAF). Compare with charge_basis, payment_cap and calculate in python/msp.py.",
+      "page_notes": [{"content": "Use docs/rules.md, docs/cms-example-3.md and docs/migration/04-legacy-walkthrough.md. Emphasize that the $13,000 is a total acceptance amount, not acceptance of the $12,500 primary payment in full (full=N)."}]
+    },
+    {
+      "title": "COBOL to Python migration",
+      "purpose": "Construct-by-construct mapping from COBOL to python/msp.py, what had to stay byte-identical and why, what was re-expressed (immutable values instead of by-reference mutation, explicit character sets instead of collating sequence, exceptions instead of STOP RUN), the translation traps a naive port would hit (float money, str.isdigit/int validation, text-mode reading, skipping blank lines, strip on IDs, reordering checks), and why overflow cannot differ here.",
+      "page_notes": [{"content": "Base this on docs/migration/05-cobol-to-python.md."}]
+    },
+    {
+      "title": "Rule map: policy to COBOL to tests to Python",
+      "parent": "COBOL to Python migration",
+      "purpose": "Present the traceability table from docs/migration/02-rule-map.md: each payment, validation and batch rule, whether it is CMS policy or an interface decision, the COBOL lines, the independent tests, the Python function, and the result."
+    },
+    {
+      "title": "Evidence and verification",
+      "purpose": "Explain the three evidence layers and the order they were produced (tests committed against COBOL before any Python existed), the hand-derived ledger in tests_policy/expectations.json, the Python unit tests, the COBOL-vs-Python comparisons (curated 30, synthetic 1,000, adversarial edge batch, fatal paths) with tools/verify.py and tools/demo_compare.py, the retained outputs under evidence/rehearsal/, and what parity does and does not prove. Include the seven-step presentation path from docs/migration/evidence-index.md."
+    },
+    {
+      "title": "Maintaining the system going forward",
+      "purpose": "Guide for the next maintainer: where each kind of knowledge lives, the safe tests-first change procedure, how to interpret parity when a change is intentional, invariants to keep (no float, bytes in, immutable records, fatal behavior, exit codes), why to keep the COBOL and baseline evidence, and the Devin Playbooks in docs/playbooks/ for repeating the migration or making a maintainability change.",
+      "page_notes": [{"content": "Base this on docs/migration/06-maintaining.md and docs/follow-up-exercise.md."}]
+    }
+  ]
+}
