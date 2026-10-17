@@ -1,0 +1,229 @@
+
+$ make build generate
+make: Nothing to be done for 'build'.
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+exit=0
+
+$ make test
+python3 tools/verify.py baseline --command 'build/msp-batch' --report build/baseline-report.json
+PASS: records and totals match; report=build/baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
+python3 -m unittest discover -s tests -v
+test_blank_record_is_invalid_not_eof (test_verification.VerificationTests) ... ok
+test_candidate_can_be_verified_against_curated_expectations (test_verification.VerificationTests) ... ok
+test_comparison_detects_one_cent_and_reason_mismatch (test_verification.VerificationTests) ... ok
+test_control_bytes_and_validation_precedence (test_verification.VerificationTests) ... ok
+test_crash_missing_executable_timeout_and_missing_output (test_verification.VerificationTests) ... ok
+test_crlf_and_last_record_without_newline (test_verification.VerificationTests) ... ok
+test_duplicate_claim_id_is_fatal (test_verification.VerificationTests) ... ok
+test_empty_batch (test_verification.VerificationTests) ... ok
+test_identifiable_invalid_duplicate_is_fatal (test_verification.VerificationTests) ... ok
+test_maximum_transport_length_is_one_invalid_record (test_verification.VerificationTests) ... ok
+test_missing_candidate_is_not_a_pass (test_verification.VerificationTests) ... ok
+test_oversized_physical_line_aborts_without_splitting (test_verification.VerificationTests) ... ok
+test_rejects_output_faults (test_verification.VerificationTests) ... ok
+test_seeded_batch_and_serialization (test_verification.VerificationTests) ... ok
+test_serializer_rejects_float_negative_overflow_missing_and_bad_flag (test_verification.VerificationTests) ... ok
+test_unchanged_replay_passes_plumbing_only (test_verification.VerificationTests) ... ok
+test_usage_missing_input_unwritable_output_and_record_limit (test_verification.VerificationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 1.667s
+
+OK
+exit=0
+
+$ python3 -m unittest discover -s tests_policy -v
+test_10000_records_succeed_and_10001_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_crlf_and_missing_final_newline_match_lf (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_identifiable_rejected_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_valid_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_empty_input_is_zero_record_batch (test_policy.BatchInterfaceTests) ... ok
+test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_missing_input_exits_2 (test_policy.BatchInterfaceTests) ... ok
+test_state_resets_after_rejected_contract_and_payment_in_full (test_policy.BatchInterfaceTests) ... ok
+test_unidentifiable_rejections_never_collide (test_policy.BatchInterfaceTests) ... ok
+test_usage_errors_exit_2 (test_policy.BatchInterfaceTests) ... ok
+test_ledger_totals_follow_from_rows (test_policy.LedgerArithmeticAudit) ... ok
+test_stated_limits_follow_from_inputs_and_expected_payment_is_lowest (test_policy.LedgerArithmeticAudit) ... ok
+test_batch_succeeds (test_policy.PolicyLedgerTests) ... ok
+test_cms_ex3_pays_500_dollars_not_1500 (test_policy.PolicyLedgerTests) ... ok
+test_every_case_matches_hand_derived_expectation (test_policy.PolicyLedgerTests) ... ok
+test_totals_match_ledger_and_rows (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 4.969s
+
+OK
+exit=0
+
+$ MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v
+test_10000_records_succeed_and_10001_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_crlf_and_missing_final_newline_match_lf (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_identifiable_rejected_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_valid_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_empty_input_is_zero_record_batch (test_policy.BatchInterfaceTests) ... ok
+test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_missing_input_exits_2 (test_policy.BatchInterfaceTests) ... ok
+test_state_resets_after_rejected_contract_and_payment_in_full (test_policy.BatchInterfaceTests) ... ok
+test_unidentifiable_rejections_never_collide (test_policy.BatchInterfaceTests) ... ok
+test_usage_errors_exit_2 (test_policy.BatchInterfaceTests) ... ok
+test_ledger_totals_follow_from_rows (test_policy.LedgerArithmeticAudit) ... ok
+test_stated_limits_follow_from_inputs_and_expected_payment_is_lowest (test_policy.LedgerArithmeticAudit) ... ok
+test_batch_succeeds (test_policy.PolicyLedgerTests) ... ok
+test_cms_ex3_pays_500_dollars_not_1500 (test_policy.PolicyLedgerTests) ... ok
+test_every_case_matches_hand_derived_expectation (test_policy.PolicyLedgerTests) ... ok
+test_totals_match_ledger_and_rows (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 1.472s
+
+OK
+exit=0
+
+$ python3 -m unittest discover -s tests_python -v
+test_counts_totals_and_formatting (test_msp_units.BatchTests) ... ok
+test_duplicate_identifiable_ids_are_fatal_but_reserved_ids_are_not (test_msp_units.BatchTests) ... ok
+test_no_state_carries_between_records (test_msp_units.BatchTests) ... ok
+test_record_limit (test_msp_units.BatchTests) ... ok
+test_cms_ex3_contract_replaces_charges_and_pays_500 (test_msp_units.CalculateTests) ... ok
+test_cms_ex3_without_contract_would_pay_1500 (test_msp_units.CalculateTests) ... ok
+test_larger_of_deductions_or_primary_is_subtracted (test_msp_units.CalculateTests) ... ok
+test_maximum_amounts_are_exact_integers (test_msp_units.CalculateTests) ... ok
+test_payment_cap_is_lower_of_gross_and_basis (test_msp_units.CalculateTests) ... ok
+test_zero_reason_boundaries (test_msp_units.CalculateTests) ... ok
+test_lf_crlf_blank_and_final_line (test_msp_units.FramingTests) ... ok
+test_line_spanning_read_chunks (test_msp_units.FramingTests) ... ok
+test_transport_limit (test_msp_units.FramingTests) ... ok
+test_success_writes_exact_files (test_msp_units.MainTests) ... ok
+test_usage_and_failure_exit_2 (test_msp_units.MainTests) ... usage: msp-batch INPUT OUTPUT TOTALS
+paths must be distinct
+fatal batch failure; discard outputs; cannot open input: [Errno 2] No such file or directory: '/tmp/tmp_i1onjp9/absent.dat'
+fatal batch failure; discard outputs; cannot open output: [Errno 2] No such file or directory: '/tmp/tmp_i1onjp9/missing-dir/r.csv'
+ok
+test_contract_range_and_flag (test_msp_units.ValidateTests) ... ok
+test_length_and_identity (test_msp_units.ValidateTests) ... ok
+test_numeric_class_matches_cobol (test_msp_units.ValidateTests) ... ok
+test_rejection_precedence (test_msp_units.ValidateTests) ... ok
+test_valid_record_parses_all_fields (test_msp_units.ValidateTests) ... ok
+test_empty_batch_summary_matches_totals (test_summary_json.SummaryJsonTests) ... ok
+test_fatal_duplicate_does_not_write_or_replace_summary (test_summary_json.SummaryJsonTests) ... ok
+test_integer_cents_are_exact (test_summary_json.SummaryJsonTests) ... ok
+test_mixed_validity_counts_match_totals (test_summary_json.SummaryJsonTests) ... ok
+test_no_flag_csv_bytes_and_flag_preserves_csv (test_summary_json.SummaryJsonTests) ... ok
+test_option_positions_and_equals_form (test_summary_json.SummaryJsonTests) ... ok
+test_summary_contract_matches_totals (test_summary_json.SummaryJsonTests) ... ok
+test_summary_option_usage_errors (test_summary_json.SummaryJsonTests) ... ok
+test_summary_path_collisions_are_rejected_before_open (test_summary_json.SummaryJsonTests) ... ok
+test_unwritable_summary_destinations_fail_cleanly (test_summary_json.SummaryJsonTests) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 1.568s
+
+OK
+exit=0
+
+$ make compare CANDIDATE='python3 python/msp.py'
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
+exit=0
+
+$ make compare CANDIDATE='python3 python/msp.py --summary-json build/compare-s.json'
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 30 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
+exit=0
+
+$ python3 tools/demo_compare.py --input build/curated.dat --out evidence/maintainability-summary-json/curated
+MATCH: COBOL vs Python: curated.dat: 30 records, 0 mismatches, totals_match=True, byte_identical=True -> evidence/maintainability-summary-json/curated/side-by-side.md
+exit=0
+
+$ python3 tools/demo_compare.py --input build/curated.dat --python 'python3 python/msp.py --summary-json build/s-curated.json' --out evidence/maintainability-summary-json/curated-with-flag
+MATCH: COBOL vs Python: curated.dat: 30 records, 0 mismatches, totals_match=True, byte_identical=True -> evidence/maintainability-summary-json/curated-with-flag/side-by-side.md
+exit=0
+
+$ python3 tools/demo_compare.py --input build/synthetic.dat --python 'python3 python/msp.py --summary-json build/s.json' --out evidence/maintainability-summary-json/synthetic-with-flag
+MATCH: COBOL vs Python: synthetic.dat: 1000 records, 0 mismatches, totals_match=True, byte_identical=True -> evidence/maintainability-summary-json/synthetic-with-flag/side-by-side.md
+exit=0
+
+$ python3 tools/demo_compare.py --input build/synthetic.dat --out evidence/maintainability-summary-json/synthetic
+MATCH: COBOL vs Python: synthetic.dat: 1000 records, 0 mismatches, totals_match=True, byte_identical=True -> evidence/maintainability-summary-json/synthetic/side-by-side.md
+exit=0
+
+$ python3 tools/demo_compare.py --edge-cases --out evidence/maintainability-summary-json/edge
+MATCH: COBOL vs Python: edge-cases.dat: 24 records, 0 mismatches, totals_match=True, byte_identical=True -> evidence/maintainability-summary-json/edge/side-by-side.md
+exit=0
+
+$ cp build/s.json build/s-curated.json evidence/maintainability-summary-json/
+exit=0
+
+$ python3 - <<'PY'  # inline check source; executed with exit=0
+import csv
+import hashlib
+import json
+from pathlib import Path
+
+root = Path('.')
+evidence = root / 'evidence/maintainability-summary-json'
+checks = [
+    ('curated', evidence / 'curated-with-flag/python-totals.csv', evidence / 's-curated.json'),
+    ('synthetic', evidence / 'synthetic-with-flag/python-totals.csv', evidence / 's.json'),
+]
+failures = 0
+for name, totals_path, summary_path in checks:
+    with totals_path.open(newline='', encoding='ascii') as stream:
+        totals = next(csv.DictReader(stream))
+    expected = {key: int(totals[key]) for key in
+                ('records', 'paid', 'zero', 'invalid', 'payment_cents')}
+    actual = json.loads(summary_path.read_text(encoding='ascii'))
+    mismatch = actual != expected
+    failures += mismatch
+    print(f'{name} JSON vs totals: {"1" if mismatch else "0"} mismatches; '
+          f'JSON={actual}; totals={expected}')
+
+csv_pairs = [
+    ('curated results', evidence / 'curated-with-flag/python-results.csv', evidence / 'pre-change/pre-curated-results.csv'),
+    ('curated totals', evidence / 'curated-with-flag/python-totals.csv', evidence / 'pre-change/pre-curated-totals.csv'),
+    ('synthetic results', evidence / 'synthetic-with-flag/python-results.csv', evidence / 'pre-change/pre-synthetic-results.csv'),
+    ('synthetic totals', evidence / 'synthetic-with-flag/python-totals.csv', evidence / 'pre-change/pre-synthetic-totals.csv'),
+]
+for name, current, previous in csv_pairs:
+    current_hash = hashlib.sha256(current.read_bytes()).hexdigest()
+    previous_hash = hashlib.sha256(previous.read_bytes()).hexdigest()
+    mismatch = current_hash != previous_hash
+    failures += mismatch
+    print(f'{name} sha256: {"MISMATCH" if mismatch else "byte-identical"}; '
+          f'current={current_hash}; pre-change={previous_hash}')
+
+curated_results = evidence / 'curated-with-flag/python-results.csv'
+with curated_results.open(newline='', encoding='ascii') as stream:
+    cms_row = next((row for row in csv.reader(stream) if len(row) > 1 and row[1] == 'CMS-EX3'), None)
+if cms_row is None:
+    failures += 1
+    print('CMS-EX3 row: MISSING')
+else:
+    print('CMS-EX3 row: ' + ','.join(cms_row))
+    if cms_row[3] != '0000050000':
+        failures += 1
+print(f'overall mismatches: {failures}')
+raise SystemExit(1 if failures else 0)
+PY
+curated JSON vs totals: 0 mismatches; JSON={'records': 30, 'paid': 12, 'zero': 9, 'invalid': 9, 'payment_cents': 10000450202}; totals={'records': 30, 'paid': 12, 'zero': 9, 'invalid': 9, 'payment_cents': 10000450202}
+synthetic JSON vs totals: 0 mismatches; JSON={'records': 1000, 'paid': 271, 'zero': 729, 'invalid': 0, 'payment_cents': 514352570951}; totals={'records': 1000, 'paid': 271, 'zero': 729, 'invalid': 0, 'payment_cents': 514352570951}
+curated results sha256: byte-identical; current=05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474; pre-change=05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474
+curated totals sha256: byte-identical; current=7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660; pre-change=7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660
+synthetic results sha256: byte-identical; current=9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9; pre-change=9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9
+synthetic totals sha256: byte-identical; current=7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e; pre-change=7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e
+CMS-EX3 row: 0000000002,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE
+overall mismatches: 0
+exit=0

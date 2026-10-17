@@ -27,6 +27,7 @@ with no access to the people who wrote either version.
 4. **Run all three layers.**
    ```sh
    MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v
+   python3 -m unittest tests_python.test_summary_json -v
    python3 -m unittest discover -s tests_python -v
    make compare CANDIDATE='python3 python/msp.py'
    python3 tools/demo_compare.py --input build/curated.dat --out build/cmp-curated
@@ -36,6 +37,36 @@ with no access to the people who wrote either version.
    listing which records differ and why. Unrelated records must still match.
 6. **Update the rule map** row(s) and, if a COBOL construct is involved, the
    walkthrough.
+
+## Worked example: `--summary-json`
+
+This is an **interface change**, not a CMS policy change: the Python CLI adds
+an optional JSON summary while keeping the three positional paths and CSV
+format unchanged. It is Python-only; COBOL has no equivalent output, so parity
+is checked on the result and totals CSVs. The acceptance tests are added and
+run before the implementation:
+
+```sh
+make build generate
+make test
+python3 -m unittest discover -s tests_policy -v
+MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v
+python3 -m unittest tests_python.test_summary_json -v
+python3 -m unittest discover -s tests_python -v
+make compare CANDIDATE='python3 python/msp.py'
+make compare CANDIDATE='python3 python/msp.py --summary-json build/compare-s.json'
+python3 tools/demo_compare.py --input build/curated.dat --out evidence/maintainability-summary-json/curated
+python3 tools/demo_compare.py --input build/curated.dat --python 'python3 python/msp.py --summary-json build/s-curated.json' --out evidence/maintainability-summary-json/curated-with-flag
+python3 tools/demo_compare.py --input build/synthetic.dat --python 'python3 python/msp.py --summary-json build/s.json' --out evidence/maintainability-summary-json/synthetic-with-flag
+python3 tools/demo_compare.py --input build/synthetic.dat --out evidence/maintainability-summary-json/synthetic
+python3 tools/demo_compare.py --edge-cases --out evidence/maintainability-summary-json/edge
+```
+
+The run logs, before/after CSVs, JSON summaries, invocation examples, and
+curated, synthetic, and edge-case comparisons are retained in
+`evidence/maintainability-summary-json/`. The four demo comparisons report
+zero record mismatches and byte-identical CSV outputs; the CMS-EX3 result
+remains `0000050000` cents.
 
 ## Invariants to keep
 
