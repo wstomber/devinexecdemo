@@ -1,0 +1,37 @@
+source_commit=d085746454a80adfb875db8ef7390e12aac6a68b + uncommitted python/, tests_python/
+$ python3 -m unittest discover -s tests_python -v
+test_duplicates (test_msp.BatchState) ... ok
+test_record_limit (test_msp.BatchState) ... ok
+test_state_reset_after_rejected_contract (test_msp.BatchState) ... ok
+test_cms_ex1 (test_msp.CalculatePayment) ... ok
+test_cms_ex3_contract_branch (test_msp.CalculatePayment) ... ok
+test_each_limit_controls (test_msp.CalculatePayment) ... ok
+test_equal_limits (test_msp.CalculatePayment) ... ok
+test_maximums_are_exact_integers (test_msp.CalculatePayment) ... ok
+test_one_cent_boundaries (test_msp.CalculatePayment) ... ok
+test_zero_reason_precedence (test_msp.CalculatePayment) ... ok
+test_end_to_end_and_fatal_exit (test_msp.Cli) ... duplicate claim ID: A; fatal batch failure; discard outputs
+fatal batch failure; discard outputs: [Errno 2] No such file or directory: '/tmp/tmp9f_hhj12/missing'
+ok
+test_usage_and_distinct_paths (test_msp.Cli) ... usage: msp.py INPUT OUTPUT TOTALS
+usage: msp.py INPUT OUTPUT TOTALS
+paths must be distinct
+ok
+test_result_row (test_msp.Formatting) ... ok
+test_totals_row (test_msp.Formatting) ... ok
+test_lf_crlf_eof (test_msp.Framing) ... ok
+test_line_limit_across_chunk_boundaries (test_msp.Framing) ... ok
+test_ascii_digits_only (test_msp.IsNumeric) ... ok
+test_python_pitfalls_this_avoids (test_msp.IsNumeric) ... ok
+test_invalid (test_msp.ValidId) ... ok
+test_valid (test_msp.ValidId) ... ok
+test_contract_equal_and_zero_are_valid (test_msp.ValidationPrecedence) ... ok
+test_each_reason_and_order (test_msp.ValidationPrecedence) ... ok
+test_identity (test_msp.ValidationPrecedence) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.148s
+
+OK
+[exit 0]
+
