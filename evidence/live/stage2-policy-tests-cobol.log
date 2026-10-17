@@ -1,0 +1,38 @@
+$ git rev-parse HEAD
+b1d2a1cba66bb0644118efec2a2881f2db7bcd36
+$ MSP_COMMAND=build/msp-batch python3 -m unittest discover -s tests_policy -v
+test_duplicate_between_two_rejected_records_fatal (test_batch_interface.DuplicateIds) ... ok
+test_duplicate_valid_ids_fatal (test_batch_interface.DuplicateIds) ... ok
+test_duplicate_with_rejected_first_occurrence_fatal (test_batch_interface.DuplicateIds) ... ok
+test_similar_ids_are_distinct (test_batch_interface.DuplicateIds) ... ok
+test_unidentifiable_records_never_collide (test_batch_interface.DuplicateIds) ... ok
+test_4096_byte_line_is_one_invalid_record (test_batch_interface.Framing) ... ok
+test_4096_bytes_plus_crlf_is_accepted (test_batch_interface.Framing) ... ok
+test_4097_byte_final_line_without_newline_is_fatal (test_batch_interface.Framing) ... ok
+test_4097_byte_line_is_fatal (test_batch_interface.Framing) ... ok
+test_blank_line_between_records_is_bad_length_not_eof (test_batch_interface.Framing) ... ok
+test_crlf_equals_lf (test_batch_interface.Framing) ... ok
+test_empty_input_is_successful_zero_batch (test_batch_interface.Framing) ... ok
+test_missing_final_newline_still_processes_last_record (test_batch_interface.Framing) ... ok
+test_10000_records_allowed (test_batch_interface.RecordLimit) ... ok
+test_10001_records_fatal (test_batch_interface.RecordLimit) ... ok
+test_10001st_blank_line_also_counts_as_record (test_batch_interface.RecordLimit) ... ok
+test_contract_does_not_leak_through_rejected_record (test_batch_interface.StateReset) ... ok
+test_mixed_totals (test_batch_interface.StateReset) ... ok
+test_valid_after_malformed_amount_and_short_line (test_batch_interface.StateReset) ... ok
+test_identical_paths_rejected (test_batch_interface.Usage) ... ok
+test_missing_input_file (test_batch_interface.Usage) ... ok
+test_unwritable_output (test_batch_interface.Usage) ... ok
+test_wrong_argument_counts (test_batch_interface.Usage) ... ok
+test_every_case_is_sourced_and_explained (test_policy_ledger.LedgerSelfConsistency) ... ok
+test_recorded_limits_produce_expected_payment (test_policy_ledger.LedgerSelfConsistency) ... ok
+test_batch_succeeds (test_policy_ledger.PolicyLedgerAgainstProgram) ... ok
+test_cms_ex3_is_500_dollars (test_policy_ledger.PolicyLedgerAgainstProgram) ... ok
+test_each_case (test_policy_ledger.PolicyLedgerAgainstProgram) ... ok
+test_totals_reconcile_with_ledger (test_policy_ledger.PolicyLedgerAgainstProgram) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 6.607s
+
+OK
+exit=0
