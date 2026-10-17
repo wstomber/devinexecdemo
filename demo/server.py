@@ -2,7 +2,8 @@
 
 Serves the frontend, evidence assembled from real artifacts (demo/evidence.py), read-only
 raw files, and a "Run it live" action that executes the real COBOL and Python commands into a
-new build/demo-runs/<UTC> folder. Saved rehearsal evidence is never written.
+new build/demo-runs/<UTC> folder. Saved rehearsal evidence is never written. "Start Devin live"
+launches the migration Playbook through the Devin API (demo/devin_launch.py) when DEVIN_API_KEY is set.
 """
 import argparse
 import json
@@ -18,6 +19,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import devin_launch  # noqa: E402
 import evidence  # noqa: E402
 
 ROOT = evidence.ROOT
@@ -135,6 +137,8 @@ class Handler(BaseHTTPRequestHandler):
             data = evidence.build()
             data["live_running"] = LOCK.locked()
             return self.send(200, json.dumps(data))
+        if path == "/api/devin-run":
+            return self.send(200, json.dumps(devin_launch.state()))
         if path.startswith("/raw/"):
             name = path[len("/raw/"):]
             target = (ROOT / name).resolve()
@@ -153,7 +157,11 @@ class Handler(BaseHTTPRequestHandler):
         return self.send(200, target.read_bytes(), ctype)
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/live-run":
+        path = urlparse(self.path).path
+        if path == "/api/devin-run":
+            code, payload = devin_launch.start()
+            return self.send(code, json.dumps(payload))
+        if path != "/api/live-run":
             return self.send(404, "not found", "text/plain")
         started = start_live_run()
         return self.send(202 if started else 409, json.dumps({"started": started}))

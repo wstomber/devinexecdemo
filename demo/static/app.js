@@ -1,5 +1,5 @@
 "use strict";
-let E = null, route = "", cmpKey = null, cmpQuery = "", cmpFilter = "all", cmpPage = 0, poll = null;
+let E = null, route = "", cmpKey = null, cmpQuery = "", cmpFilter = "all", cmpPage = 0, poll = null, D = null, dpoll = null;
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const money = c => { if (c === null || c === undefined || Number.isNaN(c)) return "—"; const neg = c < 0; c = Math.abs(c);
@@ -7,6 +7,7 @@ const money = c => { if (c === null || c === undefined || Number.isNaN(c)) retur
 const cents = c => c === null || c === undefined ? "—" : c.toLocaleString("en-US") + "¢";
 const badge = (s, txt) => `<span class="badge ${esc(s)}">${esc(txt || s)}</span>`;
 const SAVED = `<span class="badge SAVED">SAVED REHEARSAL</span>`, LIVE = `<span class="badge LIVE">CURRENT LIVE EXECUTION</span>`;
+const LIVE_DEVIN = `<span class="badge LIVE">LIVE DEVIN SESSION</span>`;
 const raw = (p, label) => p ? `<a href="/raw/${esc(p)}" target="_blank">${esc(label || p)}</a>` : `<span class="muted">not available</span>`;
 const gh = p => `https://github.com/wstomber/devinexecdemo/blob/${E.git.head || "main"}/${p}`;
 const commit = sha => sha ? `<a href="https://github.com/wstomber/devinexecdemo/commit/${esc(sha)}" target="_blank"><code>${esc(sha.slice(0, 7))}</code></a>` : "UNKNOWN";
@@ -76,6 +77,7 @@ R.overview = async () => {
     <div class="card"><h3>3. Test first</h3>${badge(E.git.tests_before_python.status)}<div class="small">Hand-derived answers, run on COBOL before any Python existed</div></div><div class="arrow">→</div>
     <div class="card"><h3>4. Migrate &amp; compare</h3>${badge(allPassed ? "PASSED" : "FAILED")}<div class="small">${total.toLocaleString()} claims compared, ${Object.values(c).reduce((n, x) => n + (x.mismatches || 0), 0)} mismatches</div></div>
   </div>
+  <h2>Devin, working live</h2><div id="devinslot">${devinCard()}</div>
   <h2>The case that matters</h2>
   <div class="card"><b>CMS-EX3:</b> the provider agreed to accept $13,000 in total. The primary insurer paid $12,500. Medicare owes <b>$500</b> — not $1,500. <a href="#ex3">See the full walkthrough →</a></div>
   <h2>Scope — be honest about it</h2>
@@ -244,13 +246,42 @@ R.review = async () => {
   <h2>Commit history (this checkout)</h2><table><tbody>${E.git.commits.slice(0, 10).map(c => `<tr><td>${commit(c.sha)}</td><td class="small">${esc(c.date)}</td><td>${esc(c.subject)}</td></tr>`).join("")}</tbody></table>
   <h2>Playbooks — Devin can repeat this</h2><div class="grid g2">${(st.playbooks || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">${esc(p.title)}</a></h3><div class="small"><code>${esc(p.id)}</code> · starts from <code>${esc(p.start_ref)}</code> · source ${raw(p.source)}</div>
    <p>Rehearsal run: ${badge(p.fresh_run?.status || "UNKNOWN")} <a href="${esc(p.fresh_run?.session || "#")}" target="_blank">session</a>${p.fresh_run?.pr ? ` · <a href="${esc(p.fresh_run.pr)}" target="_blank">PR</a>` : ""}</p></div>`).join("")}</div>
-  <div class="card" style="margin-top:12px"><h3>Launch Devin live</h3><ol><li>Open <a href="https://app.devin.ai" target="_blank">app.devin.ai</a> and start a new session.</li><li>In the Playbook picker, choose <b>MSP COBOL to Python with evidence</b>.</li>
-   <li>Paste: <div class="cmd"><code>Run this on wstomber/devinexecdemo starting from branch demo/starter-37ceca1.</code><button class="btn sm" data-copy="Run this on wstomber/devinexecdemo starting from branch demo/starter-37ceca1.">Copy</button></div></li><li>Come back to this app; check on the session at the end.</li></ol></div>
+  <h2>Watch Devin do it again, live</h2><div id="devinslot">${devinCard()}</div>
   <h2>Assumptions &amp; limits</h2><ul><li>Synthetic, educational module based on public CMS rules — not CMS production code, not complete Medicare policy.</li><li>Parity is proven for the tested batches (curated 30, synthetic 1,000, edge 24, fatal paths) — not for every possible input.</li><li>Both versions stop on lines over 4,096 bytes or more than 10,000 claims, deliberately identical.</li><li>No performance or cost claims.</li></ul>
   ${(E.expectations?.interface_assumptions) ? `<details><summary>Interface assumptions Devin recorded</summary><pre>${esc(JSON.stringify(E.expectations.interface_assumptions, null, 1))}</pre></details>` : ""}
   ${await mdBlock("docs/migration/02-rule-map.md", "Rule map: policy → COBOL → test → Python")}
   <details><summary>Human interventions and review time (${ev.length} events)</summary><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Human time</th></tr></thead><tbody>${ev.map(e => `<tr><td class="small">${esc(e.timestamp_utc)}</td><td>${esc(e.actor)}</td><td>${esc(e.event)}</td><td>${esc(e.human_intervention_seconds)}</td></tr>`).join("")}</tbody></table><p class="small muted">UNKNOWN means not measured — it is not zero. No efficiency claim is made.</p></details>`;
 };
+
+const MANUAL = "Run this on wstomber/devinexecdemo starting from branch demo/starter-37ceca1.";
+const manualSteps = () => `<ol><li>Open <a href="https://app.devin.ai" target="_blank">app.devin.ai</a> and start a new session.</li><li>In the Playbook picker, choose <b>MSP COBOL to Python with evidence</b>.</li>
+   <li>Paste: <div class="cmd"><code>${MANUAL}</code><button class="btn sm" data-copy="${MANUAL}">Copy</button></div></li></ol>`;
+function devinLabel(s) {
+  if (s.status === "running") return ({waiting_for_user: ["Waiting for input", "UNKNOWN"], waiting_for_approval: ["Waiting for approval", "UNKNOWN"], finished: ["Finished", "PASSED"]})[s.status_detail] || ["Working", "RUNNING"];
+  return ({new: ["Starting", "RUNNING"], claimed: ["Starting", "RUNNING"], resuming: ["Resuming", "RUNNING"], suspended: ["Paused", "UNKNOWN"], exit: ["Finished", "PASSED"], error: ["Error", "FAILED"]})[s.status] || ["Unknown", "UNKNOWN"];
+}
+const devinActive = s => s && ["new", "claimed", "running", "resuming"].includes(s.status) && s.status_detail !== "finished";
+function devinCard() {
+  const intro = `<p>Starts a brand-new Devin session with the saved Playbook <b>MSP COBOL to Python with evidence</b>. It begins from the COBOL-only starter branch and has never seen the finished migration.</p>`;
+  if (!D) return `<div class="card">${intro}<p class="muted">Checking Devin…</p></div>`;
+  const err = D.error ? `<div class="err">${esc(D.error)}</div>` : "";
+  if (!D.configured) return `<div class="card">${intro}${err}<p class="small muted">This copy of the app has no Devin API key, so start it by hand:</p>${manualSteps()}</div>`;
+  const s = D.session, startBtn = label => `<button class="btn primary" data-devin-start="1">${label}</button>`;
+  if (!s) return `<div class="card">${intro}${err}<p>${startBtn("▶ Start Devin live")}</p><p class="small muted">A full migration takes longer than a meeting. Start it early, then come back to it at the end.</p></div>`;
+  const [label, cls] = devinLabel(s), started = s.started_at ? new Date(s.started_at).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) : "";
+  const prs = (s.pull_requests || []).map(p => `<a href="${esc(p.url)}" target="_blank">Pull request ${esc(p.url.split("/").pop())}</a> ${badge((p.state || "open").toUpperCase())}`).join(" · ");
+  return `<div class="card">${intro}${err}
+   <p>${LIVE_DEVIN} ${badge(cls, label)} <span class="small">started ${esc(started)}</span></p>
+   <p><a class="btn primary" href="${esc(s.url)}" target="_blank">Open Devin's session ↗</a> ${prs ? `&nbsp; ${prs}` : devinActive(s) ? `<span class="small muted">&nbsp; Its pull request appears here once Devin opens it.</span>` : `<span class="small muted">&nbsp; No pull request was opened.</span>`}</p>
+   ${s.problem ? `<p class="small muted">Last status check: ${esc(s.problem)}</p>` : ""}
+   ${devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
+}
+async function refreshDevin() {
+  if (!$("#devinslot")) { clearInterval(dpoll); dpoll = null; return; }
+  try { const r = await fetch("/api/devin-run"); D = await r.json(); } catch (e) { D = {configured: true, error: "Could not reach this app's server."}; }
+  const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard();
+  if (!devinActive(D?.session)) { clearInterval(dpoll); dpoll = null; } else if (!dpoll) dpoll = setInterval(refreshDevin, 10000);
+}
 
 function renderLive() {
   const L = E.live, running = E.live_running || L?.status === "RUNNING";
@@ -294,6 +325,7 @@ async function render() {
    <span class="muted">Checkout ${commit(E.git.head)} on <code>${esc(E.git.branch)}</code> · evidence read ${esc(E.generated_at)}</span>
    <span>${idx < VIEWS.length - 1 ? `<a class="btn primary" href="#${VIEWS[idx + 1][0]}">${esc(VIEWS[idx + 1][1])} →</a>` : ""}</span>`;
   renderLive();
+  if ($("#devinslot")) refreshDevin();
 }
 async function load() {
   const r = await fetch("/api/evidence"); if (!r.ok) throw new Error("evidence " + r.status); E = await r.json();
@@ -302,9 +334,10 @@ async function refresh() { const wasRunning = E?.live_running; await load(); ren
   if (wasRunning && !E.live_running) { cmpKey = null; render(); } }
 
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],#runlive");
+  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],#runlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
+  if (t.dataset.devinStart) { t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
   if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; await fetch("/api/live-run", {method: "POST"}); await load(); renderLive(); showSteps(); return; }
   if (t.dataset.steps) { ev.preventDefault(); showSteps(); return; }
   if (t.dataset.close) { $("#drawer").hidden = true; return; }

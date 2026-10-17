@@ -1,0 +1,94 @@
+"""The live-Devin launcher: never leaks the key, never double-starts, and reports failures honestly."""
+import io
+import json
+import os
+import sys
+import tempfile
+import unittest
+import urllib.error
+from pathlib import Path
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "demo"))
+import devin_launch  # noqa: E402
+
+KEY = "cog_test_key_never_shown"
+CREATED = {"session_id": "abc123", "url": "https://app.devin.ai/sessions/abc123", "status": "claimed",
+           "pull_requests": []}
+
+
+class Launcher(unittest.TestCase):
+    def setUp(self):
+        self.state = Path(tempfile.mkdtemp()) / "latest.json"
+        self.patches = [mock.patch.object(devin_launch, "STATE", self.state),
+                        mock.patch.dict(os.environ, {"DEVIN_API_KEY": KEY})]
+        for p in self.patches:
+            p.start()
+        devin_launch._checked["at"] = 0.0
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+
+    def test_without_key_nothing_is_called(self):
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(devin_launch, "call") as call:
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 503)
+        self.assertFalse(payload["configured"])
+        call.assert_not_called()
+
+    def test_start_creates_session_with_playbook_and_starter_branch(self):
+        with mock.patch.object(devin_launch, "call", return_value=CREATED) as call:
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 201)
+        method, path, body = call.call_args.args
+        self.assertEqual((method, path), ("POST", "/sessions"))
+        self.assertEqual(body["playbook_id"], devin_launch.PLAYBOOK_ID)
+        self.assertIn("demo/starter-37ceca1", body["prompt"])
+        self.assertEqual(payload["session"]["url"], CREATED["url"])
+        self.assertNotIn(KEY, json.dumps(payload) + self.state.read_text())
+
+    def test_second_start_while_running_is_refused(self):
+        running = {**CREATED, "status": "running", "status_detail": "working"}
+        with mock.patch.object(devin_launch, "call", side_effect=[CREATED, running]) as call:
+            devin_launch.start()
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 409)
+        self.assertEqual(call.call_count, 2)
+        self.assertEqual(call.call_args.args[0], "GET")
+        self.assertEqual(payload["session"]["status_detail"], "working")
+
+    def test_finished_session_allows_a_new_start(self):
+        finished = {**CREATED, "status": "running", "status_detail": "finished"}
+        with mock.patch.object(devin_launch, "call", return_value=CREATED):
+            devin_launch.start()
+        devin_launch.save({**devin_launch.load(), **finished})
+        with mock.patch.object(devin_launch, "call", return_value={**CREATED, "session_id": "new1"}):
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 201)
+        self.assertEqual(payload["session"]["session_id"], "new1")
+
+    def test_status_refresh_picks_up_pull_request(self):
+        with mock.patch.object(devin_launch, "call", return_value=CREATED):
+            devin_launch.start()
+        devin_launch._checked["at"] = 0.0
+        later = {**CREATED, "status": "running", "status_detail": "working",
+                 "pull_requests": [{"pr_url": "https://github.com/wstomber/devinexecdemo/pull/9", "pr_state": "open"}]}
+        with mock.patch.object(devin_launch, "call", return_value=later) as call:
+            payload = devin_launch.state()
+        self.assertEqual(call.call_args.args, ("GET", "/sessions/devin-abc123"))
+        self.assertEqual(payload["session"]["pull_requests"][0]["state"], "open")
+
+    def test_api_error_is_reported_without_the_key(self):
+        err = urllib.error.HTTPError("u", 403, "Forbidden", {}, io.BytesIO(b'{"detail": "missing UseDevinSessions"}'))
+        with mock.patch.object(devin_launch, "call", side_effect=err):
+            code, payload = devin_launch.start()
+        self.assertEqual(code, 502)
+        self.assertIn("403", payload["error"])
+        self.assertIn("UseDevinSessions", payload["error"])
+        self.assertNotIn(KEY, json.dumps(payload))
+        self.assertIsNone(payload["session"])
+
+
+if __name__ == "__main__":
+    unittest.main()
