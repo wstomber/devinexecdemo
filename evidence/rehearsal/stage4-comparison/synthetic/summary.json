@@ -1,0 +1,42 @@
+{
+  "title": "COBOL vs Python: 1,000-record synthetic batch (seed 20261017)",
+  "input": "build/synthetic.dat",
+  "input_sha256": "56584f8a9c0ce83ea7f8cb002203a57c478ee7ee931e625b4d3b0f4d0f609e69",
+  "verdict": "MATCH",
+  "records_compared": 1000,
+  "record_mismatches": 0,
+  "totals_match": true,
+  "exit_codes": [
+    0,
+    0
+  ],
+  "byte_identical_outputs": true,
+  "cobol": {
+    "command": "build/msp-batch",
+    "results_sha256": "9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9",
+    "totals_sha256": "7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e",
+    "totals": [
+      {
+        "records": "0000001000",
+        "paid": "0000000271",
+        "zero": "0000000729",
+        "invalid": "0000000000",
+        "payment_cents": "000514352570951"
+      }
+    ]
+  },
+  "python": {
+    "command": "python3 python/msp.py",
+    "results_sha256": "9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9",
+    "totals_sha256": "7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e",
+    "totals": [
+      {
+        "records": "0000001000",
+        "paid": "0000000271",
+        "zero": "0000000729",
+        "invalid": "0000000000",
+        "payment_cents": "000514352570951"
+      }
+    ]
+  }
+}

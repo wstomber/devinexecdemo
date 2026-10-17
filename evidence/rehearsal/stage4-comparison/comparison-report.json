@@ -1,0 +1,25 @@
+{
+  "mode": "compare",
+  "command": "build/msp-batch",
+  "candidate": "python3 python/msp.py",
+  "result": "PASS",
+  "migration_comparison": "RUN",
+  "input": "build/synthetic.dat",
+  "expected": null,
+  "timeout_seconds": 10,
+  "differences": [],
+  "baseline_totals": {
+    "records": 1000,
+    "paid": 271,
+    "zero": 729,
+    "invalid": 0,
+    "payment_cents": 514352570951
+  },
+  "candidate_totals": {
+    "records": 1000,
+    "paid": 271,
+    "zero": 729,
+    "invalid": 0,
+    "payment_cents": 514352570951
+  }
+}
