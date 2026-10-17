@@ -1,0 +1,24 @@
+$ python3 -m unittest discover -s tests_policy -v   # MSP_COMMAND default = build/msp-batch (COBOL)
+source_commit=28520cd37a3f7b3224a8d930f296326844e04155  utc=2026-10-17T21:32:57Z  cobc=cobc (GnuCOBOL) 3.1.2.0
+test_10000_records_succeed_and_10001_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_crlf_and_missing_final_newline_match_lf (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_identifiable_rejected_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_duplicate_valid_id_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_empty_input_is_zero_record_batch (test_policy.BatchInterfaceTests) ... ok
+test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal (test_policy.BatchInterfaceTests) ... ok
+test_missing_input_exits_2 (test_policy.BatchInterfaceTests) ... ok
+test_state_resets_after_rejected_contract_and_payment_in_full (test_policy.BatchInterfaceTests) ... ok
+test_unidentifiable_rejections_never_collide (test_policy.BatchInterfaceTests) ... ok
+test_usage_errors_exit_2 (test_policy.BatchInterfaceTests) ... ok
+test_ledger_totals_follow_from_rows (test_policy.LedgerArithmeticAudit) ... ok
+test_stated_limits_follow_from_inputs_and_expected_payment_is_lowest (test_policy.LedgerArithmeticAudit) ... ok
+test_batch_succeeds (test_policy.PolicyLedgerTests) ... ok
+test_cms_ex3_pays_500_dollars_not_1500 (test_policy.PolicyLedgerTests) ... ok
+test_every_case_matches_hand_derived_expectation (test_policy.PolicyLedgerTests) ... ok
+test_totals_match_ledger_and_rows (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.513s
+
+OK
+[exit 0]
