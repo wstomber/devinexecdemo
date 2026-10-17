@@ -1,0 +1,6 @@
+COMMAND: cmp evidence/live/comparison/curated/cobol-results.csv evidence/live/comparison/curated/python-results.csv; cmp evidence/live/comparison/curated/cobol-totals.csv evidence/live/comparison/curated/python-totals.csv; cmp evidence/live/comparison/synthetic/cobol-results.csv evidence/live/comparison/synthetic/python-results.csv; cmp evidence/live/comparison/synthetic/cobol-totals.csv evidence/live/comparison/synthetic/python-totals.csv
+curated results: identical
+curated totals: identical
+synthetic results: identical
+synthetic totals: identical
+exit=0

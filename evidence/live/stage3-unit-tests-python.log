@@ -1,0 +1,21 @@
+COMMAND: python3 -m unittest discover -s tests_python -v
+test_main_exit_codes_and_byte_outputs (test_msp.BatchProcessing) ... ok
+test_output_formatting_is_fixed_width (test_msp.BatchProcessing) ... ok
+test_record_limit_including_blank_records (test_msp.BatchProcessing) ... ok
+test_state_resets_and_duplicate_rejected_identifiers_are_fatal (test_msp.BatchProcessing) ... ok
+test_lf_crlf_final_partial_and_blank_lines (test_msp.Framing) ... ok
+test_line_size_limits_and_crlf_buffer_edge (test_msp.Framing) ... ok
+test_cms_example_3_and_no_contract (test_msp.PaymentCalculation) ... ok
+test_each_limit_can_control_and_equal_limits (test_msp.PaymentCalculation) ... ok
+test_one_cent_boundaries_zero_precedence_and_max_values (test_msp.PaymentCalculation) ... ok
+test_zero_payment_branch_precedence (test_msp.PaymentCalculation) ... ok
+test_ascii_digit_fields_reject_non_ascii_and_other_characters (test_msp.RecordValidation) ... ok
+test_each_validation_reason (test_msp.RecordValidation) ... ok
+test_id_rules_and_provisional_identifier (test_msp.RecordValidation) ... ok
+test_precedence_is_length_id_amount_contract_flag (test_msp.RecordValidation) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.047s
+
+OK
+exit=0
