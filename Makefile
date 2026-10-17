@@ -33,3 +33,10 @@ capture-baseline: build
 
 clean:
 	rm -rf build tools/__pycache__ tests/__pycache__
+
+.PHONY: demo demo-refresh
+demo: build generate
+	$(PYTHON) demo/server.py
+
+demo-refresh: build generate
+	$(PYTHON) demo/server.py --run-once
