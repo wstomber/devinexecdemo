@@ -6,4 +6,4 @@
 - [04 — Legacy walkthrough](04-legacy-walkthrough.md)
 - [05 — COBOL-to-Python guide](05-cobol-to-python-guide.md)
 - [06 — Maintenance guide](06-maintenance-guide.md)
-- [Evidence index](../evidence-index.md)
+- [Evidence index](evidence-index.md)
