@@ -186,6 +186,13 @@ def result_row(record_no: int, result: Result) -> str:
     return f"{record_no:010d},{result.claim_id},{result.status},{result.payment_cents:010d},{result.reason}"
 
 
+def open_output(path: str):
+    try:
+        return open(path, "w", encoding="ascii", newline="\n")
+    except OSError as exc:
+        raise FatalBatchError(f"cannot open output: {exc}") from exc
+
+
 def run(input_path: str, output_path: str, totals_path: str) -> None:
     batch = Batch()
     try:
@@ -193,16 +200,14 @@ def run(input_path: str, output_path: str, totals_path: str) -> None:
     except OSError as exc:
         raise FatalBatchError(f"cannot open input: {exc}") from exc
     with source:
-        try:
-            output = open(output_path, "w", encoding="ascii", newline="\n")
-            totals = open(totals_path, "w", encoding="ascii", newline="\n")
-        except OSError as exc:
-            raise FatalBatchError(f"cannot open output: {exc}") from exc
-        with output, totals:
-            output.write(RESULTS_HEADER + "\n")
-            for record in read_records(source):
-                output.write(result_row(batch.records + 1, batch.process(record)) + "\n")
-            totals.write(TOTALS_HEADER + "\n" + batch.totals_row() + "\n")
+        output = open_output(output_path)
+        with output:
+            totals = open_output(totals_path)
+            with totals:
+                output.write(RESULTS_HEADER + "\n")
+                for record in read_records(source):
+                    output.write(result_row(batch.records + 1, batch.process(record)) + "\n")
+                totals.write(TOTALS_HEADER + "\n" + batch.totals_row() + "\n")
 
 
 def main(argv=None) -> int:

@@ -2,10 +2,12 @@
 
     python3 -m unittest discover -s tests_python -v
 """
+import gc
 import io
 import sys
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -190,6 +192,14 @@ class MainTests(unittest.TestCase):
         self.assertEqual(msp.main(self.paths("in.dat", "r.csv", "r.csv")), 2)
         self.assertEqual(msp.main(self.paths("absent.dat", "r.csv", "t.csv")), 2)
         self.assertEqual(msp.main(self.paths("in.dat", "missing-dir/r.csv", "t.csv")), 2)
+
+    def test_totals_open_failure_closes_results_handle(self):
+        (self.p / "t-dir").mkdir()
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ResourceWarning)
+            self.assertEqual(msp.main(self.paths("in.dat", "r.csv", "t-dir")), 2)
+            gc.collect()
+        self.assertEqual([w for w in caught if issubclass(w.category, ResourceWarning)], [])
 
 
 if __name__ == "__main__":
