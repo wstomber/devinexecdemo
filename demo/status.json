@@ -1,0 +1,70 @@
+{
+  "recorded_at": "2026-10-17T22:40:00Z",
+  "note": "Recorded by Devin from GitHub and Devin session status at recorded_at. Open the links for current state.",
+  "deepwiki": "https://app.devin.ai/wiki/wstomber/devinexecdemo",
+  "pull_requests": [
+    {
+      "number": 2,
+      "title": "[rehearsal] MSP COBOL to Python with evidence",
+      "state": "MERGED",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/2",
+      "commits_url": "https://github.com/wstomber/devinexecdemo/pull/2/commits",
+      "role": "The migration itself (stages 1-4 + docs)"
+    },
+    {
+      "number": 3,
+      "title": "Fix Devin Review findings from #2",
+      "state": "OPEN",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/3",
+      "role": "Devin Review found 3 tooling bugs after merge; fixed with regression tests (no payment change)"
+    },
+    {
+      "number": 4,
+      "title": "Optional --summary-json (maintainability Playbook run)",
+      "state": "OPEN",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/4",
+      "role": "Maintainability follow-up: tests first, then code; CSV outputs byte-identical"
+    },
+    {
+      "number": 5,
+      "title": "Playbook rehearsal: fresh migration from the COBOL-only starter",
+      "state": "OPEN",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/5",
+      "commits_url": "https://github.com/wstomber/devinexecdemo/pull/5/commits",
+      "role": "A separate Devin session ran the migration Playbook from scratch; targets demo/starter-37ceca1, never merged"
+    },
+    {
+      "number": 6,
+      "title": "Migration Evidence app (this app)",
+      "state": "OPEN",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/6",
+      "role": "The app you are looking at"
+    }
+  ],
+  "playbooks": [
+    {
+      "title": "MSP COBOL to Python with evidence",
+      "id": "playbook-f242f29f76f8440ea96928dfeec1d441",
+      "url": "https://app.devin.ai/settings/playbooks/f242f29f76f8440ea96928dfeec1d441",
+      "source": "docs/playbooks/msp-cobol-to-python.md",
+      "start_ref": "demo/starter-37ceca1",
+      "fresh_run": {
+        "session": "https://app.devin.ai/sessions/237943a1ebdc487a92de2320fc5d281f",
+        "status": "PASSED",
+        "pr": "https://github.com/wstomber/devinexecdemo/pull/5"
+      }
+    },
+    {
+      "title": "MSP synthetic maintainability change",
+      "id": "playbook-86114f1b6be442b69a02bce8716a212c",
+      "url": "https://app.devin.ai/settings/playbooks/86114f1b6be442b69a02bce8716a212c",
+      "source": "docs/playbooks/msp-maintainability-change.md",
+      "start_ref": "main",
+      "fresh_run": {
+        "session": "https://app.devin.ai/sessions/c1edaf341e244f75a3b7ce0b9b96899b",
+        "status": "PASSED",
+        "pr": "https://github.com/wstomber/devinexecdemo/pull/4"
+      }
+    }
+  ]
+}
