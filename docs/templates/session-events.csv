@@ -17,3 +17,4 @@ session_id,timestamp_utc,actor,event,elapsed_seconds,human_intervention_seconds,
 7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,0,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --input build/edge.dat --name edge,0,evidence/live/stage4-side-by-side.log,
 7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:35Z,devin,command,2,UNKNOWN,UNKNOWN,python3 tools/side_by_side.py --fatal,0,evidence/live/stage4-side-by-side.log,
 7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:10:41+00:00,devin,commit 5bf829f,,UNKNOWN,UNKNOWN,git commit,0,,"Stage 4: COBOL vs Python comparisons (curated, synthetic, adversarial edge, fatal paths): 0 mismatches"
+7909f87127ea43d3af55ee357ca75c3c,2026-10-17T23:14:29Z,devin,pr_opened,,UNKNOWN,UNKNOWN,git push + create PR,0,https://github.com/wstomber/devinexecdemo/pull/9,base demo/starter-37ceca1; not merged

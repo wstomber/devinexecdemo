@@ -8,7 +8,7 @@
 | Second Playbook ("MSP synthetic maintainability change") | NOT_CREATED in this session (out of this run's scope) |
 | Starter | `demo/starter-37ceca1` = `37ceca17f110536d55261d5d19aa187781dd8851` |
 | Branch | `devin/1792278045-msp-python-migration-live` |
-| PR | into `demo/starter-37ceca1` (not `main`); not merged |
+| PR | https://github.com/wstomber/devinexecdemo/pull/9 into `demo/starter-37ceca1` (not `main`); not merged |
 | Environment | [evidence/live/environment.txt](../../evidence/live/environment.txt) |
 | Human intervention / review time | UNKNOWN |
 
@@ -20,7 +20,7 @@
 | 2 | `d085746` | Independent ledger + batch tests, run against COBOL — **before any Python file** |
 | 3 | `57aafd3` | `python/msp.py`, unit tests, Stage 2 tests re-run unchanged |
 | 4 | `5bf829f` | Comparisons and side-by-side reports |
-| 5 | (this commit) | Rule map, primer, walkthrough, guides, this index, session events |
+| 5 | `5dc79b5` | Rule map, primer, walkthrough, guides, this index, session events |
 
 ## Seven presentation steps (docs/demo-runbook.md)
 
