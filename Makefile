@@ -1,0 +1,29 @@
+PYTHON ?= python3
+COBC ?= cobc
+COBFLAGS ?= -Wall -debug
+BASELINE ?= build/msp-batch
+CANDIDATE ?=
+export CANDIDATE
+
+.PHONY: build baseline generate compare test clean
+build: build/msp-batch
+
+build/msp-batch: cobol/batch.cob cobol/validate.cob cobol/payment.cob cobol/copybooks/claim.cpy
+	mkdir -p build
+	$(COBC) -x -free $(COBFLAGS) -I cobol/copybooks -o $@ cobol/batch.cob cobol/validate.cob cobol/payment.cob
+
+baseline: build
+	$(PYTHON) tools/verify.py baseline --command '$(BASELINE)' --report build/baseline-report.json
+
+generate:
+	$(PYTHON) tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+	$(PYTHON) tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+
+compare: build generate
+	$(PYTHON) tools/verify.py compare --command '$(BASELINE)' --candidate "$$CANDIDATE" --report build/comparison-report.json
+
+test: baseline
+	$(PYTHON) -m unittest discover -s tests -v
+
+clean:
+	rm -rf build tools/__pycache__ tests/__pycache__

@@ -1,0 +1,281 @@
+{
+  "records": [
+    {
+      "record_no": 1,
+      "claim_id": "CMS-EX1",
+      "status": "PAID",
+      "payment_cents": 150000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "CMS 40.8.3 Example 1, PDF page 82",
+      "rationale": "CMS Example 1: min(2200000-2050000,2200000-155600,2500000-2050000,2500000-155600)=150000 cents."
+    },
+    {
+      "record_no": 2,
+      "claim_id": "CMS-EX3",
+      "status": "PAID",
+      "payment_cents": 50000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "CMS 40.8.3 Example 3, PDF pages 83-84",
+      "rationale": "CMS Example 3: contractual basis 1300000; limits 1244400, 150000, 50000, 1144400 cents; lowest is 50000."
+    },
+    {
+      "record_no": 3,
+      "claim_id": "ORDINARY",
+      "status": "PAID",
+      "payment_cents": 60000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "80000 gross less 20000 primary; primary exceeds 15000 deductions."
+    },
+    {
+      "record_no": 4,
+      "claim_id": "CHARGE-LIMIT",
+      "status": "PAID",
+      "payment_cents": 50000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "60000 charge cap less 10000 primary."
+    },
+    {
+      "record_no": 5,
+      "claim_id": "DEDUCT-LIMIT",
+      "status": "PAID",
+      "payment_cents": 60000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "80000 gross less 20000 combined deductions."
+    },
+    {
+      "record_no": 6,
+      "claim_id": "CONTRACT-DED",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "DEDUCTIONS_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "30000 deductions exceed 25000 contractual cap."
+    },
+    {
+      "record_no": 7,
+      "claim_id": "PRIMARY-EQ",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "PRIMARY_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Primary equals gross cap."
+    },
+    {
+      "record_no": 8,
+      "claim_id": "PRIMARY-HIGH",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "PRIMARY_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Primary exceeds covered charges by one cent."
+    },
+    {
+      "record_no": 9,
+      "claim_id": "FULL-FIRST",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "PAYMENT_IN_FULL",
+      "origin": "synthetic",
+      "rationale": "Payment-in-full precedes both cap reasons."
+    },
+    {
+      "record_no": 10,
+      "claim_id": "ALL-ZERO",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "PRIMARY_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Valid zeros: primary equals zero cap; primary reason precedes deductions."
+    },
+    {
+      "record_no": 11,
+      "claim_id": "NO-PRIMARY",
+      "status": "PAID",
+      "payment_cents": 80000,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "No primary payment or deductions; gross cap payable."
+    },
+    {
+      "record_no": 12,
+      "claim_id": "ONE-CENT",
+      "status": "PAID",
+      "payment_cents": 1,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "One cent gross cap."
+    },
+    {
+      "record_no": 13,
+      "claim_id": "CENT-BELOW",
+      "status": "PAID",
+      "payment_cents": 1,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "Primary one cent below gross cap."
+    },
+    {
+      "record_no": 14,
+      "claim_id": "CONTRACT-0",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "PRIMARY_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Explicit zero contract differs from absent contract; zero cap."
+    },
+    {
+      "record_no": 15,
+      "claim_id": "DEDUCT-EQ",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "DEDUCTIONS_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Combined deductions equal 500 gross cap."
+    },
+    {
+      "record_no": 16,
+      "claim_id": "DEDUCT-HIGH",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "DEDUCTIONS_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "Deductible exceeds cap by one cent; clamp at zero."
+    },
+    {
+      "record_no": 17,
+      "claim_id": "COINS-CENT",
+      "status": "PAID",
+      "payment_cents": 1,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "100 less 99 coinsurance leaves one cent."
+    },
+    {
+      "record_no": 18,
+      "claim_id": "TIE",
+      "status": "PAID",
+      "payment_cents": 100,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "Primary equals combined deductions; 200 less 100."
+    },
+    {
+      "record_no": 19,
+      "claim_id": "MAX-DEDUCT",
+      "status": "ZERO",
+      "payment_cents": 0,
+      "reason": "DEDUCTIONS_AT_CAP",
+      "origin": "synthetic",
+      "rationale": "19999999998 combined deductions require an eleven-digit intermediate."
+    },
+    {
+      "record_no": 20,
+      "claim_id": "MAX-PAY",
+      "status": "PAID",
+      "payment_cents": 9999999999,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "Largest representable payment; batch total exceeds one record width."
+    },
+    {
+      "record_no": 21,
+      "claim_id": "@0000000021",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_LENGTH",
+      "origin": "synthetic",
+      "rationale": "Truncated record rejected before ID and numeric checks."
+    },
+    {
+      "record_no": 22,
+      "claim_id": "@0000000022",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_LENGTH",
+      "origin": "synthetic",
+      "rationale": "Unsupported appended field makes 74 bytes."
+    },
+    {
+      "record_no": 23,
+      "claim_id": "@0000000023",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_ID",
+      "origin": "synthetic",
+      "rationale": "Missing ID rejected; use synthetic row identity."
+    },
+    {
+      "record_no": 24,
+      "claim_id": "MISSING",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_AMOUNT",
+      "origin": "synthetic",
+      "rationale": "Required gross field absent; spaces are not zero."
+    },
+    {
+      "record_no": 25,
+      "claim_id": "SIGNED",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_AMOUNT",
+      "origin": "synthetic",
+      "rationale": "Signed amounts unsupported; reject before arithmetic."
+    },
+    {
+      "record_no": 26,
+      "claim_id": "DECIMAL",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_AMOUNT",
+      "origin": "synthetic",
+      "rationale": "Decimal point unsupported in integer-cent field."
+    },
+    {
+      "record_no": 27,
+      "claim_id": "BADOPTION",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_AMOUNT",
+      "origin": "synthetic",
+      "rationale": "Partial optional sentinel is malformed."
+    },
+    {
+      "record_no": 28,
+      "claim_id": "HIGHCONTRACT",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_CONTRACT",
+      "origin": "synthetic",
+      "rationale": "Contract above charges is outside the lower-amount interface."
+    },
+    {
+      "record_no": 29,
+      "claim_id": "BADFLAG",
+      "status": "INVALID",
+      "payment_cents": 0,
+      "reason": "BAD_FLAG",
+      "origin": "synthetic",
+      "rationale": "Unsupported full indicator; no truthy coercion."
+    },
+    {
+      "record_no": 30,
+      "claim_id": "AFTER-ERROR",
+      "status": "PAID",
+      "payment_cents": 100,
+      "reason": "SECONDARY_PAYABLE",
+      "origin": "synthetic",
+      "rationale": "Positive record follows invalid records and an earlier contract; proves per-record reset."
+    }
+  ],
+  "totals": {
+    "records": 30,
+    "paid": 12,
+    "zero": 9,
+    "invalid": 9,
+    "payment_cents": 10000450202
+  }
+}

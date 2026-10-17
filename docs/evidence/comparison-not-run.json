@@ -1,0 +1,11 @@
+{
+  "mode": "compare",
+  "command": "build/msp-batch",
+  "candidate": null,
+  "result": "NOT_RUN",
+  "migration_comparison": "NOT_RUN",
+  "input": "build/synthetic.dat",
+  "expected": null,
+  "timeout_seconds": 10,
+  "error": "Python candidate not supplied; migration comparison has not run"
+}
