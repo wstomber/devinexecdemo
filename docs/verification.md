@@ -26,7 +26,7 @@ Results:
 | Independent curated baseline | PASS: all 30 records match IDs/status/reason/exact cents |
 | Curated counts | 12 PAID, 9 ZERO, 9 INVALID |
 | Curated total | 10,000,450,202 cents |
-| Batch/harness tests | 16 tests passed |
+| Batch/harness tests | 17 tests passed |
 | Seeded input generation | 1,000 valid records, seed 20261017, deterministic |
 | Synthetic execution and structural reconciliation | 271 PAID, 729 ZERO, 0 INVALID |
 | Synthetic observed total (not an independent oracle) | 514,352,570,951 cents |
@@ -48,6 +48,14 @@ newline, control bytes, duplicate IDs including identifiable invalid records,
 oversized lines, missing input, unwritable output, the batch limit, serialization
 validation, and the seeded batch. Curated expectations exercise the payment
 boundaries. No unexecuted check is counted as passed.
+
+The first Ubuntu CI run with GnuCOBOL 3.1.2 exposed silent truncation of oversized
+LINE SEQUENTIAL input that the local 3.2 runtime rejected. The reader now uses
+fixed one-byte sequential reads and explicit line-length enforcement, preserving
+the same interface across both versions. The regression tests cover 4,096-byte
+and 4,097-byte lines with LF, CRLF, and no final newline. All 17 tests pass
+locally after this correction; consult the PR checks for the Linux/container
+result on the final commit.
 
 `docs/evidence/` preserves the initial baseline report and explicit missing-candidate
 report. They describe the starter at verification time; regenerate `build/` reports

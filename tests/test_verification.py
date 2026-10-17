@@ -158,10 +158,18 @@ class VerificationTests(unittest.TestCase):
                          ["BAD_AMOUNT", "BAD_AMOUNT", "BAD_ID", "BAD_FLAG"])
 
     def test_oversized_physical_line_aborts_without_splitting(self):
-        self.batch.write_text("X" * 4097 + "\n")
-        result = subprocess.run([BASELINE, str(self.batch), str(self.directory / "out"),
-                                 str(self.directory / "total")], capture_output=True)
-        self.assertEqual(result.returncode, 2)
+        for suffix in ("\n", "\r\n", ""):
+            self.batch.write_bytes(("X" * 4097 + suffix).encode("ascii"))
+            result = subprocess.run([BASELINE, str(self.batch), str(self.directory / "out"),
+                                     str(self.directory / "total")], capture_output=True)
+            self.assertEqual(result.returncode, 2)
+
+    def test_maximum_transport_length_is_one_invalid_record(self):
+        for suffix in ("\n", "\r\n", ""):
+            self.batch.write_bytes(("X" * 4096 + suffix).encode("ascii"))
+            rows, totals = run(BASELINE, self.batch, batch_identities(self.batch), 5)
+            self.assertEqual(totals["records"], 1)
+            self.assertEqual(rows[1]["reason"], "BAD_LENGTH")
 
     def test_identifiable_invalid_duplicate_is_fatal(self):
         line = serialize(self.cases[0]["input"])

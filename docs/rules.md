@@ -90,6 +90,7 @@ Examples 1 and 3. No application behavior silently incorporates $3,822.
 | Four limits / prospective formula | `payment.cob`, `payment-cap`, `deductions`, `reduction-amount` |
 | No negative payment and reason precedence | `payment.cob`, ordered zero branches before subtraction |
 | Independent record state and totals | `batch.cob`, `process-record` and `main` |
+| Portable LF/CRLF framing and explicit transport bound | `batch.cob`, byte read loop and `finish-line` |
 | Duplicate IDs, 10,000-record limit, file failure | `batch.cob`, `process-record` and `fatal-io` |
 
 ## Fixture-to-rule mapping

@@ -4,16 +4,15 @@ environment division.
 input-output section.
 file-control.
     select claims-file assign to input-path
-        organization line sequential file status input-status.
+        organization sequential file status input-status.
     select results-file assign to output-path
         organization line sequential file status output-status.
     select totals-file assign to totals-path
         organization line sequential file status totals-status.
 data division.
 file section.
-fd claims-file record varying from 1 to 4096
-    depending on input-length.
-01 input-record pic x(4096).
+fd claims-file record contains 1 characters.
+01 input-byte pic x.
 fd results-file.
 01 output-record pic x(160).
 fd totals-file.
@@ -23,7 +22,8 @@ working-storage section.
 01 output-path pic x(1024).
 01 totals-path pic x(1024).
 01 argument-count binary-long.
-01 input-length binary-long.
+01 input-length binary-long value 0.
+01 input-record pic x(4097).
 01 input-status pic xx.
 01 output-status pic xx.
 01 totals-status pic xx.
@@ -59,10 +59,10 @@ main.
         move 2 to return-code
         goback
     end-if
-    *> Preserve control bytes and avoid splitting oversized physical lines.
+    *> Fixed one-byte reads avoid version-dependent LINE SEQUENTIAL
+    *> truncation. Line boundaries and the transport limit are explicit.
     set environment "COB_LS_NULLS" to "N"
     set environment "COB_LS_VALIDATE" to "N"
-    set environment "COB_LS_SPLIT" to "N"
     open input claims-file
     if input-status not = "00" perform fatal-io end-if
     move 1 to input-open
@@ -74,12 +74,21 @@ main.
     move 1 to totals-open
     move "record_no,claim_id,status,payment_cents,reason" to output-record
     perform write-result
+    move spaces to input-record
     perform until eof-flag = 1
-        move spaces to input-record
         read claims-file
         evaluate input-status
-          when "10" move 1 to eof-flag
-          when "00" perform process-record
+          when "10"
+            if input-length > 0 perform finish-line end-if
+            move 1 to eof-flag
+          when "00"
+            if input-byte = x"0A"
+                perform finish-line
+            else
+                if input-length >= 4097 perform fatal-io end-if
+                add 1 to input-length
+                move input-byte to input-record(input-length:1)
+            end-if
           when other perform fatal-io
         end-evaluate
     end-perform
@@ -93,6 +102,20 @@ main.
     perform close-files
     move 0 to return-code
     goback.
+finish-line.
+    if input-length > 0
+        if input-record(input-length:1) = x"0D"
+            move space to input-record(input-length:1)
+            subtract 1 from input-length
+        end-if
+    end-if
+    if input-length > 4096
+        display "input line exceeds 4096 bytes" upon syserr
+        perform fatal-io
+    end-if
+    perform process-record
+    move 0 to input-length
+    move spaces to input-record.
 process-record.
     if record-count >= 10000
         display "batch exceeds 10000 records" upon syserr
