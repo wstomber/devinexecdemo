@@ -60,7 +60,7 @@ Stage 5 refresh: [policy tests](../../evidence/live/stage5-policy-tests-python.l
 - Session: [https://app.devin.ai/sessions/237943a1ebdc487a92de2320fc5d281f](https://app.devin.ai/sessions/237943a1ebdc487a92de2320fc5d281f)
 - Playbook identity used: **COMPLETE** — “MSP COBOL to Python with evidence”.
 - Playbook ID: **UNKNOWN** — not recorded here.
-- PR: **NOT_RUN** — to be added.
+- PR: **COMPLETE** — [wstomber/devinexecdemo#5](https://github.com/wstomber/devinexecdemo/pull/5) (base `demo/starter-37ceca1`, not merged).
 - Human review time: **UNKNOWN**.
 - Human intervention time: **UNKNOWN**.
 
