@@ -27,6 +27,8 @@ def run(command, input_path, out_dir, label):
     input_path = Path(input_path).resolve()
     results = (out_dir / f"{label}-results.csv").resolve()
     totals = (out_dir / f"{label}-totals.csv").resolve()
+    if input_path in (results, totals):
+        sys.exit(f"--input must not be one of the generated outputs: {input_path}")
     for stale in (results, totals):
         stale.unlink(missing_ok=True)
     proc = subprocess.run(shlex.split(command) + [str(input_path), str(results), str(totals)],
