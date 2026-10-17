@@ -5,6 +5,10 @@ establish a verified COBOL baseline, ask Devin to migrate it to Python, and revi
 tests and exact output comparisons. **The Python payment implementation is
 intentionally absent.** Python here only serializes fixtures and verifies outputs.
 
+Read the [business and presentation brief](docs/demo-brief.md) first for the
+interview background, customer problem being illustrated, reason for choosing this
+example, intended audience, and the rehearsal-to-live Playbook idea.
+
 This is a **synthetic educational application derived from public rules**. It is
 not CMS production source code, a complete claims processor, or a replica of CWF,
 FISS, or MSPPAY. Reason codes and file formats are demo-defined, not CMS codes.

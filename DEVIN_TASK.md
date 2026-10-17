@@ -1,5 +1,17 @@
 # Devin handoff: MSP modernization, evidence, and native Playbooks
 
+**Read docs/demo-brief.md first.** This is a Cognition interview presentation with
+CMS as the selected customer scenario. We chose COBOL modernization from the
+assignment's three themes and are using independent tests and exact comparisons
+to make the result assessable. The business question is whether you can understand
+an unfamiliar legacy payment rule, migrate it safely within this scope, and give
+a human reviewable evidence. First produce actual rehearsal examples, then native
+Playbooks for repeatable fresh/live runs. Do not invent CMS internal facts or
+productivity claims. The $500 contractual-cap case is the main business story.
+Begin your explanation with the customer problem, why that financial difference
+matters, the three evidence layers, and what the human reviewer should assess;
+then proceed with execution rather than stopping at an outline.
+
 Start from this prepared repository on `main`, or the pinned starter commit supplied
 by the presenter. Create a new working branch. Read README.md, docs/rules.md,
 docs/cms-example-3.md, docs/demo-readiness.md, and docs/demo-runbook.md.

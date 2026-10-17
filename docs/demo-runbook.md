@@ -1,5 +1,9 @@
 # Seven-step demonstration: completed example and fresh live run
 
+Read [the business and presentation brief](demo-brief.md) before rehearsing. It
+explains the interview assignment, selected customer scenario, and customer problem
+this code and evidence are meant to illustrate.
+
 This is a synthetic educational MSP application derived from public CMS rules.
 It is not CMS production code. Claim consistency only for the tested scope.
 
