@@ -90,19 +90,30 @@ def is_active(session):
     return bool(session) and session.get("status") in BLOCKING and session.get("status_detail") != "finished"
 
 
-def state(max_age=8):
-    """Latest launched session, refreshed from the API at most every max_age seconds."""
-    with LOCK:
+def state(max_age=8, wait=False):
+    """Latest launched session, refreshed from the API at most every max_age seconds.
+
+    Browser polls never queue behind a slow refresh: if another thread holds LOCK they get the saved state.
+    """
+    if not LOCK.acquire(blocking=wait):
+        return snapshot(load())
+    try:
         session = load()
         if session and configured() and session.get("status") not in FINAL and \
                 time.monotonic() - _checked["at"] >= max_age:
-            _checked["at"] = time.monotonic()
             sid = session["session_id"]
             try:
                 merge(session, call("GET", f"/sessions/{sid if sid.startswith('devin-') else 'devin-' + sid}"))
             except Exception as exc:  # noqa: BLE001 - shown on screen, never fatal
                 session["problem"] = problem(exc)
+            _checked["at"] = time.monotonic()
             save(session)
+        return snapshot(session)
+    finally:
+        LOCK.release()
+
+
+def snapshot(session):
     return {"configured": configured(), "playbook_id": PLAYBOOK_ID, "start_branch": START_BRANCH,
             "session": session}
 
@@ -113,7 +124,7 @@ def start():
         return 503, {**state(), "error": "This server has no DEVIN_API_KEY, so it cannot start Devin. "
                                          "Use the manual steps instead."}
     with LOCK:
-        current = state(max_age=0)["session"]
+        current = state(max_age=0, wait=True)["session"]
         if is_active(current):
             return 409, {**state(), "error": "A live Devin session is already running."}
         try:

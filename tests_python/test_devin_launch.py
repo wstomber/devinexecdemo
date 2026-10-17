@@ -79,6 +79,23 @@ class Launcher(unittest.TestCase):
         self.assertEqual([c.args[0] for c in call.call_args_list], ["GET", "POST"])
         self.assertEqual(payload["session"]["session_id"], "new2")
 
+    def test_poll_does_not_queue_behind_a_slow_refresh(self):
+        import threading
+        with mock.patch.object(devin_launch, "call", return_value=CREATED):
+            devin_launch.start()
+        devin_launch._checked["at"] = 0.0
+        held, release = threading.Event(), threading.Event()
+        holder = threading.Thread(target=lambda: (devin_launch.LOCK.acquire(), held.set(), release.wait(),
+                                                  devin_launch.LOCK.release()))
+        holder.start(); held.wait()
+        try:
+            with mock.patch.object(devin_launch, "call") as call:
+                payload = devin_launch.state()
+            call.assert_not_called()
+            self.assertEqual(payload["session"]["session_id"], "abc123")
+        finally:
+            release.set(); holder.join()
+
     def test_paused_session_is_kept_not_replaced(self):
         with mock.patch.object(devin_launch, "call", return_value=CREATED):
             devin_launch.start()
