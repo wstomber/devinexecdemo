@@ -197,3 +197,13 @@ Devin Playbooks for migration and the [synthetic follow-up](docs/follow-up-exerc
 Those Playbooks and completed migration examples do not exist merely because
 their specifications are checked into this repo. Use a pinned starter commit for
 fresh live runs, and record actual work plus human review/intervention time.
+
+## Presentation app (Migration Evidence)
+
+```sh
+make demo          # compiles COBOL, generates batches, serves http://localhost:8765
+make demo-refresh  # runs every live check once into build/demo-runs/<UTC>/ (terminal only)
+```
+
+Requires `python3` 3.10+, `make`, `git`, and GnuCOBOL 3.x (`sudo apt-get install -y gnucobol gcc make`). No other packages.
+Presenter guide: `docs/presentation/presenter-guide.md`. Readiness checklist: `docs/presentation/readiness-checklist.md`.
