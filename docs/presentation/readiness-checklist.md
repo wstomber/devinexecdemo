@@ -29,7 +29,7 @@ Recorded 2026-10-17 by Devin. Re-check anything marked PENDING on the day.
 | Item | Status | What it means for the demo |
 |---|---|---|
 | PR #3 (review fixes), PR #4 (`--summary-json`), PR #5 (fresh rehearsal) | OPEN, not merged | Fine to show as open. PR #5 is never merged. |
-| Security questions not covered by public docs: Bedrock region/GovCloud for a CMS deployment, HIPAA BAA, FedRAMP timeline for Devin Cloud | Confirm with Cognition | Ask your Cognition contact before the interview. |
+| Security questions not covered by public docs: HIPAA BAA, FedRAMP timeline for Devin Cloud | Confirm with Cognition | Ask your Cognition contact before the interview. |
 | Hosted preview link | Only works while the Devin session is awake | See "On presentation day". |
 | Human review / intervention time | UNKNOWN | Not measured, so no time-saved claim. |
 | Full 18-minute spoken rehearsal by the presenter | NOT_RUN | Timings in the guide are estimates, not measured. |

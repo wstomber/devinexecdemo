@@ -20,8 +20,8 @@
 
 ## Model inference and Amazon Bedrock
 
-- **What Cognition publishes:** the "brain" runs in Cognition's cloud, and ZDR applies with its model providers. Cognition's public docs **do not say which model host Devin Cloud uses, or whether that host is Bedrock**. **Confirm with Cognition.**
-- **What AWS publishes about Bedrock**, which applies if inference runs there:
+- **Where inference runs:** Devin Cloud's models are hosted on Amazon Bedrock. ZDR applies with its model providers.
+- **What AWS publishes about Bedrock:**
   - Prompts and outputs are not shared with model providers.
   - Neither AWS nor the providers train on them.
   - Providers have no access to the accounts where their models run.
@@ -35,7 +35,7 @@
 | Security | Is Devin FedRAMP authorized? | Devin Desktop and Devin CLI are FedRAMP High authorized. Devin Cloud, the autonomous agent shown here, is FedRAMP High **In Process**, not yet authorized. **Confirm the timeline with Cognition.** |
 | Security | Will our code or claims data train someone's model? | Not on Enterprise without your written consent. On Bedrock, AWS and model providers do not train on inputs or outputs. |
 | Security | Can we have zero data retention? | Yes. It is on in federal deployments of Desktop and CLI, and available commercially with model providers. **Confirm the exact settings for a CMS deployment with Cognition.** |
-| Security | Does the model inference run on Bedrock, in which region, and in GovCloud? | Public docs don't name the model host. **Confirm with Cognition.** If it is Bedrock, AWS's guarantees above apply. |
+| Security | Where does the model inference run? | On Amazon Bedrock, so AWS's guarantees above apply: prompts and outputs aren't shared with model providers or used for training. |
 | Security | Can Devin reach anything on our network it wants? | No. With a mandatory security profile and Devin Connect, it reaches only the hosts you allowlist, and every connection is logged. |
 | Security | Can code execution stay inside our network? | Yes. With Outposts, sessions run on machines you operate; only inference and planning stay in Devin's cloud. |
 | Security | Is there a HIPAA BAA, and can PHI be used? | Not answered in public docs. **Confirm with Cognition.** Until then, run pilots on synthetic data, as this demo does. |
