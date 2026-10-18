@@ -160,19 +160,20 @@ const RULE_STEPS = [
    ex: c => `${$$(capOf(c))} − ${$$(Math.max(c.primary, c.deductible + c.coinsurance))} = <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))}</b>`}];
 const $$ = cents => "$" + (cents / 100).toLocaleString("en-US", {maximumFractionDigits: 2});
 const capOf = c => Math.min(c.gross, c.contract ?? c.charges);
+const MISSING = `<p class="err">Not found in the source.</p>`;
 function ruleLines(text, ranges) {
   const L = text.split("\n"), out = [];
   for (const [a, b] of ranges) {
-    const s = L.findIndex(l => a.test(l)); if (s < 0) continue;
-    let e = s; if (b.source !== ".") while (e < L.length - 1 && !b.test(L[e])) e++;
+    const s = L.findIndex(l => a.test(l)); if (s < 0) return MISSING;
+    let e = s; if (b.source !== ".") { while (e < L.length && !b.test(L[e])) e++; if (e === L.length) return MISSING; }
     out.push(L.slice(s, e + 1).map((t, k) => `<div class="ln"><span>${s + k + 1}</span><span>${esc(t.replace(/^ {4,8}/, ""))}</span></div>`).join(""));
   }
-  return out.length ? out.join(`<div class="ln gap"><span>⋮</span><span></span></div>`) : `<p class="err">Not found in the source.</p>`;
+  return out.join(`<div class="ln gap"><span>⋮</span><span></span></div>`);
 }
 async function ruleMatch() {
   const [cob, py, fx] = await Promise.all([file("cobol/payment.cob"), file("python/msp.py"), file("fixtures/curated.json")]);
   if (cob == null || py == null) return `<p class="err">Source files are missing.</p>`;
-  let ex = null; try { ex = JSON.parse(fx).map(r => r.input).find(r => r.id === "CMS-EX3"); } catch (e) { ex = null; }
+  let ex = null; try { ex = JSON.parse(fx).map(r => r.input).find(r => r?.id === "CMS-EX3"); } catch (e) { ex = null; }
   if (ex && ex.contract === undefined) ex.contract = null;
   return `<table class="rulematch"><thead><tr><th>Step</th><th>COBOL (before)</th><th>Python (after)</th>${ex ? "<th>CMS-EX3, step by step</th>" : ""}</tr></thead><tbody>
   ${RULE_STEPS.map((st, k) => `<tr><td><span class="stepno">${k + 1}</span> ${esc(st.say)}</td>
@@ -391,8 +392,8 @@ document.addEventListener("click", async ev => {
   const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
-  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
-  if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
+  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
+  if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
   if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; const r = await fetch("/api/live-run", {method: "POST"}); await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps(); return; }
   if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }
   if (t.dataset.steps) { ev.preventDefault(); showSteps(); return; }
