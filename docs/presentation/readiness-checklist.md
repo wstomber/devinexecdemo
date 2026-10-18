@@ -17,7 +17,7 @@ Recorded 2026-10-17 by Devin. Re-check anything marked PENDING on the day.
 | Strict comparison | `make compare CANDIDATE='python3 python/msp.py'`; `tools/verify.py compare` on curated | PASSED |
 | Side-by-side | `tools/demo_compare.py` curated (30) and synthetic (1,000) | 0 mismatches, byte-identical |
 | All 8 screens render, no errors | Browser check of every screen | PASSED |
-| Search, filters, claim details, CMS-EX3 links, Run it live button | Browser check | PASSED |
+| Search, filters, claim details, CMS-EX3 links, Run COBOL vs Python now and Reset buttons | Browser check | PASSED |
 | A wrong result is shown as wrong | Planted a 1-cent change in a copy of a live run: app showed OVERALL FAILED, the row as MISMATCH, CMS-EX3 as $500.00 / $500.01 | PASSED (copy deleted afterwards) |
 | Missing / malformed evidence never shows as a pass | `tests_python/test_demo_evidence.py` | PASSED |
 | Maintainability Playbook fresh run | Child session, PR #4 | PASSED, PR #4 open |
@@ -37,7 +37,7 @@ Recorded 2026-10-17 by Devin. Re-check anything marked PENDING on the day.
 ## On presentation day (what you do)
 
 1. **30 minutes before:** in this Devin session, send: "Start the demo app". Devin starts it and gives you the preview button. (Or, on a machine with GnuCOBOL: `make demo`, then open http://localhost:8765.)
-2. Click through once. Press **▶ Run it live** once to warm up; it should say PASSED.
+2. Click through once. Press **▶ Run COBOL vs Python now** once to warm up; it should say PASSED and jump to 5 · Old vs new. Then press **Reset** so the audience starts blank.
 3. **5 minutes before:** press **▶ Start Devin live** (first screen or screen 7). The card then shows the session status and an **Open Devin's session ↗** button; its pull request link appears when Devin opens one. If the card shows manual steps instead, follow them (app.devin.ai → new session → Playbook "MSP COBOL to Python with evidence" → paste the one-line prompt).
 4. During the demo follow `docs/presentation/presenter-guide.md` (20-minute route, or the 15-minute route).
 5. If anything fails, say so and use the purple SAVED REHEARSAL evidence or the GitHub fallback links in the guide.

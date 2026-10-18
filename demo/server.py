@@ -1,7 +1,7 @@
 """Migration Evidence app: `make demo` -> http://localhost:8765
 
 Serves the frontend, evidence assembled from real artifacts (demo/evidence.py), read-only
-raw files, and a "Run it live" action that executes the real COBOL and Python commands into a
+raw files, and a "Run COBOL vs Python now" action that executes the real COBOL and Python commands into a
 new build/demo-runs/<UTC> folder. Saved rehearsal evidence is never written. "Start Devin live"
 launches the migration Playbook through the Devin API (demo/devin_launch.py) when DEVIN_API_KEY is set.
 """
@@ -10,6 +10,7 @@ import json
 import mimetypes
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import threading
@@ -105,6 +106,23 @@ def raw_allowed(name):
     return out.returncode == 0
 
 
+def reset_live_runs(runs=None, archive=None):
+    """Move every live run aside (never deleted) so the app shows only saved evidence again."""
+    runs = runs or evidence.RUNS
+    archive = archive or runs.parent / "demo-runs-archive"
+    if not LOCK.acquire(blocking=False):
+        return False
+    try:
+        if runs.exists() and any(runs.iterdir()):
+            dest = archive / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+            dest.mkdir(parents=True)
+            for p in runs.iterdir():
+                shutil.move(str(p), str(dest / p.name))
+        return True
+    finally:
+        LOCK.release()
+
+
 def start_live_run():
     if not LOCK.acquire(blocking=False):
         return False
@@ -161,6 +179,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/devin-run":
             code, payload = devin_launch.start()
             return self.send(code, json.dumps(payload))
+        if path == "/api/live-reset":
+            reset = reset_live_runs()
+            return self.send(200 if reset else 409, json.dumps({"reset": reset}))
         if path != "/api/live-run":
             return self.send(404, "not found", "text/plain")
         started = start_live_run()
