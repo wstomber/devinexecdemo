@@ -187,6 +187,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/devin-run":
             code, payload = devin_launch.start()
             return self.send(code, json.dumps(payload))
+        if path == "/api/devin-reset":
+            code, payload = devin_launch.reset()
+            return self.send(code, json.dumps(payload))
         if path == "/api/live-reset":
             reset = reset_live_runs()
             return self.send(200 if reset else 409, json.dumps({"reset": reset}))
