@@ -34,9 +34,12 @@ capture-baseline: build
 clean:
 	rm -rf build tools/__pycache__ tests/__pycache__
 
-.PHONY: demo demo-refresh
+.PHONY: demo demo-live demo-refresh
 demo: build generate
 	$(PYTHON) demo/server.py
+
+demo-live: build generate
+	$(PYTHON) demo/server.py --require-devin-key
 
 demo-refresh: build generate
 	$(PYTHON) demo/server.py --run-once
