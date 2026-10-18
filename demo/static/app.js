@@ -346,7 +346,7 @@ document.addEventListener("click", async ev => {
   if (t.dataset.cmp) { cmpKey = t.dataset.cmp; cmpPage = 0; return render(); }
   if (t.dataset.f) { cmpFilter = t.dataset.f; cmpPage = 0; return render(); }
   if (t.dataset.pg) { cmpPage = Math.max(0, cmpPage + +t.dataset.pg); return render(); }
-  if (t.dataset.jump || t.dataset.gotoEx3) { cmpQuery = "CMS-EX3"; cmpFilter = "all"; cmpPage = 0; if (t.dataset.gotoEx3) { cmpKey = E.live?.comparisons?.curated ? "live:curated" : "saved:curated"; return; } return render(); }
+  if (t.dataset.jump || t.dataset.gotoEx3) { cmpQuery = "CMS-EX3"; cmpFilter = "all"; cmpPage = 0; cmpKey = E.live?.comparisons?.curated ? "live:curated" : "saved:curated"; if (t.dataset.gotoEx3) return; return render(); }
 });
 document.addEventListener("input", ev => { if (ev.target.id === "cmpq") { cmpQuery = ev.target.value; cmpPage = 0; clearTimeout(window._q); window._q = setTimeout(async () => { await render(); const i = $("#cmpq"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); } });
 document.addEventListener("toggle", async ev => { const d = ev.target; if (d.dataset?.md && d.open && !d.dataset.loaded) { d.dataset.loaded = 1; d.querySelector("div").outerHTML = md(await file(d.dataset.md)); } }, true);
