@@ -16,7 +16,7 @@ h1{font-size:26px;margin:4px 0 4px}h2{font-size:19px;margin:28px 0 10px}h3{font-
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
 .card h3{margin-top:0}.stat .n{font-size:clamp(17px,2vw,26px);font-weight:700;overflow-wrap:anywhere}.stat .l{color:var(--muted);font-size:13px}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
-.PASSED,.MATCH,.MERGED{background:var(--greenbg);color:var(--green)}.FAILED,.MISMATCH,.MISSING_IN_COBOL,.MISSING_IN_PYTHON{background:var(--redbg);color:var(--red)}
+.PASSED,.MATCH,.MERGED{background:var(--greenbg);color:var(--green)}.FAILED,.INTERRUPTED,.MISMATCH,.MISSING_IN_COBOL,.MISSING_IN_PYTHON{background:var(--redbg);color:var(--red)}
 .RUNNING,.OPEN{background:#e3edfb;color:var(--blue)}.NOT_RUN,.UNKNOWN,.CLOSED{background:var(--greybg);color:var(--grey)}
 .SAVED{background:#efe7fb;color:#5b2a9e}.LIVE{background:#e3edfb;color:var(--blue)}.HIST{background:var(--amberbg);color:var(--amber)}
 .muted{color:var(--muted)}.small{font-size:13px}

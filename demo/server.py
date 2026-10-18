@@ -109,7 +109,8 @@ def raw_allowed(name):
 def run_in_progress(run_dir):
     """A run started outside this server (`--run-once`) still says RUNNING until it finishes."""
     state, err = evidence.read_json(run_dir / "run.json")
-    return not err and state.get("status") == "RUNNING" and not state.get("finished_at")
+    return (not err and state.get("status") == "RUNNING" and not state.get("finished_at")
+            and not evidence.abandoned(run_dir, state))
 
 
 def reset_live_runs(runs=None, archive=None):

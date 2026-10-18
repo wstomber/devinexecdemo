@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -198,10 +199,21 @@ def saved_rehearsal():
     }
 
 
+STALE_AFTER = 660  # longest step timeout (600 s) plus slack; run.json is rewritten at every step boundary
+
+
+def abandoned(run_dir, state):
+    """A run that still says RUNNING but stopped updating was killed before it could finish."""
+    return (state.get("status") == "RUNNING" and not state.get("finished_at")
+            and time.time() - (run_dir / "run.json").stat().st_mtime > STALE_AFTER)
+
+
 def live_run(run_dir):
     state, err = read_json(run_dir / "run.json")
     if err:
         return {"id": run_dir.name, "status": "UNKNOWN", "problem": f"run.json {err}"}
+    if abandoned(run_dir, state):
+        state = {**state, "status": "INTERRUPTED"}
     comparisons = {}
     for name in ("curated", "synthetic"):
         if (run_dir / name).exists():
