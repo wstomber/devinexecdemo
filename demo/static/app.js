@@ -85,12 +85,39 @@ R.overview = async () => {
   <li>“Match” means old and new behave identically on the batches tested here — not that the rules are complete Medicare policy.</li>
   <li>No speed or cost savings are claimed.</li></ul>`;
 };
+const CLAIM_FIELDS = [["claim ID", 12], ["charges", 10], ["approved", 10], ["primary", 10], ["deduct", 10], ["coins", 10], ["contract", 10], ["F", 1]];
+const dollars = t => /^\d{10}$/.test(t) ? $$(+t) : t.trim() === "" ? "(blank)" : /^-+$/.test(t) ? "none" : t;
+function claimLine(l) {
+  let o = 0; return CLAIM_FIELDS.map(([, w], k) => { const t = l.slice(o, o + w); o += w; return `<span class="f${k % 2}">${esc(t)}</span>`; }).join("") + esc(l.slice(o));
+}
+async function baselineTerminal(b) {
+  const [dat, res, tot, log] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"])]);
+  if (dat == null || res == null) return `<p class="err">Saved baseline files are missing.</p>`;
+  const lines = t => t.split("\n").filter(l => l !== "");
+  const L = (cls, html) => `<div class="${cls}">${html}</div>`, hl = l => /CMS-EX3/.test(l) ? " hl" : "";
+  const run = (log || "").split("\n"), at = run.findIndex(l => /^\$ build\/msp-batch \S*curated\.dat/.test(l));
+  const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat curated-results.csv curated-totals.csv";
+  const exit = at >= 0 ? (run.slice(at + 1, at + 5).find(l => /^\[exit/.test(l)) || "") : "";
+  const ruler = CLAIM_FIELDS.map(([n, w], k) => `<span class="f${k % 2}">${esc(n.padEnd(w).slice(0, w))}</span>`).join("");
+  const ex3 = lines(dat).find(l => l.startsWith("CMS-EX3"));
+  const ex3out = lines(res).map(l => l.split(",")).find(r => r[1] === "CMS-EX3");
+  let decode = ""; if (ex3) { let o = 0; decode = CLAIM_FIELDS.map(([n, w]) => { const t = ex3.slice(o, o + w); o += w; return n === "claim ID" ? `<b>${esc(t.trim())}</b>` : n === "F" ? `paid in full: ${esc(t)}` : `${n} ${dollars(t)}`; }).join(" · "); }
+  return `<div class="term">${L("p", "$ cat curated.dat")}${L("c", "# the input: one claim per line, fixed-width, 73 characters, amounts in cents")}${L("ruler", ruler)}
+  ${lines(dat).map(l => L("ln" + hl(l), claimLine(l))).join("")}
+  ${L("p", "$ " + esc(cmdText))}${exit ? L("c", esc(exit)) : ""}
+  ${L("p", "$ cat curated-results.csv")}${L("c", "# the output: one result per claim, in the same order")}
+  ${lines(res).map(l => L("ln" + hl(l), esc(l))).join("")}
+  ${tot ? L("p", "$ cat curated-totals.csv") + lines(tot).map(l => L("ln", esc(l))).join("") : ""}</div>
+  ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}).` : ""}</p>` : ""}`;
+}
 R.baseline = async () => {
   const b = E.saved.baseline, ct = b.curated_totals, st = b.synthetic_totals, m = b.manifest || {};
   const stat = (n, l) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
   return `<h1>1 · The original COBOL program, run first</h1>
   <p class="lede">The program reads a batch of claims (one fixed-width line each) and writes one result per claim — PAID, ZERO or INVALID with a payment and a reason — plus a totals line.</p>
-  <h2>Curated 30-claim batch ${SAVED} ${badge(b.status)}</h2>
+  <p>This is the real terminal session from the saved run: the 30 claims that went in, the command, and exactly what the old COBOL wrote out. CMS-EX3 is highlighted.</p>
+  ${await baselineTerminal(b)}
+  <h2>Curated 30-claim batch, summarised ${SAVED} ${badge(b.status)}</h2>
   <div class="grid g4">${ct ? stat(ct.records, "claims") + stat(ct.paid, "paid") + stat(ct.zero, "zero (valid, nothing owed)") + stat(ct.invalid, "rejected as malformed") + stat(money(ct.payment_cents), "total paid by COBOL") : `<div class="err">Totals file missing</div>`}</div>
   <h2>1,000-claim synthetic batch ${SAVED}</h2>
   <div class="grid g4">${st ? stat(st.records.toLocaleString(), "claims") + stat(st.paid, "paid") + stat(st.zero, "zero") + stat(st.invalid, "rejected") + stat(money(st.payment_cents), "total paid by COBOL") : `<div class="err">Totals file missing</div>`}</div>
