@@ -139,14 +139,56 @@ R.tests = async () => {
   <h2>Separate: starter infrastructure tests</h2><div class="card small">These came with the starter repo and check the COBOL harness itself; they are not Devin's independent policy tests. ${stepLine("starter-tests")}</div>
   ${cmd("python3 -m unittest discover -s tests_policy -v")}`;
 };
+const RULE_STEPS = [
+  {say: "Was the bill already paid in full? Then Medicare pays $0.",
+   cob: [[/if raw-full = "Y"/, /end-if/]], py: [[/if claim\.paid_in_full:/, /PAYMENT_IN_FULL/]],
+   ex: c => c.full === "Y" ? "Yes → $0" : "No → keep going"},
+  {say: "If the provider agreed to a contract amount, use it instead of the full charges.",
+   cob: [[/move claim-charges to charge-basis/, /end-if/]], py: [[/return claim\.charges if claim\.contract/, /./]],
+   ex: c => c.contract == null ? `No contract → ${$$(c.charges)}` : `Contract ${$$(c.contract)} replaces charges ${$$(c.charges)}`},
+  {say: "The limit is the smaller of the approved amount and that step-2 amount.",
+   cob: [[/compute payment-cap/, /./]], py: [[/return min\(claim\.gross, charge_basis/, /./], [/cap = payment_cap\(claim\)/, /./]],
+   ex: c => `smaller of ${$$(c.gross)} and ${$$(c.contract ?? c.charges)} = ${$$(Math.min(c.gross, c.contract ?? c.charges))}`},
+  {say: "Did the other insurer already pay the limit or more? Then Medicare pays $0.",
+   cob: [[/if claim-primary >= payment-cap/, /end-if/]], py: [[/if claim\.primary >= cap:/, /PRIMARY_AT_CAP/]],
+   ex: c => `paid ${$$(c.primary)}: ${c.primary >= capOf(c) ? "yes → $0" : "less than the limit → keep going"}`},
+  {say: "Do the patient's deductible + coinsurance reach the limit? Then Medicare pays $0.",
+   cob: [[/compute deductions =/, /end-if/]], py: [[/deductions = claim\.deductible/, /DEDUCTIONS_AT_CAP/]],
+   ex: c => `${$$(c.deductible + c.coinsurance)}: ${c.deductible + c.coinsurance >= capOf(c) ? "yes → $0" : "less than the limit → keep going"}`},
+  {say: "Otherwise Medicare pays the limit minus the bigger of those two amounts.",
+   cob: [[/compute reduction-amount/, /SECONDARY_PAYABLE/]], py: [[/return Result\(claim\.claim_id, "PAID"/, /./]],
+   ex: c => `${$$(capOf(c))} − ${$$(Math.max(c.primary, c.deductible + c.coinsurance))} = <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))}</b>`}];
+const $$ = cents => "$" + (cents / 100).toLocaleString("en-US", {maximumFractionDigits: 2});
+const capOf = c => Math.min(c.gross, c.contract ?? c.charges);
+function ruleLines(text, ranges) {
+  const L = text.split("\n"), out = [];
+  for (const [a, b] of ranges) {
+    const s = L.findIndex(l => a.test(l)); if (s < 0) continue;
+    let e = s; if (b.source !== ".") while (e < L.length - 1 && !b.test(L[e])) e++;
+    out.push(L.slice(s, e + 1).map((t, k) => `<div class="ln"><span>${s + k + 1}</span><span>${esc(t.replace(/^ {4,8}/, ""))}</span></div>`).join(""));
+  }
+  return out.length ? out.join(`<div class="ln gap"><span>⋮</span><span></span></div>`) : `<p class="err">Not found in the source.</p>`;
+}
+async function ruleMatch() {
+  const [cob, py, fx] = await Promise.all([file("cobol/payment.cob"), file("python/msp.py"), file("fixtures/curated.json")]);
+  if (cob == null || py == null) return `<p class="err">Source files are missing.</p>`;
+  let ex = null; try { ex = JSON.parse(fx).map(r => r.input).find(r => r.id === "CMS-EX3"); } catch (e) { ex = null; }
+  if (ex && ex.contract === undefined) ex.contract = null;
+  return `<table class="rulematch"><thead><tr><th>Step</th><th>COBOL (before)</th><th>Python (after)</th>${ex ? "<th>CMS-EX3, step by step</th>" : ""}</tr></thead><tbody>
+  ${RULE_STEPS.map((st, k) => `<tr><td><span class="stepno">${k + 1}</span> ${esc(st.say)}</td>
+    <td><div class="code">${ruleLines(cob, st.cob)}</div></td><td><div class="code">${ruleLines(py, st.py)}</div></td>${ex ? `<td>${st.ex(ex)}</td>` : ""}</tr>`).join("")}
+  </tbody></table>`;
+}
 R.python = async () => {
   const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
   const u = E.saved.python_unit_tests;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same rule, now in readable Python. It passed the independent tests on its first run.</p>
-  <p>Left: the original COBOL that decides what Medicare pays. Right: Devin's Python doing the same checks in the same order. The highlighted lines are the payment rule in each language.</p>
-  <div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div>
+  <p>The rule that decides what Medicare pays, one step per row. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows CMS-EX3 through each step.</p>
+  ${await ruleMatch()}
+  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest.</p>
+  <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
   <p class="small muted">“Same independent tests” = the hand-worked answers from screen 3, now run against the Python. “Unit tests” = smaller checks of each piece of the Python on its own.</p>
   <h2>What had to be preserved</h2><div class="grid g4">

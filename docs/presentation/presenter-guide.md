@@ -27,7 +27,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 2–4 | 1 · COBOL baseline | Press **▶ Run COBOL vs Python now** (top right, ~7 s). When it finishes the app jumps to 5 · Old vs new showing the fresh LIVE results. | Devin first ran the original as the yardstick. |
 | 4–6 | 2 · Devin explains COBOL | Point at the highlighted lines; mention DeepWiki. | Devin found the exact line that applies the provider's contract. |
 | 6–9 | 3 · Tests came first | Point at "Tests came first: VERIFIED FROM GIT"; click the CMS-EX3 row. | The right answers were worked out from the CMS manual and checked against COBOL before any Python existed. |
-| 9–12 | 4 · Python + unit tests | Compare the two code boxes; open "Corrections". | Same rule in readable Python, exact cents, passed the same tests first time. |
+| 9–12 | 4 · Python + unit tests | Read the 6 step rows top to bottom; point at the CMS-EX3 column ending at $500. | Same rule in readable Python, exact cents, passed the same tests first time. |
 | 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Find CMS-EX3**. | Every claim matches, and a separate strict checker confirms it. |
 | 14–16 | ★ CMS-EX3 $500 | Walk the four limits top to bottom. | $13,000 − $12,500 = $500. Missing the contract rule would pay $1,000 too much. |
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
