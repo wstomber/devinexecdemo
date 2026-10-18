@@ -94,6 +94,7 @@ async function baselineTerminal(b) {
   const [dat, res, tot, log] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"])]);
   if (dat == null || res == null) return `<p class="err">Saved baseline files are missing.</p>`;
   const lines = t => { const a = t.split("\n"); if (a[a.length - 1] === "") a.pop(); return a; };
+  const SHOWN = 15, more = (n, path) => n > SHOWN ? L("c", `# … first ${SHOWN} of ${n} claims shown · ${raw(path, "full file")}`) : "";
   const L = (cls, html) => `<div class="${cls}">${html}</div>`, hl = l => /CMS-EX3/.test(l) ? " hl" : "";
   const run = (log || "").split("\n"), at = run.findIndex(l => /^\$ build\/msp-batch \S*curated\.dat/.test(l));
   const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat curated-results.csv curated-totals.csv";
@@ -103,10 +104,10 @@ async function baselineTerminal(b) {
   const ex3out = lines(res).map(l => l.split(",")).find(r => r[1] === "CMS-EX3");
   let decode = ""; if (ex3) { let o = 0; decode = CLAIM_FIELDS.map(([n, w]) => { const t = ex3.slice(o, o + w); o += w; return n === "claim ID" ? `<b>${esc(t.trim())}</b>` : n === "F" ? `paid in full: ${esc(t)}` : `${n} ${dollars(t)}`; }).join(" · "); }
   return `<div class="term">${L("p", "$ cat curated.dat")}${L("c", "# the input: one claim per line, fixed-width, 73 characters, amounts in cents")}${L("ruler", ruler)}
-  ${lines(dat).map(l => L("ln" + hl(l), claimLine(l))).join("")}
+  ${lines(dat).slice(0, SHOWN).map(l => L("ln" + hl(l), claimLine(l))).join("")}${more(lines(dat).length, b.raw["curated.dat"])}
   ${L("p", "$ " + esc(cmdText))}${exit ? L("c", esc(exit)) : ""}
   ${L("p", "$ cat curated-results.csv")}${L("c", "# the output: one result per claim, in the same order")}
-  ${lines(res).map(l => L("ln" + hl(l), esc(l))).join("")}
+  ${lines(res).slice(0, SHOWN + 1).map(l => L("ln" + hl(l), esc(l))).join("")}${more(lines(res).length - 1, b.raw["curated-results.csv"])}
   ${L("p", "$ cat curated-totals.csv")}${tot ? lines(tot).map(l => L("ln", esc(l))).join("") : L("err", "curated-totals.csv is missing from the saved run")}</div>
   ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}).` : ""}</p>` : ""}`;
 }
