@@ -1,5 +1,5 @@
 {
-  "recorded_at": "2026-10-17T22:40:00Z",
+  "recorded_at": "2026-10-18T18:45:00Z",
   "note": "Recorded by Devin from GitHub and Devin session status at recorded_at. Open the links for current state.",
   "deepwiki": "https://app.devin.ai/wiki/wstomber/devinexecdemo",
   "pull_requests": [
@@ -14,29 +14,29 @@
     {
       "number": 3,
       "title": "Fix Devin Review findings from #2",
-      "state": "OPEN",
+      "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/3",
       "role": "Devin Review found 3 tooling bugs after merge; fixed with regression tests (no payment change)"
     },
     {
       "number": 4,
       "title": "Optional --summary-json (maintainability Playbook run)",
-      "state": "OPEN",
+      "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/4",
       "role": "Maintainability follow-up: tests first, then code; CSV outputs byte-identical"
     },
     {
       "number": 5,
       "title": "Playbook rehearsal: fresh migration from the COBOL-only starter",
-      "state": "OPEN",
+      "state": "CLOSED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/5",
       "commits_url": "https://github.com/wstomber/devinexecdemo/pull/5/commits",
-      "role": "A separate Devin session ran the migration Playbook from scratch; targets demo/starter-37ceca1, never merged"
+      "role": "A separate Devin session ran the migration Playbook from scratch; targeted demo/starter-37ceca1; closed after review, never merged (rehearsal only)"
     },
     {
       "number": 6,
       "title": "Migration Evidence app (this app)",
-      "state": "OPEN",
+      "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/6",
       "role": "The app you are looking at"
     }
