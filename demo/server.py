@@ -66,14 +66,21 @@ BUGS = {
 LOCK = threading.Lock()
 
 
-def plant_bug(run_dir, key):
-    """Write a copy of python/msp.py with one known mistake; the real file is never modified."""
+def bug_source(key):
+    """python/msp.py with one known mistake applied, and the changed line's index."""
     bug = BUGS[key]
     lines = (ROOT / "python" / "msp.py").read_text().split("\n")
     hits = [i for i, line in enumerate(lines) if line == bug["old"]]
     if len(hits) != 1:
         raise RuntimeError(f"planted bug {key!r}: expected exactly one matching line in python/msp.py, found {len(hits)}")
     lines[hits[0]] = bug["new"]
+    return lines, hits
+
+
+def plant_bug(run_dir, key, source=None):
+    """Write a copy of python/msp.py with one known mistake; the real file is never modified."""
+    bug = BUGS[key]
+    lines, hits = source or bug_source(key)
     target = run_dir / "planted-bug" / "msp.py"
     target.parent.mkdir()
     target.write_text("\n".join(lines))
@@ -109,11 +116,12 @@ def write_state(run_dir, state):
 
 def live_run(run_dir=None, bug=None):
     """Execute every step for real; record command, exit code, timing, and full output."""
+    source = bug_source(bug) if bug else None
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_dir = run_dir or evidence.RUNS / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
     rel_run = evidence.rel(run_dir)
-    planted = plant_bug(run_dir, bug) if bug else None
+    planted = plant_bug(run_dir, bug, source) if bug else None
     state = {"bug": planted, "id": run_dir.name, "folder": rel_run, "status": "RUNNING", "started_at": now(),
              "finished_at": None, "commit": evidence.git("rev-parse", "HEAD"),
              "dirty": bool(evidence.git("status", "--porcelain")),
@@ -181,6 +189,8 @@ def reset_live_runs(runs=None, archive=None):
 def start_live_run(bug=None):
     if bug is not None and bug not in BUGS:
         return False
+    if bug:
+        bug_source(bug)
     if not LOCK.acquire(blocking=False):
         return False
 
@@ -247,12 +257,17 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(404, "not found", "text/plain")
         try:
             length = int(self.headers.get("Content-Length") or 0)
+            if not 0 <= length <= 1024:
+                return self.send(413, json.dumps({"started": False, "error": "request body too large"}))
             bug = json.loads(self.rfile.read(length) or b"{}").get("bug") if length else None
         except (ValueError, AttributeError):
             return self.send(400, json.dumps({"started": False, "error": "bad request body"}))
         if bug is not None and bug not in BUGS:
             return self.send(400, json.dumps({"started": False, "error": "unknown bug"}))
-        started = start_live_run(bug)
+        try:
+            started = start_live_run(bug)
+        except RuntimeError as e:
+            return self.send(500, json.dumps({"started": False, "error": str(e)}))
         return self.send(202 if started else 409, json.dumps({"started": started}))
 
 

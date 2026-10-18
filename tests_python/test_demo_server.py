@@ -4,6 +4,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "demo"))
@@ -81,6 +82,16 @@ class PlantedBugs(unittest.TestCase):
                 self.assertIn(server.PLANTED, cmd)
         self.assertIs(server.steps_for(None), server.LIVE_STEPS)
         self.assertFalse(server.start_live_run("nope"))
+
+    def test_a_bug_that_no_longer_applies_creates_no_run_folder(self):
+        run = Path(tempfile.mkdtemp()) / "run"
+        with mock.patch.dict(server.BUGS, {"gone": {"title": "t", "what": "w", "old": "no such line", "new": "x"}}):
+            with self.assertRaises(RuntimeError):
+                server.live_run(run, bug="gone")
+            with self.assertRaises(RuntimeError):
+                server.start_live_run("gone")
+        self.assertFalse(run.exists())
+        self.assertFalse(server.LOCK.locked())
 
 
 if __name__ == "__main__":

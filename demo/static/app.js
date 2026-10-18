@@ -243,7 +243,7 @@ function bugBanner() {
   const done = L.status !== "RUNNING";
   return `<div class="bugbanner"><h3>Planted bug, on purpose: ${esc(b.title)}</h3><p>${esc(b.what)} It was planted in a throwaway copy (${raw(b.file, "see the broken file")}); the real <code>python/msp.py</code> was not changed.</p>
    <div class="code"><div class="ln"><span>${b.line}</span><span class="del">- ${esc(b.old)}</span></div><div class="ln"><span>${b.line}</span><span class="add">+ ${esc(b.new)}</span></div></div>
-   ${done ? `<p><b>${L.status === "FAILED" ? "The checks caught it" : "Result: " + esc(L.status)}:</b> ${c ? `${c.mismatches} of ${(c.rows || []).length} curated claims now pay differently from the COBOL` : "comparison missing"} · ${pt?.tests ? `${failed} of ${pt.tests} hand-derived tests failed` : "hand-derived tests did not report"} · strict verifier ${badge(c?.verifier?.status || "UNKNOWN")}</p>` : `<p class="muted">Running the checks against the broken copy…</p>`}
+   ${done ? `<p><b>${L.status === "FAILED" ? "The checks caught it" : "Result: " + esc(L.status)}:</b> ${c ? `${c.mismatches} of ${(c.rows || []).length} curated claims now get a different result from the COBOL` : "comparison missing"} · ${pt?.tests ? `${failed} of ${pt.tests} hand-derived tests failed` : "hand-derived tests did not report"} · strict verifier ${badge(c?.verifier?.status || "UNKNOWN")}</p>` : `<p class="muted">Running the checks against the broken copy…</p>`}
    <p><button class="btn primary" data-undo="1" ${done ? "" : "disabled"}>Undo: run the real code again</button></p></div>`;
 }
 function breakCard() {
