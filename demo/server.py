@@ -48,7 +48,53 @@ LIVE_STEPS = [
     ("synthetic-compare", "Side-by-side table, 1,000-record batch",
      "python3 tools/demo_compare.py --input build/synthetic.dat --out {run}/synthetic"),
 ]
+PLANTED = "{run}/planted-bug/msp.py"
+BUGS = {
+    "contract": {"title": "Forget the contract rule",
+                 "what": "Ignores the provider's contract amount and always uses the full charges.",
+                 "old": "    return claim.charges if claim.contract is None else claim.contract",
+                 "new": "    return claim.charges"},
+    "boundary": {"title": "Off by one: > instead of \u2265",
+                 "what": "Medicare should pay $0 when the other insurer paid exactly the limit; this version only stops when it paid more.",
+                 "old": "    if claim.primary >= cap:",
+                 "new": "    if claim.primary > cap:"},
+    "cents": {"title": "Drop the cents",
+              "what": "Rounds every payment down to whole dollars.",
+              "old": '    return Result(claim.claim_id, "PAID", cap - max(deductions, claim.primary), "SECONDARY_PAYABLE")',
+              "new": '    return Result(claim.claim_id, "PAID", (cap - max(deductions, claim.primary)) // 100 * 100, "SECONDARY_PAYABLE")'},
+}
 LOCK = threading.Lock()
+
+
+def plant_bug(run_dir, key):
+    """Write a copy of python/msp.py with one known mistake; the real file is never modified."""
+    bug = BUGS[key]
+    lines = (ROOT / "python" / "msp.py").read_text().split("\n")
+    hits = [i for i, line in enumerate(lines) if line == bug["old"]]
+    if len(hits) != 1:
+        raise RuntimeError(f"planted bug {key!r}: expected exactly one matching line in python/msp.py, found {len(hits)}")
+    lines[hits[0]] = bug["new"]
+    target = run_dir / "planted-bug" / "msp.py"
+    target.parent.mkdir()
+    target.write_text("\n".join(lines))
+    return {"key": key, "title": bug["title"], "what": bug["what"], "line": hits[0] + 1,
+            "old": bug["old"].strip(), "new": bug["new"].strip(), "file": evidence.rel(target)}
+
+
+def steps_for(bug):
+    """With a planted bug, every Python check runs the broken copy; the unit tests import the real module, so they are skipped."""
+    if not bug:
+        return LIVE_STEPS
+    out = []
+    for key, title, cmd in LIVE_STEPS:
+        if key == "python-units":
+            continue
+        if "python/msp.py" in cmd:
+            cmd = cmd.replace("python/msp.py", PLANTED)
+        elif key.endswith("-compare"):
+            cmd += f" --python 'python3 {PLANTED}'"
+        out.append((key, title, cmd))
+    return out
 
 
 def now():
@@ -61,17 +107,18 @@ def write_state(run_dir, state):
     tmp.replace(run_dir / "run.json")
 
 
-def live_run(run_dir=None):
+def live_run(run_dir=None, bug=None):
     """Execute every step for real; record command, exit code, timing, and full output."""
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_dir = run_dir or evidence.RUNS / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
     rel_run = evidence.rel(run_dir)
-    state = {"id": run_dir.name, "folder": rel_run, "status": "RUNNING", "started_at": now(),
+    planted = plant_bug(run_dir, bug) if bug else None
+    state = {"bug": planted, "id": run_dir.name, "folder": rel_run, "status": "RUNNING", "started_at": now(),
              "finished_at": None, "commit": evidence.git("rev-parse", "HEAD"),
              "dirty": bool(evidence.git("status", "--porcelain")),
              "steps": [{"key": k, "title": t, "command": c.format(run=rel_run), "status": "NOT_RUN",
-                        "exit_code": None, "log": f"{rel_run}/{k}.log"} for k, t, c in LIVE_STEPS]}
+                        "exit_code": None, "log": f"{rel_run}/{k}.log"} for k, t, c in steps_for(bug)]}
     write_state(run_dir, state)
     for step in state["steps"]:
         step["status"], step["started_at"] = "RUNNING", now()
@@ -131,13 +178,15 @@ def reset_live_runs(runs=None, archive=None):
         LOCK.release()
 
 
-def start_live_run():
+def start_live_run(bug=None):
+    if bug is not None and bug not in BUGS:
+        return False
     if not LOCK.acquire(blocking=False):
         return False
 
     def worker():
         try:
-            live_run()
+            live_run(bug=bug)
         finally:
             LOCK.release()
     threading.Thread(target=worker, daemon=True).start()
@@ -162,6 +211,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/evidence":
             data = evidence.build()
             data["live_running"] = LOCK.locked()
+            data["bugs"] = {k: {"title": b["title"], "what": b["what"]} for k, b in BUGS.items()}
             return self.send(200, json.dumps(data))
         if path == "/api/devin-run":
             return self.send(200, json.dumps(devin_launch.state()))
@@ -195,7 +245,14 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200 if reset else 409, json.dumps({"reset": reset}))
         if path != "/api/live-run":
             return self.send(404, "not found", "text/plain")
-        started = start_live_run()
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            bug = json.loads(self.rfile.read(length) or b"{}").get("bug") if length else None
+        except (ValueError, AttributeError):
+            return self.send(400, json.dumps({"started": False, "error": "bad request body"}))
+        if bug is not None and bug not in BUGS:
+            return self.send(400, json.dumps({"started": False, "error": "unknown bug"}))
+        started = start_live_run(bug)
         return self.send(202 if started else 409, json.dumps({"started": started}))
 
 
@@ -204,6 +261,7 @@ def main():
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--run-once", action="store_true", help="run the live evidence steps and exit")
+    parser.add_argument("--plant-bug", choices=sorted(BUGS), help="with --run-once: run the checks against a broken copy of the Python")
     parser.add_argument("--require-devin-key", action="store_true",
                         help="refuse to start unless DEVIN_API_KEY is set, so Start Devin live can't silently fall back")
     args = parser.parse_args()
@@ -212,8 +270,8 @@ def main():
               "Open a new shell (secrets load only in new shells) and try again.", file=sys.stderr)
         return 2
     if args.run_once:
-        state = live_run()
-        print(f"{state['status']}: {state['folder']}")
+        state = live_run(bug=args.plant_bug)
+        print(f"{state['status']}: {state['folder']}" + (f" (planted bug: {state['bug']['title']})" if state["bug"] else ""))
         for step in state["steps"]:
             print(f"  {step['status']:7} exit={step['exit_code']} {step['command']}")
         return 0 if state["status"] == "PASSED" else 1

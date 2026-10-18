@@ -59,6 +59,30 @@ class ResetLiveRuns(unittest.TestCase):
         self.assertEqual(len(list(self.runs.iterdir())), 1)
 
 
+class PlantedBugs(unittest.TestCase):
+    def test_each_bug_changes_exactly_one_line_of_a_copy(self):
+        real = (server.ROOT / "python" / "msp.py").read_text()
+        for key in server.BUGS:
+            with self.subTest(key):
+                run = Path(tempfile.mkdtemp())
+                info = server.plant_bug(run, key)
+                broken = (run / "planted-bug" / "msp.py").read_text().split("\n")
+                diff = [i for i, (a, b) in enumerate(zip(real.split("\n"), broken)) if a != b]
+                self.assertEqual(diff, [info["line"] - 1])
+        self.assertEqual((server.ROOT / "python" / "msp.py").read_text(), real)
+
+    def test_bug_steps_use_the_copy_and_skip_unit_tests(self):
+        steps = server.steps_for("contract")
+        keys = [k for k, _, _ in steps]
+        self.assertNotIn("python-units", keys)
+        for key, _, cmd in steps:
+            self.assertNotIn(" python/msp.py", cmd)
+            if key in ("policy-python", "curated-verify", "synthetic-verify", "curated-compare", "synthetic-compare"):
+                self.assertIn(server.PLANTED, cmd)
+        self.assertIs(server.steps_for(None), server.LIVE_STEPS)
+        self.assertFalse(server.start_live_run("nope"))
+
+
 if __name__ == "__main__":
     unittest.main()
 
