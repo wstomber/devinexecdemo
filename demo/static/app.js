@@ -86,14 +86,14 @@ R.overview = async () => {
   <li>No speed or cost savings are claimed.</li></ul>`;
 };
 const CLAIM_FIELDS = [["claim ID", 12], ["charges", 10], ["approved", 10], ["primary", 10], ["deduct", 10], ["coins", 10], ["contract", 10], ["F", 1]];
-const dollars = t => /^\d{10}$/.test(t) ? $$(+t) : t.trim() === "" ? "(blank)" : /^-+$/.test(t) ? "none" : t;
+const dollars = t => /^\d{10}$/.test(t) ? $$(+t) : t.trim() === "" ? "(blank)" : /^-+$/.test(t) ? "none" : esc(t);
 function claimLine(l) {
   let o = 0; return CLAIM_FIELDS.map(([, w], k) => { const t = l.slice(o, o + w); o += w; return `<span class="f${k % 2}">${esc(t)}</span>`; }).join("") + esc(l.slice(o));
 }
 async function baselineTerminal(b) {
   const [dat, res, tot, log] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"])]);
   if (dat == null || res == null) return `<p class="err">Saved baseline files are missing.</p>`;
-  const lines = t => t.split("\n").filter(l => l !== "");
+  const lines = t => { const a = t.split("\n"); if (a[a.length - 1] === "") a.pop(); return a; };
   const L = (cls, html) => `<div class="${cls}">${html}</div>`, hl = l => /CMS-EX3/.test(l) ? " hl" : "";
   const run = (log || "").split("\n"), at = run.findIndex(l => /^\$ build\/msp-batch \S*curated\.dat/.test(l));
   const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat curated-results.csv curated-totals.csv";
@@ -107,7 +107,7 @@ async function baselineTerminal(b) {
   ${L("p", "$ " + esc(cmdText))}${exit ? L("c", esc(exit)) : ""}
   ${L("p", "$ cat curated-results.csv")}${L("c", "# the output: one result per claim, in the same order")}
   ${lines(res).map(l => L("ln" + hl(l), esc(l))).join("")}
-  ${tot ? L("p", "$ cat curated-totals.csv") + lines(tot).map(l => L("ln", esc(l))).join("") : ""}</div>
+  ${L("p", "$ cat curated-totals.csv")}${tot ? lines(tot).map(l => L("ln", esc(l))).join("") : L("err", "curated-totals.csv is missing from the saved run")}</div>
   ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}).` : ""}</p>` : ""}`;
 }
 R.baseline = async () => {
@@ -396,10 +396,14 @@ function showRow(no) {
    ${r[1] === "CMS-EX3" ? `<p><a href="#ex3">Open the CMS-EX3 walkthrough →</a></p>` : ""}`;
 }
 
+let renderGen = 0;
 async function render() {
+  const gen = ++renderGen;
   route = (location.hash.slice(1) || "overview"); if (!R[route]) route = "overview";
   $("#nav").innerHTML = VIEWS.map(([k, l]) => `<a href="#${k}" class="${k === route ? "on" : ""}${k === "ex3" ? " ex3" : ""}">${l}</a>`).join("");
-  $("#view").innerHTML = await R[route]();
+  const html = await R[route]();
+  if (gen !== renderGen) return;
+  $("#view").innerHTML = html;
   const idx = VIEWS.findIndex(v => v[0] === route);
   $("#foot").innerHTML = `<span>${idx > 0 ? `<a class="btn" href="#${VIEWS[idx - 1][0]}">← ${esc(VIEWS[idx - 1][1])}</a>` : ""}</span>
    <span class="muted">Checkout ${commit(E.git.head)} on <code>${esc(E.git.branch)}</code> · evidence read ${esc(E.generated_at)}</span>
