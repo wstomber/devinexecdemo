@@ -39,10 +39,14 @@ class ResetLiveRuns(unittest.TestCase):
     def test_reset_archives_abandoned_run(self):
         stale = self.runs / "20261018T000002Z"
         stale.mkdir()
-        (stale / "run.json").write_text('{"status": "RUNNING", "finished_at": null}')
+        (stale / "run.json").write_text('{"status": "RUNNING", "finished_at": null, '
+                                         '"steps": [{"key": "a", "status": "PASSED"}, {"key": "b", "status": "RUNNING"}]}')
         old = time.time() - evidence.STALE_AFTER - 60
         os.utime(stale / "run.json", (old, old))
-        self.assertEqual(evidence.live_run(stale)["status"], "INTERRUPTED")
+        shown = evidence.live_run(stale)
+        self.assertEqual(shown["status"], "INTERRUPTED")
+        self.assertEqual([st["status"] for st in shown["steps"]], ["PASSED", "INTERRUPTED"])
+        self.assertFalse(evidence.abandoned(self.runs / "gone", {"status": "RUNNING"}))
         self.assertTrue(server.reset_live_runs(self.runs, self.archive))
         self.assertEqual(list(self.runs.iterdir()), [])
 

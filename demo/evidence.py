@@ -204,8 +204,12 @@ STALE_AFTER = 660  # longest step timeout (600 s) plus slack; run.json is rewrit
 
 def abandoned(run_dir, state):
     """A run that still says RUNNING but stopped updating was killed before it could finish."""
-    return (state.get("status") == "RUNNING" and not state.get("finished_at")
-            and time.time() - (run_dir / "run.json").stat().st_mtime > STALE_AFTER)
+    if state.get("status") != "RUNNING" or state.get("finished_at"):
+        return False
+    try:
+        return time.time() - (run_dir / "run.json").stat().st_mtime > STALE_AFTER
+    except OSError:  # archived by Reset since it was read
+        return False
 
 
 def live_run(run_dir):
@@ -213,7 +217,9 @@ def live_run(run_dir):
     if err:
         return {"id": run_dir.name, "status": "UNKNOWN", "problem": f"run.json {err}"}
     if abandoned(run_dir, state):
-        state = {**state, "status": "INTERRUPTED"}
+        state = {**state, "status": "INTERRUPTED",
+                 "steps": [{**st, "status": "INTERRUPTED"} if st.get("status") == "RUNNING" else st
+                           for st in state.get("steps", [])]}
     comparisons = {}
     for name in ("curated", "synthetic"):
         if (run_dir / name).exists():
