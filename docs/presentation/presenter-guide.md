@@ -5,7 +5,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 ## Before you start (5 minutes before)
 
 1. Open the app (see "Starting the app" below). The first screen is "The problem".
-2. Optional: press **▶ Start Devin live** (on "The problem" screen, or screen 7) so Devin is already working when you show it. Then press **Open Devin's session ↗** to show it working.
+2. Optional: press **▶ Start Devin live** (on "The problem" screen, or screen 6) so Devin is already working when you show it. Then press **Open Devin's session ↗** to show it working.
 3. Keep this guide on a second screen or printed. The app itself shows nothing presenter-only, so everything on screen is fine for the audience to see.
 
 ## Colours and labels
@@ -30,18 +30,18 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 9–12 | 4 · Python + unit tests | Compare the two code boxes; open "Corrections". | Same rule in readable Python, exact cents, passed the same tests first time. |
 | 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Find CMS-EX3**. | Every claim matches, and a separate strict checker confirms it. |
 | 14–16 | ★ CMS-EX3 $500 | Walk the four limits top to bottom. | $13,000 − $12,500 = $500. Missing the contract rule would pay $1,000 too much. |
-| 16–18 | 6 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition publishes (ZDR with the model labs, Outposts), and what we will confirm with Cognition. |
-| 18–20 | 7 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
-| +2 (optional) | 7 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
+| 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
+| +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
+| 18–20 | 7 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition publishes (ZDR with the model labs, Outposts), and what we will confirm with Cognition. |
 | +2 (if asked about next steps) | 8 · Pilot plan | Walk the four weeks; point at the "Security's role" column. | Security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
 
 ## 15-minute route
 
-The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Security & data (2) → 7 · Review & repeat (2).
+The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Review & repeat (2) → 7 · Security & data (2).
 
 ## If something goes wrong
 
-- **A security question you can't answer:** say "I'll confirm that with Cognition". Rows marked "Confirm with Cognition" on screen 6 are exactly those.
+- **A security question you can't answer:** say "I'll confirm that with Cognition". Rows marked "Confirm with Cognition" on screen 7 are exactly those.
 - **Start blank:** press **Reset** (top right, next to the run button) to clear live results; the saved rehearsal evidence is untouched.
 - **"Run COBOL vs Python now" shows FAILED:** say "the live run failed; here is the saved rehearsal". Every screen still shows the purple SAVED REHEARSAL evidence. Click "steps" (top right) to show which step failed.
 - **The app will not open:** use the GitHub fallback links:
