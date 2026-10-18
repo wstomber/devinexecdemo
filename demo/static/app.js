@@ -63,7 +63,7 @@ const ex3Case = () => E.expectations?.cases?.find(c => c.claim_id === "CMS-EX3")
 const findRow = (cmp, id) => cmp?.rows?.find(r => r[1] === id);
 
 const VIEWS = [["overview", "The problem"], ["baseline", "1 · COBOL baseline"], ["explain", "2 · Devin explains COBOL"], ["tests", "3 · Tests came first"],
-  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["security", "6 · Security & data"], ["review", "7 · Review & repeat"]];
+  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["security", "6 · Security & data"], ["review", "7 · Review & repeat"], ["pilot", "8 · Pilot plan"]];
 
 const R = {};
 R.overview = async () => {
@@ -237,8 +237,11 @@ R.ex3 = async () => {
    <li>Python tests: <code>test_cms_ex3_contract_replaces_charges_and_pays_500</code>, <code>test_cms_ex3_without_contract_would_pay_1500</code></li>
    <li>Comparison row: <a href="#compare" data-goto-ex3="1">curated batch, CMS-EX3</a></li></ul></div></div>`;
 };
+R.pilot = async () => `<h1>8 · A four-week pilot</h1>
+  <p class="lede">How CMS could try this safely on one real system: security sets the rules first, then tries to break them.</p>
+  <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>`;
 R.security = async () => `<h1>6 · Security &amp; data</h1>
-  <p class="lede">What this demo touched, what Cognition and AWS publish about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
+  <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
 R.review = async () => {
   const st = E.status || {}, ev = E.session_events || [];
