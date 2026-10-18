@@ -202,6 +202,7 @@ fresh live runs, and record actual work plus human review/intervention time.
 
 ```sh
 make demo          # compiles COBOL, generates batches, serves http://localhost:8765
+make demo-live     # same, but refuses to start unless DEVIN_API_KEY is set (Start Devin live)
 make demo-refresh  # runs every live check once into build/demo-runs/<UTC>/ (terminal only)
 ```
 

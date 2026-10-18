@@ -61,3 +61,14 @@ class ResetLiveRuns(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RequireDevinKey(unittest.TestCase):
+    def test_refuses_to_start_without_key(self):
+        from unittest import mock
+        env = {k: v for k, v in os.environ.items() if k != "DEVIN_API_KEY"}
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(sys, "argv", ["server.py", "--require-devin-key"]), \
+                mock.patch.object(server, "ThreadingHTTPServer") as http:
+            self.assertEqual(server.main(), 2)
+            http.assert_not_called()

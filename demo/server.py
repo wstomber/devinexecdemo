@@ -204,7 +204,13 @@ def main():
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--run-once", action="store_true", help="run the live evidence steps and exit")
+    parser.add_argument("--require-devin-key", action="store_true",
+                        help="refuse to start unless DEVIN_API_KEY is set, so Start Devin live can't silently fall back")
     args = parser.parse_args()
+    if args.require_devin_key and not devin_launch.configured():
+        print("DEVIN_API_KEY is not set in this shell, so Start Devin live would not work. "
+              "Open a new shell (secrets load only in new shells) and try again.", file=sys.stderr)
+        return 2
     if args.run_once:
         state = live_run()
         print(f"{state['status']}: {state['folder']}")
@@ -213,6 +219,7 @@ def main():
         return 0 if state["status"] == "PASSED" else 1
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Migration Evidence app: http://localhost:{args.port}  (Ctrl+C to stop)")
+    print(f"Start Devin live: {'ready (DEVIN_API_KEY set)' if devin_launch.configured() else 'NOT available: DEVIN_API_KEY is not set'}")
     server.serve_forever()
 
 
