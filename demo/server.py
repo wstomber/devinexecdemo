@@ -106,6 +106,12 @@ def raw_allowed(name):
     return out.returncode == 0
 
 
+def run_in_progress(run_dir):
+    """A run started outside this server (`--run-once`) still says RUNNING until it finishes."""
+    state, err = evidence.read_json(run_dir / "run.json")
+    return not err and state.get("status") == "RUNNING" and not state.get("finished_at")
+
+
 def reset_live_runs(runs=None, archive=None):
     """Move every live run aside (never deleted) so the app shows only saved evidence again."""
     runs = runs or evidence.RUNS
@@ -113,10 +119,11 @@ def reset_live_runs(runs=None, archive=None):
     if not LOCK.acquire(blocking=False):
         return False
     try:
-        if runs.exists() and any(runs.iterdir()):
+        done = [p for p in runs.iterdir() if not run_in_progress(p)] if runs.exists() else []
+        if done:
             dest = archive / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
             dest.mkdir(parents=True)
-            for p in runs.iterdir():
+            for p in done:
                 shutil.move(str(p), str(dest / p.name))
         return True
     finally:

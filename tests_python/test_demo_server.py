@@ -25,6 +25,14 @@ class ResetLiveRuns(unittest.TestCase):
         self.assertTrue(server.reset_live_runs(self.runs, self.archive))
         self.assertEqual(len(list(self.archive.iterdir())), 1)
 
+    def test_reset_leaves_in_progress_run(self):
+        busy = self.runs / "20261018T000001Z"
+        busy.mkdir()
+        (busy / "run.json").write_text('{"status": "RUNNING", "finished_at": null}')
+        self.assertTrue(server.reset_live_runs(self.runs, self.archive))
+        self.assertEqual([p.name for p in self.runs.iterdir()], ["20261018T000001Z"])
+        self.assertEqual([p.name for p in self.archive.glob("*/*")], ["20261018T000000Z"])
+
     def test_reset_refused_while_running(self):
         server.LOCK.acquire()
         try:
