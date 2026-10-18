@@ -132,7 +132,14 @@ if __name__ == "__main__":
 
 
 class Reset(unittest.TestCase):
-    setUp, tearDown = Launcher.setUp, Launcher.tearDown
+    tearDown = Launcher.tearDown
+
+    def setUp(self):
+        self.state = Path(tempfile.mkdtemp()) / "devin-runs" / "latest.json"
+        self.patches = [mock.patch.object(devin_launch, "STATE", self.state),
+                        mock.patch.dict(os.environ, {"DEVIN_API_KEY": KEY})]
+        for p in self.patches:
+            p.start()
 
     def archived(self):
         return sorted(self.state.parent.with_name("devin-runs-archive").glob("*.json"))
