@@ -63,7 +63,7 @@ const ex3Case = () => E.expectations?.cases?.find(c => c.claim_id === "CMS-EX3")
 const findRow = (cmp, id) => cmp?.rows?.find(r => r[1] === id);
 
 const VIEWS = [["overview", "The problem"], ["baseline", "1 · COBOL baseline"], ["explain", "2 · Devin explains COBOL"], ["tests", "3 · Tests came first"],
-  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["security", "6 · Security & data"], ["review", "7 · Review & repeat"], ["pilot", "8 · Pilot plan"]];
+  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["review", "6 · Review & repeat"], ["security", "7 · Security & data"], ["pilot", "8 · Pilot plan"]];
 
 const R = {};
 R.overview = async () => {
@@ -240,12 +240,12 @@ R.ex3 = async () => {
 R.pilot = async () => `<h1>8 · A four-week pilot</h1>
   <p class="lede">How CMS could try this safely on one real system: security sets the rules first, then tries to break them.</p>
   <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>`;
-R.security = async () => `<h1>6 · Security &amp; data</h1>
+R.security = async () => `<h1>7 · Security &amp; data</h1>
   <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
 R.review = async () => {
   const st = E.status || {}, ev = E.session_events || [];
-  return `<h1>7 · Reviewable, and repeatable</h1>
+  return `<h1>6 · Reviewable, and repeatable</h1>
   <p class="lede">Everything a human reviewer needs is in one pull request, and the process is saved as Playbooks so Devin can do it again — or keep maintaining the code.</p>
   ${E.status_problem ? `<div class="err">demo/status.json ${esc(E.status_problem)}</div>` : `<p class="small muted">PR / Playbook status recorded ${esc(st.recorded_at)} — click through for the current state.</p>`}
   <h2>Pull requests</h2><div class="grid g2">${(st.pull_requests || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">#${p.number}</a> ${badge(p.state)}</h3>${esc(p.title)}<div class="small muted">${esc(p.role)}</div>${p.commits_url ? `<a class="small" href="${esc(p.commits_url)}" target="_blank">See the commit-by-commit order</a>` : ""}</div>`).join("")}</div>
@@ -278,7 +278,7 @@ function devinCard() {
   const prs = (s.pull_requests || []).map(p => `<a href="${esc(p.url)}" target="_blank">Pull request ${esc(p.url.split("/").pop())}</a> ${badge((p.state || "open").toUpperCase())}`).join(" · ");
   return `<div class="card">${intro}${err}
    <p>${LIVE_DEVIN} ${badge(cls, label)} <span class="small">started ${esc(started)}</span></p>
-   <p><a class="btn primary" href="${esc(s.url)}" target="_blank">Open Devin's session ↗</a> ${prs ? `&nbsp; ${prs}` : devinActive(s) ? `<span class="small muted">&nbsp; Its pull request appears here once Devin opens it.</span>` : `<span class="small muted">&nbsp; No pull request was opened.</span>`}</p>
+   <p><a class="btn primary" href="${esc(s.url)}" target="_blank">Open Devin's session ↗</a> <button class="btn" data-devin-reset="1" title="${devinActive(s) ? "Stops this Devin session and clears the card" : "Clears the card"}">Reset</button> ${prs ? `&nbsp; ${prs}` : devinActive(s) ? `<span class="small muted">&nbsp; Its pull request appears here once Devin opens it.</span>` : `<span class="small muted">&nbsp; No pull request was opened.</span>`}</p>
    ${s.problem ? `<p class="small muted">Last status check: ${esc(s.problem)}</p>` : ""}
    ${s.status === "suspended" ? `<p class="small muted">Devin paused this session. Open it and send a message to resume it.</p>` : devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
 }
@@ -342,9 +342,10 @@ function openFresh() { $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQue
   if (location.hash === "#compare") render(); else location.hash = "#compare"; }
 
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],#runlive,#resetlive");
+  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
+  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
   if (t.dataset.devinStart) { t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
   if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; const r = await fetch("/api/live-run", {method: "POST"}); await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps(); return; }
   if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }

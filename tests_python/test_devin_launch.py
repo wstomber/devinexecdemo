@@ -129,3 +129,44 @@ class Launcher(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Reset(unittest.TestCase):
+    tearDown = Launcher.tearDown
+
+    def setUp(self):
+        self.state = Path(tempfile.mkdtemp()) / "devin-runs" / "latest.json"
+        self.patches = [mock.patch.object(devin_launch, "STATE", self.state),
+                        mock.patch.dict(os.environ, {"DEVIN_API_KEY": KEY})]
+        for p in self.patches:
+            p.start()
+
+    def archived(self):
+        return sorted(self.state.parent.with_name("devin-runs-archive").glob("*.json"))
+
+    def test_reset_stops_a_live_session_and_clears_the_card(self):
+        devin_launch.save({**CREATED, "status": "suspended"})
+        with mock.patch.object(devin_launch, "call", return_value={}) as call:
+            code, payload = devin_launch.reset()
+        self.assertEqual(code, 200)
+        self.assertEqual(call.call_args.args[:2], ("DELETE", "/sessions/devin-abc123"))
+        self.assertIsNone(payload["session"])
+        self.assertFalse(self.state.exists())
+        self.assertEqual(len(self.archived()), 1)
+
+    def test_reset_of_a_finished_session_only_clears_the_card(self):
+        devin_launch.save({**CREATED, "status": "exit"})
+        with mock.patch.object(devin_launch, "call") as call:
+            code, payload = devin_launch.reset()
+        self.assertEqual(code, 200)
+        call.assert_not_called()
+        self.assertIsNone(payload["session"])
+
+    def test_failed_stop_keeps_the_card(self):
+        devin_launch.save({**CREATED, "status": "running", "status_detail": "working"})
+        err = urllib.error.HTTPError("u", 500, "boom", {}, io.BytesIO(b"{}"))
+        with mock.patch.object(devin_launch, "call", side_effect=err):
+            code, payload = devin_launch.reset()
+        self.assertEqual(code, 502)
+        self.assertTrue(self.state.exists())
+        self.assertIn("Could not stop", payload["error"])

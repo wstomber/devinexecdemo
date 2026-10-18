@@ -138,3 +138,24 @@ def start():
         save(session)
         _checked["at"] = time.monotonic()
         return 201, state()
+
+
+def reset():
+    """Stop the latest session if it is still live, and move its record aside so the card offers a fresh start."""
+    with LOCK:
+        session = load()
+        if not session:
+            return 200, state()
+        if configured() and is_active(session):
+            sid = session["session_id"]
+            try:
+                call("DELETE", f"/sessions/{sid if sid.startswith('devin-') else 'devin-' + sid}")
+            except Exception as exc:  # noqa: BLE001
+                return 502, {**state(), "error": f"Could not stop the session: {problem(exc)}"}
+        archive = STATE.parent.with_name("devin-runs-archive")
+        archive.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        (archive / f"{stamp}-{session['session_id']}.json").write_text(
+            json.dumps({**session, "reset_at": now()}, indent=2) + "\n")
+        STATE.unlink()
+        return 200, state()

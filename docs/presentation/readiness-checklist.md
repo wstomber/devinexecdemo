@@ -38,6 +38,6 @@ Recorded 2026-10-17 by Devin. Re-check anything marked PENDING on the day.
 
 1. **30 minutes before:** in this Devin session, send: "Start the demo app". Devin starts it with `make demo-live`, checks that "▶ Start Devin live" shows as a button, and gives you the preview button. (Or, on a machine with GnuCOBOL: `make demo`, then open http://localhost:8765.)
 2. Click through once. Press **▶ Run COBOL vs Python now** once to warm up; it should say PASSED and jump to 5 · Old vs new. Then press **Reset** so the audience starts blank.
-3. **5 minutes before:** press **▶ Start Devin live** (first screen or screen 7). The card then shows the session status and an **Open Devin's session ↗** button; its pull request link appears when Devin opens one. If the card shows manual steps instead, follow them (app.devin.ai → new session → Playbook "MSP COBOL to Python with evidence" → paste the one-line prompt).
+3. **5 minutes before:** press **▶ Start Devin live** (first screen or screen 6). The card then shows the session status and an **Open Devin's session ↗** button; its pull request link appears when Devin opens one. If the card shows manual steps instead, follow them (app.devin.ai → new session → Playbook "MSP COBOL to Python with evidence" → paste the one-line prompt).
 4. During the demo follow `docs/presentation/presenter-guide.md` (20-minute route, or the 15-minute route).
 5. If anything fails, say so and use the purple SAVED REHEARSAL evidence or the GitHub fallback links in the guide.

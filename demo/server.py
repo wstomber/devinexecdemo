@@ -187,6 +187,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/devin-run":
             code, payload = devin_launch.start()
             return self.send(code, json.dumps(payload))
+        if path == "/api/devin-reset":
+            code, payload = devin_launch.reset()
+            return self.send(code, json.dumps(payload))
         if path == "/api/live-reset":
             reset = reset_live_runs()
             return self.send(200 if reset else 409, json.dumps({"reset": reset}))
@@ -216,7 +219,8 @@ def main():
         return 0 if state["status"] == "PASSED" else 1
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Migration Evidence app: http://localhost:{args.port}  (Ctrl+C to stop)")
-    print(f"Start Devin live: {'ready (DEVIN_API_KEY set)' if devin_launch.configured() else 'NOT available: DEVIN_API_KEY is not set'}")
+    print(f"Start Devin live: {'ready (DEVIN_API_KEY set)' if devin_launch.configured() else 'NOT available: DEVIN_API_KEY is not set'}",
+          flush=True)
     server.serve_forever()
 
 
