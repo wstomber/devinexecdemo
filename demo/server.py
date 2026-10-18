@@ -259,7 +259,11 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length") or 0)
             if not 0 <= length <= 1024:
                 return self.send(413, json.dumps({"started": False, "error": "request body too large"}))
+            self.connection.settimeout(5)
             bug = json.loads(self.rfile.read(length) or b"{}").get("bug") if length else None
+        except TimeoutError:
+            self.close_connection = True
+            return self.send(408, json.dumps({"started": False, "error": "request body timed out"}))
         except (ValueError, AttributeError):
             return self.send(400, json.dumps({"started": False, "error": "bad request body"}))
         if bug is not None and bug not in BUGS:
