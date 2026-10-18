@@ -53,3 +53,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 .rulematch td:nth-child(4){background:#fffaf0;font-size:14px}.rulematch .code{max-height:none}.rulematch .code .ln span:last-child{white-space:pre-wrap;word-break:break-word}.rulematch .code .ln span:first-child{width:30px}
 .stepno{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;margin-right:4px}
 .code .ln.gap span:first-child{color:#5d7186}
+.term{background:#0b1015;color:#d6e2ee;font-family:var(--mono);font-size:13px;line-height:1.5;border-radius:8px;padding:12px 14px;max-height:620px;overflow:auto}.term>div{white-space:pre}
+.term .p{color:#8fe08f;margin-top:8px}.term .p:first-child{margin-top:0}.term .c{color:#6f8597}.term .ruler{color:#6f8597;font-size:12px}
+.term .f1{color:#9cc7ff}.term .ruler .f1{color:#5f84b3}.term .hl{background:#3a3110;color:#ffe2a0}.term .hl .f0,.term .hl .f1{color:#ffe2a0}
+.term .err{color:#ff8f8f}
