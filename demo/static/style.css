@@ -48,3 +48,8 @@ input[type=search]{padding:7px 10px;border:1px solid var(--line);border-radius:7
 footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:8px 24px;font-size:13px;z-index:6}
 .warn{background:var(--amberbg);border:1px solid #f0c36a;border-radius:8px;padding:10px 14px}
 .err{background:var(--redbg);border:1px solid #f3b4ad;border-radius:8px;padding:10px 14px}
+.rulematch{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 8px}.rulematch td{vertical-align:top;background:#fff;padding:10px;border-top:1px solid #e3e7ee;border-bottom:1px solid #e3e7ee}
+.rulematch th:first-child{width:22%}.rulematch th:nth-child(2),.rulematch th:nth-child(3){width:30%}.rulematch td:first-child{border-left:4px solid var(--blue);border-radius:6px 0 0 6px}.rulematch td:last-child{border-radius:0 6px 6px 0;border-right:1px solid #e3e7ee}
+.rulematch td:nth-child(4){background:#fffaf0;font-size:14px}.rulematch .code{max-height:none}.rulematch .code .ln span:last-child{white-space:pre-wrap;word-break:break-word}.rulematch .code .ln span:first-child{width:30px}
+.stepno{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;margin-right:4px}
+.code .ln.gap span:first-child{color:#5d7186}

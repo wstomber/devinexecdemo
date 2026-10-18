@@ -139,14 +139,57 @@ R.tests = async () => {
   <h2>Separate: starter infrastructure tests</h2><div class="card small">These came with the starter repo and check the COBOL harness itself; they are not Devin's independent policy tests. ${stepLine("starter-tests")}</div>
   ${cmd("python3 -m unittest discover -s tests_policy -v")}`;
 };
+const RULE_STEPS = [
+  {say: "Was the bill already paid in full? Then Medicare pays $0.",
+   cob: [[/if raw-full = "Y"/, /end-if/]], py: [[/if claim\.paid_in_full:/, /PAYMENT_IN_FULL/]],
+   ex: c => c.full === "Y" ? "Yes → $0" : "No → keep going"},
+  {say: "If the provider agreed to a contract amount, use it instead of the full charges.",
+   cob: [[/move claim-charges to charge-basis/, /end-if/]], py: [[/return claim\.charges if claim\.contract/, /./]],
+   ex: c => c.contract == null ? `No contract → ${$$(c.charges)}` : `Contract ${$$(c.contract)} replaces charges ${$$(c.charges)}`},
+  {say: "The limit is the smaller of the approved amount and that step-2 amount.",
+   cob: [[/compute payment-cap/, /./]], py: [[/return min\(claim\.gross, charge_basis/, /./], [/cap = payment_cap\(claim\)/, /./]],
+   ex: c => `smaller of ${$$(c.gross)} and ${$$(c.contract ?? c.charges)} = ${$$(Math.min(c.gross, c.contract ?? c.charges))}`},
+  {say: "Did the other insurer already pay the limit or more? Then Medicare pays $0.",
+   cob: [[/if claim-primary >= payment-cap/, /end-if/]], py: [[/if claim\.primary >= cap:/, /PRIMARY_AT_CAP/]],
+   ex: c => `paid ${$$(c.primary)}: ${c.primary >= capOf(c) ? "yes → $0" : "less than the limit → keep going"}`},
+  {say: "Do the patient's deductible + coinsurance reach the limit? Then Medicare pays $0.",
+   cob: [[/compute deductions =/, /end-if/]], py: [[/deductions = claim\.deductible/, /DEDUCTIONS_AT_CAP/]],
+   ex: c => `${$$(c.deductible + c.coinsurance)}: ${c.deductible + c.coinsurance >= capOf(c) ? "yes → $0" : "less than the limit → keep going"}`},
+  {say: "Otherwise Medicare pays the limit minus the bigger of those two amounts.",
+   cob: [[/compute reduction-amount/, /SECONDARY_PAYABLE/]], py: [[/return Result\(claim\.claim_id, "PAID"/, /./]],
+   ex: c => `${$$(capOf(c))} − ${$$(Math.max(c.primary, c.deductible + c.coinsurance))} = <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))}</b>`}];
+const $$ = cents => "$" + (cents / 100).toLocaleString("en-US", {maximumFractionDigits: 2});
+const capOf = c => Math.min(c.gross, c.contract ?? c.charges);
+const MISSING = `<p class="err">Not found in the source.</p>`;
+function ruleLines(text, ranges) {
+  const L = text.split("\n"), out = [];
+  for (const [a, b] of ranges) {
+    const s = L.findIndex(l => a.test(l)); if (s < 0) return MISSING;
+    let e = s; if (b.source !== ".") { while (e < L.length && !b.test(L[e])) e++; if (e === L.length) return MISSING; }
+    out.push(L.slice(s, e + 1).map((t, k) => `<div class="ln"><span>${s + k + 1}</span><span>${esc(t.replace(/^ {4,8}/, ""))}</span></div>`).join(""));
+  }
+  return out.join(`<div class="ln gap"><span>⋮</span><span></span></div>`);
+}
+async function ruleMatch() {
+  const [cob, py, fx] = await Promise.all([file("cobol/payment.cob"), file("python/msp.py"), file("fixtures/curated.json")]);
+  if (cob == null || py == null) return `<p class="err">Source files are missing.</p>`;
+  let ex = null; try { ex = JSON.parse(fx).map(r => r.input).find(r => r?.id === "CMS-EX3"); } catch (e) { ex = null; }
+  if (ex && ex.contract === undefined) ex.contract = null;
+  return `<table class="rulematch"><thead><tr><th>Step</th><th>COBOL (before)</th><th>Python (after)</th>${ex ? "<th>CMS-EX3, step by step</th>" : ""}</tr></thead><tbody>
+  ${RULE_STEPS.map((st, k) => `<tr><td><span class="stepno">${k + 1}</span> ${esc(st.say)}</td>
+    <td><div class="code">${ruleLines(cob, st.cob)}</div></td><td><div class="code">${ruleLines(py, st.py)}</div></td>${ex ? `<td>${st.ex(ex)}</td>` : ""}</tr>`).join("")}
+  </tbody></table>`;
+}
 R.python = async () => {
   const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
   const u = E.saved.python_unit_tests;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same rule, now in readable Python. It passed the independent tests on its first run.</p>
-  <p>Left: the original COBOL that decides what Medicare pays. Right: Devin's Python doing the same checks in the same order. The highlighted lines are the payment rule in each language.</p>
-  <div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div>
+  <p>The rule that decides what Medicare pays, one step per row. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows CMS-EX3 through each step.</p>
+  ${await ruleMatch()}
+  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest.</p>
+  <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
   <p class="small muted">“Same independent tests” = the hand-worked answers from screen 3, now run against the Python. “Unit tests” = smaller checks of each piece of the Python on its own.</p>
   <h2>What had to be preserved</h2><div class="grid g4">
@@ -282,9 +325,13 @@ function devinCard() {
    ${s.problem ? `<p class="small muted">Last status check: ${esc(s.problem)}</p>` : ""}
    ${s.status === "suspended" ? `<p class="small muted">Devin paused this session. Open it and send a message to resume it.</p>` : devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
 }
+let devinGen = 0;
 async function refreshDevin() {
   if (!$("#devinslot")) { clearInterval(dpoll); dpoll = null; return; }
-  try { const r = await fetch("/api/devin-run"); D = await r.json(); } catch (e) { D = {configured: true, error: "Could not reach this app's server."}; }
+  const gen = devinGen; let d;
+  try { const r = await fetch("/api/devin-run"); d = await r.json(); } catch (e) { d = {configured: true, error: "Could not reach this app's server."}; }
+  if (gen !== devinGen) return;
+  D = d;
   const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard();
   if (!devinActive(D?.session)) { clearInterval(dpoll); dpoll = null; } else if (!dpoll) dpoll = setInterval(refreshDevin, 10000);
 }
@@ -345,8 +392,8 @@ document.addEventListener("click", async ev => {
   const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
-  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
-  if (t.dataset.devinStart) { t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
+  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
+  if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
   if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; const r = await fetch("/api/live-run", {method: "POST"}); await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps(); return; }
   if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }
   if (t.dataset.steps) { ev.preventDefault(); showSteps(); return; }
