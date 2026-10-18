@@ -54,7 +54,7 @@ async function codeSnippet(path, startRe, endRe) { const t = await file(path); c
 function testStatus(saved, live, label) {
   return `<div class="card"><h3>${esc(label)}</h3>
    <div>${SAVED} ${badge(saved?.status || "UNKNOWN")} ${saved?.tests != null ? saved.tests + " tests" : ""} · ${raw(saved?.log, "log")}</div>
-   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + live.tests + " tests" : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run it live”</span>'}</div></div>`;
+   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + live.tests + " tests" : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run COBOL vs Python now”</span>'}</div></div>`;
 }
 const liveStep = key => E.live?.steps?.find(s => s.key === key);
 function stepLine(key) { const s = liveStep(key); return s ? `${LIVE} ${badge(s.status)} exit ${s.exit_code ?? "—"} · ${raw(s.log, "output")}` : `${LIVE} ${badge("NOT_RUN")}`; }
@@ -141,12 +141,14 @@ R.tests = async () => {
 };
 R.python = async () => {
   const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
-  const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /goback|end-if\.\s*$/);
+  const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
   const u = E.saved.python_unit_tests;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same rule, now in readable Python. It passed the independent tests on its first run.</p>
+  <p>Left: the original COBOL that decides what Medicare pays. Right: Devin's Python doing the same checks in the same order. The highlighted lines are the payment rule in each language.</p>
   <div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div>
   <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
+  <p class="small muted">“Same independent tests” = the hand-worked answers from screen 3, now run against the Python. “Unit tests” = smaller checks of each piece of the Python on its own.</p>
   <h2>What had to be preserved</h2><div class="grid g4">
    <div class="card"><h3>Exact cents</h3>Whole-number cents everywhere — never floating point — like COBOL's packed decimal.</div>
    <div class="card"><h3>Optional contract</h3>“----------” means no contract; a number replaces the charges.</div>
@@ -159,6 +161,7 @@ R.python = async () => {
   <p class="small">Commit ${commit(E.git.stages.stage3?.sha)} · <a href="https://github.com/wstomber/devinexecdemo/commit/${esc(E.git.stages.stage3?.sha || "")}" target="_blank">view the diff</a></p>
   ${cmd("MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v")}${cmd("python3 -m unittest discover -s tests_python -v")}`;
 };
+const curatedKey = () => E.live?.comparisons?.curated?.rows?.length ? "live:curated" : "saved:curated";
 function cmpSources() {
   const out = []; for (const [k, v] of Object.entries(E.saved.comparisons)) out.push(["saved:" + k, v]);
   for (const [k, v] of Object.entries(E.live?.comparisons || {})) out.push(["live:" + k, v]); return out;
@@ -286,7 +289,7 @@ async function refreshDevin() {
 function renderLive() {
   const L = E.live, running = E.live_running || L?.status === "RUNNING";
   $("#live").innerHTML = `${L ? `${LIVE} ${badge(L.status)} <span>${esc(L.started_at || "")}</span> <a href="#" style="color:#cfe0ff" data-steps="1">steps</a>` : `<span class="badge NOT_RUN">NO LIVE RUN YET</span>`}
-   <button class="btn primary" id="runlive" ${running ? "disabled" : ""}>${running ? "Running…" : "▶ Run it live"}</button>`;
+   <button class="btn primary" id="runlive" ${running ? "disabled" : ""}>${running ? "Running COBOL and Python…" : "▶ Run COBOL vs Python now"}</button>${L && !running ? ' <button class="btn" id="resetlive" title="Clear live results; saved rehearsal evidence is untouched">Reset</button>' : ""}`;
   if (running && !poll) poll = setInterval(refresh, 1500);
   if (!running && poll) { clearInterval(poll); poll = null; }
 }
@@ -331,14 +334,17 @@ async function load() {
   const r = await fetch("/api/evidence"); if (!r.ok) throw new Error("evidence " + r.status); E = await r.json();
 }
 async function refresh() { const wasRunning = E?.live_running; await load(); renderLive(); if (!$("#drawer").hidden && $("#drawer h2")?.textContent.startsWith("Live run")) showSteps();
-  if (wasRunning && !E.live_running) { cmpKey = null; render(); } }
+  if (wasRunning && !E.live_running) openFresh(); }
+function openFresh() { $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQuery = ""; cmpFilter = "all"; cmpPage = 0;
+  if (location.hash === "#compare") render(); else location.hash = "#compare"; }
 
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],#runlive");
+  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
   if (t.dataset.devinStart) { t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); D = await r.json(); } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
-  if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; await fetch("/api/live-run", {method: "POST"}); await load(); renderLive(); showSteps(); return; }
+  if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; const r = await fetch("/api/live-run", {method: "POST"}); await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps(); return; }
+  if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }
   if (t.dataset.steps) { ev.preventDefault(); showSteps(); return; }
   if (t.dataset.close) { $("#drawer").hidden = true; return; }
   if (t.dataset.case) return showCase(+t.dataset.case);
@@ -346,7 +352,7 @@ document.addEventListener("click", async ev => {
   if (t.dataset.cmp) { cmpKey = t.dataset.cmp; cmpPage = 0; return render(); }
   if (t.dataset.f) { cmpFilter = t.dataset.f; cmpPage = 0; return render(); }
   if (t.dataset.pg) { cmpPage = Math.max(0, cmpPage + +t.dataset.pg); return render(); }
-  if (t.dataset.jump || t.dataset.gotoEx3) { cmpQuery = "CMS-EX3"; cmpFilter = "all"; cmpPage = 0; cmpKey = E.live?.comparisons?.curated ? "live:curated" : "saved:curated"; if (t.dataset.gotoEx3) return; return render(); }
+  if (t.dataset.jump || t.dataset.gotoEx3) { cmpQuery = "CMS-EX3"; cmpFilter = "all"; cmpPage = 0; cmpKey = curatedKey(); if (t.dataset.gotoEx3) return; return render(); }
 });
 document.addEventListener("input", ev => { if (ev.target.id === "cmpq") { cmpQuery = ev.target.value; cmpPage = 0; clearTimeout(window._q); window._q = setTimeout(async () => { await render(); const i = $("#cmpq"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); } });
 document.addEventListener("toggle", async ev => { const d = ev.target; if (d.dataset?.md && d.open && !d.dataset.loaded) { d.dataset.loaded = 1; d.querySelector("div").outerHTML = md(await file(d.dataset.md)); } }, true);

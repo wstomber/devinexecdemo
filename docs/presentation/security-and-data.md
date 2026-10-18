@@ -1,7 +1,7 @@
 ## What this demo touched
 
 - **No real data.** Every claim here is synthetic and was built from public CMS manual rules. There is no PHI, no PII, and no CMS system access.
-- **Nothing leaves this app.** The page loads only from its own server. "Run it live" runs the COBOL and Python programs on the demo machine and writes a new timestamped folder. Saved evidence is never overwritten.
+- **Nothing leaves this app.** The page loads only from its own server. "Run COBOL vs Python now" runs the COBOL and Python programs on the demo machine and writes a new timestamped folder. Saved evidence is never overwritten.
 - **Humans stay in control.** Devin's work arrives as pull requests that a person reviews. Nothing in this demo was merged without the owner saying so.
 - **No new third-party code.** The Python migration uses only the Python standard library (`sys`, `dataclasses`, `typing`), so there is no new package supply chain to vet.
 
