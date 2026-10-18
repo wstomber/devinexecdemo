@@ -94,6 +94,7 @@ async function baselineTerminal(b) {
   const [dat, res, tot, log] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"])]);
   if (dat == null || res == null) return `<p class="err">Saved baseline files are missing.</p>`;
   const lines = t => { const a = t.split("\n"); if (a[a.length - 1] === "") a.pop(); return a; };
+  const SHOWN = 15, more = (n, path) => n > SHOWN ? L("c", `# … first ${SHOWN} of ${n} claims shown · ${raw(path, "full file")}`) : "";
   const L = (cls, html) => `<div class="${cls}">${html}</div>`, hl = l => /CMS-EX3/.test(l) ? " hl" : "";
   const run = (log || "").split("\n"), at = run.findIndex(l => /^\$ build\/msp-batch \S*curated\.dat/.test(l));
   const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat curated-results.csv curated-totals.csv";
@@ -103,10 +104,10 @@ async function baselineTerminal(b) {
   const ex3out = lines(res).map(l => l.split(",")).find(r => r[1] === "CMS-EX3");
   let decode = ""; if (ex3) { let o = 0; decode = CLAIM_FIELDS.map(([n, w]) => { const t = ex3.slice(o, o + w); o += w; return n === "claim ID" ? `<b>${esc(t.trim())}</b>` : n === "F" ? `paid in full: ${esc(t)}` : `${n} ${dollars(t)}`; }).join(" · "); }
   return `<div class="term">${L("p", "$ cat curated.dat")}${L("c", "# the input: one claim per line, fixed-width, 73 characters, amounts in cents")}${L("ruler", ruler)}
-  ${lines(dat).map(l => L("ln" + hl(l), claimLine(l))).join("")}
+  ${lines(dat).slice(0, SHOWN).map(l => L("ln" + hl(l), claimLine(l))).join("")}${more(lines(dat).length, b.raw["curated.dat"])}
   ${L("p", "$ " + esc(cmdText))}${exit ? L("c", esc(exit)) : ""}
   ${L("p", "$ cat curated-results.csv")}${L("c", "# the output: one result per claim, in the same order")}
-  ${lines(res).map(l => L("ln" + hl(l), esc(l))).join("")}
+  ${lines(res).slice(0, SHOWN + 1).map(l => L("ln" + hl(l), esc(l))).join("")}${more(lines(res).length - 1, b.raw["curated-results.csv"])}
   ${L("p", "$ cat curated-totals.csv")}${tot ? lines(tot).map(l => L("ln", esc(l))).join("") : L("err", "curated-totals.csv is missing from the saved run")}</div>
   ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}).` : ""}</p>` : ""}`;
 }
@@ -236,6 +237,21 @@ function cmpSources() {
   const out = []; for (const [k, v] of Object.entries(E.saved.comparisons)) out.push(["saved:" + k, v]);
   for (const [k, v] of Object.entries(E.live?.comparisons || {})) out.push(["live:" + k, v]); return out;
 }
+function bugBanner() {
+  const L = E.live, b = L?.bug; if (!b) return "";
+  const c = L.comparisons?.curated, pt = L.policy_tests_python, failed = +(/failures=(\d+)/.exec(pt?.detail || "")?.[1] || 0) + +(/errors=(\d+)/.exec(pt?.detail || "")?.[1] || 0);
+  const done = L.status !== "RUNNING";
+  return `<div class="bugbanner"><h3>Planted bug, on purpose: ${esc(b.title)}</h3><p>${esc(b.what)} It was planted in a throwaway copy (${raw(b.file, "see the broken file")}); the real <code>python/msp.py</code> was not changed.</p>
+   <div class="code"><div class="ln"><span>${b.line}</span><span class="del">- ${esc(b.old)}</span></div><div class="ln"><span>${b.line}</span><span class="add">+ ${esc(b.new)}</span></div></div>
+   ${done ? `<p><b>${L.status === "FAILED" ? "The checks caught it" : "Result: " + esc(L.status)}:</b> ${c ? `${c.mismatches} of ${(c.rows || []).length} curated claims now get a different result from the COBOL` : "comparison missing"} · ${pt?.tests ? `${failed} of ${pt.tests} hand-derived tests failed` : "hand-derived tests did not report"} · strict verifier ${badge(c?.verifier?.status || "UNKNOWN")}</p>` : `<p class="muted">Running the checks against the broken copy…</p>`}
+   <p><button class="btn primary" data-undo="1" ${done ? "" : "disabled"}>Undo: run the real code again</button></p></div>`;
+}
+function breakCard() {
+  if (E.live?.bug || !E.bugs) return "";
+  const running = E.live_running || E.live?.status === "RUNNING";
+  return `<div class="card"><h3>Try to break it</h3><p>Pick a mistake a rewrite could easily make. The app puts it into a throwaway copy of the Python and reruns every check against the COBOL. The real code is never touched.</p>
+   <p>${Object.entries(E.bugs).map(([k, b]) => `<button class="btn" data-bug="${esc(k)}" title="${esc(b.what)}" ${running ? "disabled" : ""}>${esc(b.title)}</button>`).join(" ")}</p></div>`;
+}
 R.compare = async () => {
   const src = cmpSources(); if (!cmpKey || !src.find(s => s[0] === cmpKey)) cmpKey = (src.find(s => s[0] === "live:synthetic") || src.find(s => s[0] === "saved:synthetic") || src[0])[0];
   const c = src.find(s => s[0] === cmpKey)[1];
@@ -251,6 +267,7 @@ R.compare = async () => {
   const t = c.totals || {};
   return `<h1>5 · Old vs new, claim by claim</h1>
   <p class="lede">The original COBOL and the new Python were run on the same input. This table is rebuilt from both programs' raw output files.</p>
+  ${bugBanner() || breakCard()}
   <div class="toolbar">${src.map(([k, v]) => `<button class="btn${k === cmpKey ? " on" : ""}" data-cmp="${k}">${k.startsWith("live") ? "LIVE" : "SAVED"} · ${esc(k.split(":")[1])} (${v.records?.python ?? "?"})</button>`).join("")}</div>
   <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <span class="muted small">${esc(c.title)}</span></div>
   ${c.problem ? `<div class="err">${esc(c.problem)}</div>` : ""}
@@ -283,7 +300,7 @@ R.ex3 = async () => {
   const sc = E.saved.comparisons.curated, rowS = findRow(sc, "CMS-EX3"), rowL = findRow(E.live?.comparisons?.curated, "CMS-EX3");
   const noOtaf = E.expectations.cases.find(x => x.claim_id === "EX3-NO-OTAF");
   const pay = await codeSnippet("cobol/payment.cob", /move claim-charges to charge-basis/, /function min/);
-  return `<h1>★ CMS-EX3 — the contractual cap</h1>
+  return `<h1>★ CMS-EX3 — the contractual cap</h1>${bugBanner()}
   <p class="lede">From the CMS manual (${esc(c.source)}). The hospital agreed to accept <b>$13,000 in total</b>. The primary insurer paid $12,500. What does Medicare owe?</p>
   <div class="grid g2"><div class="card"><h3>The claim</h3><table>
    <tr><td>Charges</td><td class="num">${money(i.charges)}</td></tr><tr><td>Gross Medicare payable</td><td class="num">${money(i.gross)}</td></tr>
@@ -309,7 +326,8 @@ R.ex3 = async () => {
 };
 R.pilot = async () => `<h1>8 · A four-week pilot</h1>
   <p class="lede">How CMS could try this safely on one real system: security sets the rules first, then tries to break them.</p>
-  <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>`;
+  <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>
+  <div class="card ask"><h2>Proposed next step</h2><p>Pick one low-risk legacy system and name an owner for it. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
 R.security = async () => `<h1>7 · Security &amp; data</h1>
   <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
@@ -365,7 +383,7 @@ async function refreshDevin() {
 
 function renderLive() {
   const L = E.live, running = E.live_running || L?.status === "RUNNING";
-  $("#live").innerHTML = `${L ? `${LIVE} ${badge(L.status)} <span>${esc(L.started_at || "")}</span> <a href="#" style="color:#cfe0ff" data-steps="1">steps</a>` : `<span class="badge NOT_RUN">NO LIVE RUN YET</span>`}
+  $("#live").innerHTML = `${L ? `${LIVE} ${badge(L.status)} <span>${esc(L.started_at || "")}</span> <a href="#" style="color:#cfe0ff" data-steps="1">steps</a>` : `<span class="badge NOT_RUN">NO LIVE RUN YET</span>`}${L?.bug ? ' <span class="badge FAILED">PLANTED BUG</span>' : ""}
    <button class="btn primary" id="runlive" ${running ? "disabled" : ""}>${running ? "Running COBOL and Python…" : "▶ Run COBOL vs Python now"}</button>${L && !running ? ' <button class="btn" id="resetlive" title="Clear live results; saved rehearsal evidence is untouched">Reset</button>' : ""}`;
   if (running && !poll) poll = setInterval(refresh, 1500);
   if (!running && poll) { clearInterval(poll); poll = null; }
@@ -373,7 +391,7 @@ function renderLive() {
 function showSteps() {
   const L = E.live; if (!L) return;
   $("#drawer").hidden = false;
-  $("#drawer").innerHTML = `<button class="btn" data-close="1" style="float:right">Close</button><h2>Live run ${esc(L.id)}</h2>
+  $("#drawer").innerHTML = `<button class="btn" data-close="1" style="float:right">Close</button><h2>Live run ${esc(L.id)}</h2>${L.bug ? `<div class="err">Planted bug, on purpose: ${esc(L.bug.title)}. These checks run against a broken copy of the Python.</div>` : ""}
    <p>${LIVE} ${badge(L.status)}<br><span class="small">Started ${esc(L.started_at)} · finished ${esc(L.finished_at || "—")} · commit ${commit(L.commit)}${L.dirty ? " (uncommitted changes present)" : ""}<br>Folder <code>${esc(L.folder)}</code></span></p>
    <ul class="steps">${(L.steps || []).map(s => `<li>${badge(s.status)}<span><b>${esc(s.title)}</b><br><code class="small">${esc(s.command)}</code><br><span class="small">exit ${s.exit_code ?? "—"} · ${raw(s.log, "full output")}</span></span></li>`).join("")}</ul>
    <p class="small muted">If a step fails, the saved rehearsal evidence stays on screen, labeled SAVED REHEARSAL.</p>`;
@@ -416,16 +434,22 @@ async function load() {
 }
 async function refresh() { const wasRunning = E?.live_running; await load(); renderLive(); if (!$("#drawer").hidden && $("#drawer h2")?.textContent.startsWith("Live run")) showSteps();
   if (wasRunning && !E.live_running) openFresh(); }
-function openFresh() { $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQuery = ""; cmpFilter = "all"; cmpPage = 0;
+async function startRun(t, bug) {
+  t.disabled = true; t.textContent = "Starting…";
+  const r = await fetch("/api/live-run", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(bug ? {bug} : {})});
+  await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps();
+}
+function openFresh() { $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQuery = ""; cmpFilter = E.live?.bug ? "mismatch" : "all"; cmpPage = 0;
   if (location.hash === "#compare") render(); else location.hash = "#compare"; }
 
 document.addEventListener("click", async ev => {
-  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],#runlive,#resetlive");
+  const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],[data-bug],[data-undo],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
   if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
   if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
-  if (t.id === "runlive") { t.disabled = true; t.textContent = "Starting…"; const r = await fetch("/api/live-run", {method: "POST"}); await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps(); return; }
+  if (t.id === "runlive" || t.dataset.undo) return startRun(t);
+  if (t.dataset.bug) return startRun(t, t.dataset.bug);
   if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }
   if (t.dataset.steps) { ev.preventDefault(); showSteps(); return; }
   if (t.dataset.close) { $("#drawer").hidden = true; return; }

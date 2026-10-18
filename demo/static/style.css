@@ -57,3 +57,6 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 .term .p{color:#8fe08f;margin-top:8px}.term .p:first-child{margin-top:0}.term .c{color:#6f8597}.term .ruler{color:#6f8597;font-size:12px}
 .term .f1{color:#9cc7ff}.term .ruler .f1{color:#5f84b3}.term .hl{background:#3a3110;color:#ffe2a0}.term .hl .f0,.term .hl .f1{color:#ffe2a0}
 .term .err{color:#ff8f8f}
+.bugbanner{border:2px solid #c62828;background:#fff4f3;border-radius:8px;padding:12px 16px;margin:12px 0}.bugbanner h3{margin:0 0 6px;color:#b71c1c}
+.bugbanner .code{max-height:none;margin:8px 0}.bugbanner .del{color:#ff9b9b}.bugbanner .add{color:#9be89b}
+.card.ask{border-left:6px solid var(--blue);margin-top:16px}.card.ask h2{margin-top:0}

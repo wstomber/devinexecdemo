@@ -39,6 +39,24 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Review & repeat (2) → 7 · Security & data (2).
 
+## Try to break it (screen 5)
+
+Invite the interviewer to pick one of the three mistakes. About 7 seconds later the red box shows what caught it. Press **Undo** to go back to green. Line: "Pick any mistake a rewrite could make; watch the checks catch it."
+
+## Ask the DeepWiki live (screen 2)
+
+Let the interviewer type their own question at https://app.devin.ai/wiki/wstomber/devinexecdemo. These were tested on 2026-10-18 and answered correctly, with file references (the links show the saved answers):
+
+1. "What is a COBOL copybook, and how is claim.cpy used in this repo?" ([answer](https://app.devin.ai/search/api_c270c01b-544f-431d-adf1-e6c96510b032))
+2. "How do the COBOL and Python keep exact cents? What does PIC 9(10) mean?" ([answer](https://app.devin.ai/search/api_2fc755dc-93c6-446a-92e4-0f355fc4eaa4))
+3. "Walk me through how claim CMS-EX3 gets paid $500, in the COBOL and in the Python." ([answer](https://app.devin.ai/search/api_f6d0ca42-1e3e-4e8e-a749-24a3f8214996))
+4. "What happens if a claim has no contract amount, or the contract field has a typo in it?" ([answer](https://app.devin.ai/search/api_cae40504-95ac-4c82-b16e-fca9aebacc74))
+5. "What does GOBACK do in COBOL and what is the Python equivalent here?" ([answer](https://app.devin.ai/search/api_06b5dd04-7c68-4a06-8cc9-16579819f6bc))
+6. "If CMS changed the MSP payment rule, which files would an engineer change and which tests would catch a mistake?" ([answer](https://app.devin.ai/search/api_7c069a5e-2230-4c06-a9c5-0f2b9b59952e))
+7. "Why were the tests written from the CMS manual before the Python was written, and where is that visible in the git history?" ([answer](https://app.devin.ai/search/api_c6d0d02f-b9bd-404f-a967-479838c36e46))
+
+Avoid: "What happens if the contract field is all dashes or has bad characters?" Its first sentence wrongly lumped all-dashes in with errors; all-dashes means "no contract". The answer takes about 15 seconds; fill the pause by saying "this is the wiki Devin generated from the code".
+
 ## If something goes wrong
 
 - **A security question you can't answer:** say "I'll confirm that with Cognition". Rows marked "Confirm with Cognition" on screen 7 are exactly those.
