@@ -216,7 +216,8 @@ def main():
         return 0 if state["status"] == "PASSED" else 1
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Migration Evidence app: http://localhost:{args.port}  (Ctrl+C to stop)")
-    print(f"Start Devin live: {'ready (DEVIN_API_KEY set)' if devin_launch.configured() else 'NOT available: DEVIN_API_KEY is not set'}")
+    print(f"Start Devin live: {'ready (DEVIN_API_KEY set)' if devin_launch.configured() else 'NOT available: DEVIN_API_KEY is not set'}",
+          flush=True)
     server.serve_forever()
 
 
