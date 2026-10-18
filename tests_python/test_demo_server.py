@@ -1,10 +1,13 @@
 """Reset moves live runs aside (never deletes them) and refuses while a run is in progress."""
+import os
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "demo"))
+import evidence  # noqa: E402
 import server  # noqa: E402
 
 
@@ -32,6 +35,16 @@ class ResetLiveRuns(unittest.TestCase):
         self.assertTrue(server.reset_live_runs(self.runs, self.archive))
         self.assertEqual([p.name for p in self.runs.iterdir()], ["20261018T000001Z"])
         self.assertEqual([p.name for p in self.archive.glob("*/*")], ["20261018T000000Z"])
+
+    def test_reset_archives_abandoned_run(self):
+        stale = self.runs / "20261018T000002Z"
+        stale.mkdir()
+        (stale / "run.json").write_text('{"status": "RUNNING", "finished_at": null}')
+        old = time.time() - evidence.STALE_AFTER - 60
+        os.utime(stale / "run.json", (old, old))
+        self.assertEqual(evidence.live_run(stale)["status"], "INTERRUPTED")
+        self.assertTrue(server.reset_live_runs(self.runs, self.archive))
+        self.assertEqual(list(self.runs.iterdir()), [])
 
     def test_reset_refused_while_running(self):
         server.LOCK.acquire()
