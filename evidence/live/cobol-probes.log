@@ -1,0 +1,39 @@
+B record, LF: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+B record, CRLF: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+B record, CR CR LF: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+CR inside a CWF line (dropped): exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+no final newline: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+B + 10 trailing spaces: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+X at byte 64: exit=2 rows=
+X at byte 65 (ignored): exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+bytes past 64 discarded, not a new record: exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,ACCEPTED,DISPOSITION_01 
+TAB at byte 45: exit=2 rows=
+TAB inside MBI (kept as data): exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+NUL inside MBI (kept as data): exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+form feed before B: exit=2 rows=
+empty CWF file: exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+CWF file containing only CR: exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+CWF blank line: exit=2 rows=
+CWF CRLF-only line: exit=2 rows=
+lowercase MBI in CWF (accepted, never matches): exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+duplicate B MBI (first wins): exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+numeric but impossible CWF dates (accepted): exit=0 rows=ORDINARY,ACCEPTED,DISPOSITION_01 DUPCHK,REJECTED,NOT_ENTITLED 
+half-dashed MSP period: exit=2 rows=
+lowercase record type: exit=2 rows=
+1000 B records: exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+1001 B records: exit=2 rows=
+1000 H records: exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+1001 H records: exit=2 rows=
+CWF path is a directory: exit=0 rows=ORDINARY,REJECTED,NOT_ENTITLED DUPCHK,REJECTED,NOT_ENTITLED 
+duplicate ID at record 2: exit=2 results_lines=2 totals_bytes=0
+bad CWF: exit=2 results=old totals=old (outputs untouched)
+missing input: exit=2 results=old (untouched)
+input is a directory: exit=2 results_lines=1
+unopenable totals: exit=2 results_bytes=0
+3 arguments: exit=2
+5 arguments: exit=2
+same output/totals string: exit=2
+'o.csv' vs 'o.csv ' (trailing space): exit=2
+'o.csv' vs './o.csv' alias: exit=0 (aliases not detected)
+input path with trailing space: exit=0
+empty input path: exit=2
