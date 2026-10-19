@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from fixtures import case_record, serialize  # noqa: E402  (serializer only, no payment logic)
+from fixtures import case_record, serialize, serialize_cwf  # noqa: E402  (serializer only, no payment logic)
 
 LEDGER = json.loads((Path(__file__).with_name("expectations.json")).read_text())
 COMMAND = shlex.split(os.environ.get("MSP_COMMAND", str(ROOT / "build/msp-batch")))
@@ -35,22 +35,27 @@ class Batch:
         self.results = Path(directory) / "results.csv"
         self.totals = Path(directory) / "totals.csv"
         self.input.write_bytes(content if isinstance(content, bytes) else content.encode("ascii"))
+        self.cwf = Path(directory) / "cwf.dat"
+        self.cwf.write_text("".join(line + "\n" for line in serialize_cwf(LEDGER["cwf_reference"])))
 
     def run(self, *args):
-        argv = list(args) or [str(self.input), str(self.results), str(self.totals)]
+        argv = list(args) or [str(self.input), str(self.cwf), str(self.results), str(self.totals)]
         return subprocess.run(COMMAND + argv, capture_output=True, timeout=60, check=False, cwd=ROOT)
 
     def rows(self):
         with self.results.open(newline="") as stream:
             reader = csv.DictReader(stream)
-            assert reader.fieldnames == ["record_no", "claim_id", "status", "payment_cents", "reason"]
+            assert reader.fieldnames == ["record_no", "claim_id", "status", "payment_cents", "reason",
+                                         "cwf", "cwf_reason", "released_cents"]
             return [{"record_no": int(r["record_no"]), "claim_id": r["claim_id"], "status": r["status"],
-                     "payment_cents": int(r["payment_cents"]), "reason": r["reason"]} for r in reader]
+                     "payment_cents": int(r["payment_cents"]), "reason": r["reason"], "cwf": r["cwf"],
+                     "cwf_reason": r["cwf_reason"], "released_cents": int(r["released_cents"])} for r in reader]
 
     def total(self):
         with self.totals.open(newline="") as stream:
             reader = csv.DictReader(stream)
-            assert reader.fieldnames == ["records", "paid", "zero", "invalid", "payment_cents"]
+            assert reader.fieldnames == ["records", "paid", "zero", "invalid", "payment_cents",
+                                         "accepted", "rejected", "released_cents"]
             (row,) = list(reader)
             return {k: int(v) for k, v in row.items()}
 
@@ -86,6 +91,17 @@ class PolicyLedgerTests(unittest.TestCase):
         self.assertEqual(rows["EX3-NO-OTAF"]["payment_cents"], 150000)
         self.assertEqual(rows["EX3-NO-OTAF"]["payment_cents"] - rows["CMS-EX3"]["payment_cents"], 100000)
 
+    def test_cms_ex3_is_accepted_and_releases_500_dollars(self):
+        rows = {r["claim_id"]: r for r in self.batch.rows()}
+        for claim_id in ("CMS-EX3", "EX3-MSP"):
+            self.assertEqual((rows[claim_id]["cwf"], rows[claim_id]["released_cents"]), ("ACCEPTED", 50000))
+
+    def test_cwf_rejection_releases_nothing_but_keeps_the_calculation(self):
+        rows = [r for r in self.batch.rows() if r["cwf"] == "REJECTED"]
+        self.assertEqual({r["cwf_reason"] for r in rows}, {"NOT_ENTITLED", "DUPLICATE", "MSP_PRIMARY_NOT_BILLED"})
+        self.assertTrue(all(r["released_cents"] == 0 for r in rows))
+        self.assertTrue(any(r["payment_cents"] > 0 for r in rows))
+
     def test_totals_match_ledger_and_rows(self):
         expected = {k: v for k, v in LEDGER["totals"].items() if k != "arithmetic"}
         self.assertEqual(self.batch.total(), expected)
@@ -116,6 +132,12 @@ class LedgerArithmeticAudit(unittest.TestCase):
         for status in ("PAID", "ZERO", "INVALID"):
             self.assertEqual(totals[status.lower()], statuses.count(status))
         self.assertEqual(totals["payment_cents"], sum(c["expected"]["payment_cents"] for c in LEDGER["cases"]))
+        decisions = [c["expected"]["cwf"] for c in LEDGER["cases"]]
+        self.assertEqual((totals["accepted"], totals["rejected"]), (decisions.count("ACCEPTED"), decisions.count("REJECTED")))
+        self.assertEqual(totals["released_cents"], sum(c["expected"]["released_cents"] for c in LEDGER["cases"]))
+        for case in LEDGER["cases"]:
+            x = case["expected"]
+            self.assertEqual(x["released_cents"], x["payment_cents"] if x["cwf"] == "ACCEPTED" else 0, case["claim_id"])
 
 
 class BatchInterfaceTests(unittest.TestCase):
@@ -132,7 +154,8 @@ class BatchInterfaceTests(unittest.TestCase):
         b = self.batch("")
         self.assertEqual(b.run().returncode, 0)
         self.assertEqual(b.rows(), [])
-        self.assertEqual(b.total(), {"records": 0, "paid": 0, "zero": 0, "invalid": 0, "payment_cents": 0})
+        self.assertEqual(b.total(), {"records": 0, "paid": 0, "zero": 0, "invalid": 0, "payment_cents": 0,
+                                     "accepted": 0, "rejected": 0, "released_cents": 0})
 
     def test_crlf_and_missing_final_newline_match_lf(self):
         records = [claim("A1"), claim("A2", primary=0)]
@@ -150,18 +173,18 @@ class BatchInterfaceTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
 
     def test_duplicate_identifiable_rejected_id_is_fatal(self):
-        bad_flag = claim("DUP")[:72] + "X"
+        bad_flag = claim("DUP")[:72] + "X" + claim("DUP")[73:]
         completed = self.batch(claim("DUP") + "\n" + bad_flag + "\n").run()
         self.assertEqual(completed.returncode, 2)
 
     def test_unidentifiable_rejections_never_collide(self):
-        b = self.batch("SHORT\nSHORT\n" + " " * 73 + "\n")
+        b = self.batch("SHORT\nSHORT\n" + " " * 92 + "\n")
         self.assertEqual(b.run().returncode, 0)
         self.assertEqual([r["claim_id"] for r in b.rows()], ["@0000000001", "@0000000002", "@0000000003"])
         self.assertEqual({r["reason"] for r in b.rows()}, {"BAD_LENGTH", "BAD_ID"})
 
     def test_state_resets_after_rejected_contract_and_payment_in_full(self):
-        records = [claim("R1", contract=0)[:72] + "Q", claim("R2"),
+        records = [claim("R1", contract=0)[:72] + "Q" + claim("R1")[73:], claim("R2"),
                    claim("R3", full="Y"), claim("R4"),
                    claim("R5", contract=100001), claim("R6")]
         b = self.batch("\n".join(records) + "\n")
@@ -181,19 +204,31 @@ class BatchInterfaceTests(unittest.TestCase):
         b = self.batch("\n".join(records) + "\n")
         self.assertEqual(b.run().returncode, 0)
         self.assertEqual(b.total(), {"records": 10000, "paid": 10000, "zero": 0, "invalid": 0,
-                                     "payment_cents": 900000000})
+                                     "payment_cents": 900000000, "accepted": 10000, "rejected": 0,
+                                     "released_cents": 900000000})
         self.assertEqual(self.batch("\n".join(records + [claim("EXTRA")]) + "\n").run().returncode, 2)
 
     def test_usage_errors_exit_2(self):
         b = self.batch(claim("U1") + "\n")
-        self.assertEqual(b.run(str(b.input), str(b.results)).returncode, 2)
-        self.assertEqual(b.run(str(b.input), str(b.results), str(b.results)).returncode, 2)
-        self.assertEqual(b.run(str(b.input), str(b.input), str(b.totals)).returncode, 2)
+        self.assertEqual(b.run(str(b.input), str(b.results), str(b.totals)).returncode, 2)
+        self.assertEqual(b.run(str(b.input), str(b.cwf), str(b.results), str(b.results)).returncode, 2)
+        self.assertEqual(b.run(str(b.input), str(b.input), str(b.results), str(b.totals)).returncode, 2)
+        self.assertEqual(b.run(str(b.input), str(b.cwf), str(b.cwf), str(b.totals)).returncode, 2)
 
     def test_missing_input_exits_2(self):
         b = self.batch("")
         missing = str(Path(self.temp.name) / "absent.dat")
-        self.assertEqual(b.run(missing, str(b.results), str(b.totals)).returncode, 2)
+        self.assertEqual(b.run(missing, str(b.cwf), str(b.results), str(b.totals)).returncode, 2)
+
+    def test_missing_or_malformed_cwf_file_exits_2(self):
+        b = self.batch(claim("C1") + "\n")
+        missing = str(Path(self.temp.name) / "absent-cwf.dat")
+        self.assertEqual(b.run(str(b.input), missing, str(b.results), str(b.totals)).returncode, 2)
+        good = b.cwf.read_text()
+        for bad in ("Q" + good.splitlines()[0][1:], good.splitlines()[0][:43], "H7HISTORY0012025031500001000O0"):
+            with self.subTest(bad=bad):
+                b.cwf.write_text(good + bad + "\n")
+                self.assertEqual(b.run().returncode, 2)
 
 
 if __name__ == "__main__":

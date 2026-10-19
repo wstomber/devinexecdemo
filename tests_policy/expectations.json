@@ -1,306 +1,2330 @@
 {
-  "title": "Devin's independently derived MSP expectation ledger (pre-migration)",
-  "author": "Devin, rehearsal session https://app.devin.ai/sessions/227ede5941704863b4c28458ebdba9ff",
-  "derivation": "Every expected result below was worked out by hand from CMS Pub. 100-05 Ch. 5 sections 40.8-40.8.3 (policy cases) or from the documented demo interface contract in README.md (interface cases). No value was copied from COBOL output or from fixtures/expected.json. Amounts are integer cents. Symbols: C covered charges, G gross Medicare payable, P primary payment, D deductible, K coinsurance, T = D + K, A optional obligatory acceptance amount (OTAF), B = A if supplied else C. Policy: payment = max(0, min(G-P, G-T, B-P, B-T)) unless the primary payment was accepted as payment in full (full=Y), in which case 0.",
-  "source": "CMS Medicare Secondary Payer Manual, Pub. 100-05, Chapter 5, https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Downloads/msp105c05.pdf (retrieved PDF SHA-256 a2ea49af2675c75ee617961723848016fee55f80b74aa7716b22fa38e10af693; one-based PDF pages)",
-  "interface_assumptions": [
-    "I1 Zero-reason precedence (PAYMENT_IN_FULL, then PRIMARY_AT_CAP, then DEDUCTIONS_AT_CAP) and all reason/status strings are demo interface codes, not CMS codes.",
-    "I2 PRIMARY_AT_CAP means P >= min(G, B); DEDUCTIONS_AT_CAP means T >= min(G, B) with P below it. A zero cap therefore reports PRIMARY_AT_CAP.",
-    "I3 A supplied contract equal to charges is valid; a contract above charges is BAD_CONTRACT; a contract of zero is valid and gives a zero cap.",
-    "I4 Validation order: BAD_LENGTH, BAD_ID, BAD_AMOUNT, BAD_CONTRACT, BAD_FLAG. BAD_LENGTH/BAD_ID rows use identity @ + 10-digit record number; later rejections keep the claim ID.",
-    "I5 Each record is evaluated independently; nothing parsed from an earlier (even rejected) record may affect a later one.",
-    "I6 Duplicate identifiable IDs, lines over 4096 bytes, more than 10000 records, wrong argument count and identical paths are fatal (exit 2). Empty input is a valid zero-record batch.",
-    "I7 Upstream supplies eligibility, coverage, G, D and K; the historical $1,556 deductible appears only as example input."
-  ],
-  "cases": [
-    {"record_no": 1, "claim_id": "CMS-EX3", "category": "policy-published",
-     "input": {"id": "CMS-EX3", "charges": 1500000, "gross": 1400000, "primary": 1250000, "deductible": 155600, "coinsurance": 0, "contract": 1300000, "full": "N"},
-     "source": "40.8.3 Example 3, PDF pp. 83-84; 40.8.2 p. 79-80 (OTAF is treated as the charges)",
-     "limits_cents": [150000, 1244400, 50000, 1144400],
-     "arithmetic": "B=A=1300000 (OTAF replaces 1500000 charges). G-P=1400000-1250000=150000; G-T=1400000-155600=1244400; B-P=1300000-1250000=50000; B-T=1300000-155600=1144400. Lowest = 50000 ($500).",
-     "assumptions": "Deductible 155600 is the historical example input. full=N: $13,000 is the obligatory total, the $12,500 primary payment was not itself accepted in full.",
-     "expected": {"status": "PAID", "payment_cents": 50000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 2, "claim_id": "EX3-NO-OTAF", "category": "policy-counterfactual",
-     "input": {"id": "EX3-NO-OTAF", "charges": 1500000, "gross": 1400000, "primary": 1250000, "deductible": 155600, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2-40.8.3 formula with Example 3 amounts but no OTAF supplied",
-     "limits_cents": [150000, 1244400, 250000, 1344400],
-     "arithmetic": "B=C=1500000. G-P=150000; G-T=1244400; C-P=1500000-1250000=250000; C-T=1500000-155600=1344400. Lowest = 150000 ($1,500): $1,000 more than CMS-EX3.",
-     "assumptions": "Explanatory counterfactual for the business story; not a published example.",
-     "expected": {"status": "PAID", "payment_cents": 150000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 3, "claim_id": "CMS-EX1", "category": "policy-published",
-     "input": {"id": "CMS-EX1", "charges": 2500000, "gross": 2200000, "primary": 2050000, "deductible": 155600, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.3 Example 1, PDF p. 82",
-     "limits_cents": [150000, 2044400, 450000, 2344400],
-     "arithmetic": "G-P=2200000-2050000=150000; G-T=2200000-155600=2044400; C-P=2500000-2050000=450000; C-T=2500000-155600=2344400. Lowest = 150000.",
-     "assumptions": "Historical deductible input.",
-     "expected": {"status": "PAID", "payment_cents": 150000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 4, "claim_id": "OTAF-T", "category": "policy-contract-cap",
-     "input": {"id": "OTAF-T", "charges": 500000, "gross": 450000, "primary": 10000, "deductible": 60000, "coinsurance": 20000, "contract": 300000, "full": "N"},
-     "source": "40.8.2 limits (OTAF minus deductions controls)",
-     "limits_cents": [440000, 370000, 290000, 220000],
-     "arithmetic": "T=60000+20000=80000; B=300000. G-P=440000; G-T=370000; B-P=290000; B-T=220000. Lowest = 220000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 220000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 5, "claim_id": "GROSS-P", "category": "policy-gross-cap",
-     "input": {"id": "GROSS-P", "charges": 500000, "gross": 300000, "primary": 100000, "deductible": 20000, "coinsurance": 5000, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (gross minus primary controls)",
-     "limits_cents": [200000, 275000, 400000, 475000],
-     "arithmetic": "T=25000. G-P=200000; G-T=275000; C-P=400000; C-T=475000. Lowest = 200000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 200000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 6, "claim_id": "GROSS-T", "category": "policy-deductions",
-     "input": {"id": "GROSS-T", "charges": 500000, "gross": 300000, "primary": 20000, "deductible": 100000, "coinsurance": 10000, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (gross minus deductions controls); 40.8.3 A uses the larger of deductions or primary",
-     "limits_cents": [280000, 190000, 480000, 390000],
-     "arithmetic": "T=110000. G-P=280000; G-T=190000; C-P=480000; C-T=390000. Lowest = 190000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 190000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 7, "claim_id": "CHARGE-P", "category": "policy-charge-cap",
-     "input": {"id": "CHARGE-P", "charges": 200000, "gross": 350000, "primary": 50000, "deductible": 10000, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (charges minus primary controls)",
-     "limits_cents": [300000, 340000, 150000, 190000],
-     "arithmetic": "T=10000. G-P=300000; G-T=340000; C-P=150000; C-T=190000. Lowest = 150000.",
-     "assumptions": "Gross above charges is a valid input (README).",
-     "expected": {"status": "PAID", "payment_cents": 150000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 8, "claim_id": "CHARGE-T", "category": "policy-charge-cap",
-     "input": {"id": "CHARGE-T", "charges": 200000, "gross": 350000, "primary": 10000, "deductible": 40000, "coinsurance": 15000, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (charges minus deductions controls)",
-     "limits_cents": [340000, 295000, 190000, 145000],
-     "arithmetic": "T=55000. G-P=340000; G-T=295000; C-P=190000; C-T=145000. Lowest = 145000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 145000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 9, "claim_id": "EQUAL-LIMITS", "category": "policy-equal-limits",
-     "input": {"id": "EQUAL-LIMITS", "charges": 400000, "gross": 400000, "primary": 50000, "deductible": 30000, "coinsurance": 20000, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (all four equal)",
-     "limits_cents": [350000, 350000, 350000, 350000],
-     "arithmetic": "G=C=400000; P=T=50000. Every limit = 350000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 350000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 10, "claim_id": "OTAF-EQ-GRS", "category": "policy-equal-limits",
-     "input": {"id": "OTAF-EQ-GRS", "charges": 500000, "gross": 400000, "primary": 100000, "deductible": 0, "coinsurance": 0, "contract": 400000, "full": "N"},
-     "source": "40.8.2 limits (OTAF equals gross)",
-     "limits_cents": [300000, 400000, 300000, 400000],
-     "arithmetic": "B=400000=G. G-P=300000; G-T=400000; B-P=300000; B-T=400000. Lowest = 300000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 300000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 11, "claim_id": "OTAF-EQ-CHG", "category": "interface-contract-equal",
-     "input": {"id": "OTAF-EQ-CHG", "charges": 300000, "gross": 500000, "primary": 100000, "deductible": 0, "coinsurance": 0, "contract": 300000, "full": "N"},
-     "source": "40.8.2 limits; README: contract equal to charges is allowed (I3)",
-     "limits_cents": [400000, 500000, 200000, 300000],
-     "arithmetic": "B=300000=C. G-P=400000; G-T=500000; B-P=200000; B-T=300000. Lowest = 200000 (same as no contract).",
-     "assumptions": "I3.",
-     "expected": {"status": "PAID", "payment_cents": 200000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 12, "claim_id": "T-OVER-P-1C", "category": "policy-one-cent",
-     "input": {"id": "T-OVER-P-1C", "charges": 100000, "gross": 100000, "primary": 30000, "deductible": 30001, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.3 A: subtract the larger of deductions or primary",
-     "limits_cents": [70000, 69999, 70000, 69999],
-     "arithmetic": "T=30001 exceeds P=30000 by one cent. G-T=69999 < G-P=70000. Lowest = 69999.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 69999, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 13, "claim_id": "P-OVER-T-1C", "category": "policy-one-cent",
-     "input": {"id": "P-OVER-T-1C", "charges": 100000, "gross": 100000, "primary": 30001, "deductible": 20000, "coinsurance": 10000, "contract": null, "full": "N"},
-     "source": "40.8.3 A: subtract the larger of deductions or primary",
-     "limits_cents": [69999, 70000, 69999, 70000],
-     "arithmetic": "T=30000; P=30001. G-P=69999 < G-T=70000. Lowest = 69999.",
-     "assumptions": "Deductible and coinsurance are summed (T=D+K).",
-     "expected": {"status": "PAID", "payment_cents": 69999, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 14, "claim_id": "CAP-1C", "category": "policy-one-cent",
-     "input": {"id": "CAP-1C", "charges": 50000, "gross": 50001, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (charges one cent below gross)",
-     "limits_cents": [40001, 50001, 40000, 50000],
-     "arithmetic": "G-P=40001; G-T=50001; C-P=40000; C-T=50000. Lowest = 40000.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 40000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 15, "claim_id": "PRIM-1C-UNDR", "category": "policy-one-cent",
-     "input": {"id": "PRIM-1C-UNDR", "charges": 100000, "gross": 100000, "primary": 99999, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8 / 40.8.2: primary one cent below the cap",
-     "limits_cents": [1, 100000, 1, 100000],
-     "arithmetic": "G-P=C-P=1. Lowest = 1 cent.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 1, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 16, "claim_id": "PRIM-AT-CAP", "category": "policy-valid-zero",
-     "input": {"id": "PRIM-AT-CAP", "charges": 100000, "gross": 100000, "primary": 100000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8, PDF p. 78: no payment when primary equals or exceeds charges or gross",
-     "limits_cents": [0, 100000, 0, 100000],
-     "arithmetic": "G-P=0. Lowest = 0.",
-     "assumptions": "Reason per I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 17, "claim_id": "PRIM-1C-OVER", "category": "policy-valid-zero",
-     "input": {"id": "PRIM-1C-OVER", "charges": 100000, "gross": 100000, "primary": 100001, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8, PDF p. 78",
-     "limits_cents": [-1, 100000, -1, 100000],
-     "arithmetic": "G-P=-1, floored at 0. Payment 0.",
-     "assumptions": "Reason per I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 18, "claim_id": "DED-1C-UNDR", "category": "policy-one-cent",
-     "input": {"id": "DED-1C-UNDR", "charges": 100000, "gross": 100000, "primary": 0, "deductible": 99999, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits (deductions one cent below cap)",
-     "limits_cents": [100000, 1, 100000, 1],
-     "arithmetic": "G-T=C-T=1. Lowest = 1 cent.",
-     "assumptions": "Synthetic amounts.",
-     "expected": {"status": "PAID", "payment_cents": 1, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 19, "claim_id": "DED-AT-CAP", "category": "policy-valid-zero",
-     "input": {"id": "DED-AT-CAP", "charges": 100000, "gross": 100000, "primary": 0, "deductible": 60000, "coinsurance": 40000, "contract": null, "full": "N"},
-     "source": "40.8.2 limits",
-     "limits_cents": [100000, 0, 100000, 0],
-     "arithmetic": "T=100000=G. G-T=0. Payment 0.",
-     "assumptions": "Reason per I2; no beneficiary liability calculated.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "DEDUCTIONS_AT_CAP"}},
-    {"record_no": 20, "claim_id": "OTAF-PRIM-AT", "category": "policy-contract-cap",
-     "input": {"id": "OTAF-PRIM-AT", "charges": 500000, "gross": 450000, "primary": 200000, "deductible": 0, "coinsurance": 0, "contract": 200000, "full": "N"},
-     "source": "40.8.2: OTAF treated as charges; 40.8 no payment when primary reaches it",
-     "limits_cents": [250000, 450000, 0, 200000],
-     "arithmetic": "B=200000. B-P=0. Payment 0. (Ignoring the OTAF would pay G-P=250000.)",
-     "assumptions": "Reason per I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 21, "claim_id": "NO-PRIMARY", "category": "policy-valid-zero-input",
-     "input": {"id": "NO-PRIMARY", "charges": 80000, "gross": 80000, "primary": 0, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits with a zero primary payment",
-     "limits_cents": [80000, 80000, 80000, 80000],
-     "arithmetic": "All limits 80000.",
-     "assumptions": "Explicit zero amounts are valid, not missing.",
-     "expected": {"status": "PAID", "payment_cents": 80000, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 22, "claim_id": "FULL-PAID", "category": "policy-payment-in-full",
-     "input": {"id": "FULL-PAID", "charges": 100000, "gross": 100000, "primary": 50000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "Y"},
-     "source": "40.8, PDF p. 78: no payment when primary payment is accepted/required as payment in full",
-     "limits_cents": [50000, 100000, 50000, 100000],
-     "arithmetic": "Limits would allow 50000, but full=Y gives 0.",
-     "assumptions": "full=Y is an upstream assertion (I7).",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PAYMENT_IN_FULL"}},
-    {"record_no": 23, "claim_id": "FULL-PRIM", "category": "interface-precedence",
-     "input": {"id": "FULL-PRIM", "charges": 1000, "gross": 1000, "primary": 2000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "Y"},
-     "source": "40.8 (both conditions give zero); precedence is I1",
-     "limits_cents": [-1000, 1000, -1000, 1000],
-     "arithmetic": "Payment 0 either way; full=Y reported first.",
-     "assumptions": "I1.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PAYMENT_IN_FULL"}},
-    {"record_no": 24, "claim_id": "PRIM-AND-DED", "category": "interface-precedence",
-     "input": {"id": "PRIM-AND-DED", "charges": 1000, "gross": 1000, "primary": 1000, "deductible": 1000, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits; precedence is I1",
-     "limits_cents": [0, 0, 0, 0],
-     "arithmetic": "P=T=cap=1000. Payment 0; primary reason first.",
-     "assumptions": "I1, I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 25, "claim_id": "OTAF-ZERO", "category": "interface-contract-zero",
-     "input": {"id": "OTAF-ZERO", "charges": 100000, "gross": 100000, "primary": 0, "deductible": 0, "coinsurance": 0, "contract": 0, "full": "N"},
-     "source": "40.8.2 limits with B=0; README explicit zero contract (I3)",
-     "limits_cents": [100000, 100000, 0, 0],
-     "arithmetic": "B=0. B-P=0. Payment 0.",
-     "assumptions": "I2, I3.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 26, "claim_id": "GROSS-ZERO", "category": "policy-valid-zero-input",
-     "input": {"id": "GROSS-ZERO", "charges": 100000, "gross": 0, "primary": 0, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits with G=0",
-     "limits_cents": [0, 0, 100000, 100000],
-     "arithmetic": "G-P=0. Payment 0.",
-     "assumptions": "I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 27, "claim_id": "MAX-PAY", "category": "interface-maximum",
-     "input": {"id": "MAX-PAY", "charges": 9999999999, "gross": 9999999999, "primary": 0, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits at the 10-digit field maximum (README)",
-     "limits_cents": [9999999999, 9999999999, 9999999999, 9999999999],
-     "arithmetic": "All limits 9999999999. Payment 9999999999.",
-     "assumptions": "Maximum per-field amount $99,999,999.99.",
-     "expected": {"status": "PAID", "payment_cents": 9999999999, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 28, "claim_id": "MAX-DEDUCT", "category": "interface-maximum",
-     "input": {"id": "MAX-DEDUCT", "charges": 9999999999, "gross": 9999999999, "primary": 0, "deductible": 9999999999, "coinsurance": 9999999999, "contract": null, "full": "N"},
-     "source": "40.8.2 limits; README 11-digit deduction sum",
-     "limits_cents": [9999999999, -9999999999, 9999999999, -9999999999],
-     "arithmetic": "T=19999999998 (11 digits, no overflow). G-T negative, floored. Payment 0.",
-     "assumptions": "I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "DEDUCTIONS_AT_CAP"}},
-    {"record_no": 29, "claim_id": "MAX-OTAF", "category": "interface-maximum",
-     "input": {"id": "MAX-OTAF", "charges": 9999999999, "gross": 9999999999, "primary": 9999999998, "deductible": 0, "coinsurance": 0, "contract": 9999999999, "full": "N"},
-     "source": "40.8.2 limits at maximum with a supplied (equal) contract",
-     "limits_cents": [1, 9999999999, 1, 9999999999],
-     "arithmetic": "B=9999999999. B-P=1. Payment 1 cent.",
-     "assumptions": "I3.",
-     "expected": {"status": "PAID", "payment_cents": 1, "reason": "SECONDARY_PAYABLE"}},
-    {"record_no": 30, "claim_id": "MAX-PRIMARY", "category": "interface-maximum",
-     "input": {"id": "MAX-PRIMARY", "charges": 9999999999, "gross": 9999999999, "primary": 9999999999, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8 at maximum",
-     "limits_cents": [0, 9999999999, 0, 9999999999],
-     "arithmetic": "G-P=0. Payment 0.",
-     "assumptions": "I2.",
-     "expected": {"status": "ZERO", "payment_cents": 0, "reason": "PRIMARY_AT_CAP"}},
-    {"record_no": 31, "claim_id": "@0000000031", "category": "interface-malformed",
-     "input": {"id": "LEN-72", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[72, 1, ""]],
-     "source": "README record contract", "arithmetic": "72 bytes (flag removed).", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_LENGTH"}},
-    {"record_no": 32, "claim_id": "@0000000032", "category": "interface-malformed",
-     "input": {"id": "LEN-74", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[73, 0, "Z"]],
-     "source": "README record contract", "arithmetic": "74 bytes (extra trailing byte).", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_LENGTH"}},
-    {"record_no": 33, "claim_id": "@0000000033", "category": "interface-malformed",
-     "raw_record": "",
-     "source": "README: a blank physical line is an invalid record, not EOF", "arithmetic": "0 bytes.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_LENGTH"}},
-    {"record_no": 34, "claim_id": "@0000000034", "category": "interface-malformed",
-     "input": {"id": "IDLOWER", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[0, 12, "lower-case  "]],
-     "source": "README ID rule (uppercase only)", "arithmetic": "Lowercase ID.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_ID"}},
-    {"record_no": 35, "claim_id": "@0000000035", "category": "interface-malformed",
-     "input": {"id": "IDEMBED", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[0, 12, "AB CD       "]],
-     "source": "README ID rule (right-padded only)", "arithmetic": "Embedded space.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_ID"}},
-    {"record_no": 36, "claim_id": "@0000000036", "category": "interface-malformed",
-     "input": {"id": "IDLEAD", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[0, 12, " ABC        "]],
-     "source": "README ID rule (right-padded only)", "arithmetic": "Leading space.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_ID"}},
-    {"record_no": 37, "claim_id": "@0000000037", "category": "interface-precedence",
-     "input": {"id": "IDPREC", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[0, 12, "bad-id      "], [22, 10, "          "]],
-     "source": "README rejection precedence", "arithmetic": "Bad ID and blank gross: ID reported first.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_ID"}},
-    {"record_no": 38, "claim_id": "AMT-SPACE", "category": "interface-malformed",
-     "input": {"id": "AMT-SPACE", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[22, 10, "          "]],
-     "source": "README: no missing monetary field defaults to zero", "arithmetic": "Blank gross is malformed, not zero.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_AMOUNT"}},
-    {"record_no": 39, "claim_id": "AMT-PLUS", "category": "interface-malformed",
-     "input": {"id": "AMT-PLUS", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[32, 10, "+000000001"]],
-     "source": "README: signed fields unsupported", "arithmetic": "Signed primary.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_AMOUNT"}},
-    {"record_no": 40, "claim_id": "OTAF-ALPHA", "category": "interface-malformed",
-     "input": {"id": "OTAF-ALPHA", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[62, 10, "ABCDEFGHIJ"]],
-     "source": "README: contract is digits or exactly ----------", "arithmetic": "Alphabetic contract.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_AMOUNT"}},
-    {"record_no": 41, "claim_id": "OTAF-1C-HIGH", "category": "interface-malformed",
-     "input": {"id": "OTAF-1C-HIGH", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": 100001, "full": "N"},
-     "source": "README: contract above charges is invalid (I3)", "arithmetic": "Contract exceeds charges by one cent.", "assumptions": "I3, I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_CONTRACT"}},
-    {"record_no": 42, "claim_id": "FLAG-LOWER", "category": "interface-malformed",
-     "input": {"id": "FLAG-LOWER", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[72, 1, "y"]],
-     "source": "README: flag exactly Y or N", "arithmetic": "Lowercase y.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_FLAG"}},
-    {"record_no": 43, "claim_id": "FLAG-SPACE", "category": "interface-malformed",
-     "input": {"id": "FLAG-SPACE", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[72, 1, " "]],
-     "source": "README: flag exactly Y or N", "arithmetic": "Space flag (record still 73 bytes).", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_FLAG"}},
-    {"record_no": 44, "claim_id": "PREC-AMT-FLG", "category": "interface-precedence",
-     "input": {"id": "PREC-AMT-FLG", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[42, 10, "00000000.1"], [72, 1, "X"]],
-     "source": "README rejection precedence", "arithmetic": "Decimal deductible and bad flag: amount first.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_AMOUNT"}},
-    {"record_no": 45, "claim_id": "PREC-OTAF-FL", "category": "interface-precedence",
-     "input": {"id": "PREC-OTAF-FL", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": 100001, "full": "N"}, "patches": [[72, 1, "X"]],
-     "source": "README rejection precedence", "arithmetic": "Contract above charges and bad flag: contract first.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_CONTRACT"}},
-    {"record_no": 46, "claim_id": "@0000000046", "category": "interface-precedence",
-     "input": {"id": "LENPREC", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"}, "patches": [[0, 12, "lower       "], [72, 1, ""]],
-     "source": "README rejection precedence", "arithmetic": "72 bytes and lowercase ID: length first.", "assumptions": "I4.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_LENGTH"}},
-    {"record_no": 47, "claim_id": "RESET-SRC", "category": "interface-state-reset",
-     "input": {"id": "RESET-SRC", "charges": 100000, "gross": 100000, "primary": 0, "deductible": 0, "coinsurance": 0, "contract": 0, "full": "N"}, "patches": [[72, 1, "Q"]],
-     "source": "README rejection precedence", "arithmetic": "Valid amounts and zero contract are parsed, then the flag is rejected.", "assumptions": "I4, I5. Sets up the next record.",
-     "expected": {"status": "INVALID", "payment_cents": 0, "reason": "BAD_FLAG"}},
-    {"record_no": 48, "claim_id": "RESET-NEXT", "category": "interface-state-reset",
-     "input": {"id": "RESET-NEXT", "charges": 100000, "gross": 100000, "primary": 10000, "deductible": 0, "coinsurance": 0, "contract": null, "full": "N"},
-     "source": "40.8.2 limits; README independent record state (I5)",
-     "limits_cents": [90000, 100000, 90000, 100000],
-     "arithmetic": "No contract, so B=C. G-P=90000. If record 47's zero contract leaked, this would wrongly be ZERO/PRIMARY_AT_CAP.",
-     "assumptions": "I5.",
-     "expected": {"status": "PAID", "payment_cents": 90000, "reason": "SECONDARY_PAYABLE"}}
-  ],
-  "totals": {
-    "arithmetic": "PAID rows 1-15,18,21,27,29,48 = 20. ZERO rows 16,17,19,20,22-26,28,30 = 11. INVALID rows 31-47 = 17. Sum: 50000+150000+150000+220000+200000+190000+150000+145000+350000+300000+200000+69999+69999+40000+1+1+80000+9999999999+1+90000 = 10002455000.",
-    "records": 48, "paid": 20, "zero": 11, "invalid": 17, "payment_cents": 10002455000
+ "title": "Devin's independently derived MSP expectation ledger (pre-migration)",
+ "author": "Devin, rehearsal session https://app.devin.ai/sessions/227ede5941704863b4c28458ebdba9ff",
+ "derivation": "Every expected result below was worked out by hand from CMS Pub. 100-05 Ch. 5 sections 40.8-40.8.3 (policy cases) or from the documented demo interface contract in README.md (interface cases). No value was copied from COBOL output or from fixtures/expected.json. Amounts are integer cents. Symbols: C covered charges, G gross Medicare payable, P primary payment, D deductible, K coinsurance, T = D + K, A optional obligatory acceptance amount (OTAF), B = A if supplied else C. Policy: payment = max(0, min(G-P, G-T, B-P, B-T)) unless the primary payment was accepted as payment in full (full=Y), in which case 0.",
+ "source": "CMS Medicare Secondary Payer Manual, Pub. 100-05, Chapter 5, https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Downloads/msp105c05.pdf (retrieved PDF SHA-256 a2ea49af2675c75ee617961723848016fee55f80b74aa7716b22fa38e10af693; one-based PDF pages)",
+ "interface_assumptions": [
+  "I1 Zero-reason precedence (PAYMENT_IN_FULL, then PRIMARY_AT_CAP, then DEDUCTIONS_AT_CAP) and all reason/status strings are demo interface codes, not CMS codes.",
+  "I2 PRIMARY_AT_CAP means P >= min(G, B); DEDUCTIONS_AT_CAP means T >= min(G, B) with P below it. A zero cap therefore reports PRIMARY_AT_CAP.",
+  "I3 A supplied contract equal to charges is valid; a contract above charges is BAD_CONTRACT; a contract of zero is valid and gives a zero cap.",
+  "I4 Validation order: BAD_LENGTH, BAD_ID, BAD_AMOUNT, BAD_CONTRACT, BAD_FLAG. BAD_LENGTH/BAD_ID rows use identity @ + 10-digit record number; later rejections keep the claim ID.",
+  "I5 Each record is evaluated independently; nothing parsed from an earlier (even rejected) record may affect a later one.",
+  "I6 Duplicate identifiable IDs, lines over 4096 bytes, more than 10000 records, wrong argument count and identical paths are fatal (exit 2). Empty input is a valid zero-record batch.",
+  "I7 Upstream supplies eligibility, coverage, G, D and K; the historical $1,556 deductible appears only as example input.",
+  "I9 CWF step (CMS Pub. 100-04 Ch. 27 s20, s20.2.2): only valid claims (PAID or ZERO) are sent; first failure wins: NOT_ENTITLED, DUPLICATE, MSP_PRIMARY_NOT_BILLED; else ACCEPTED/DISPOSITION_01. Reject codes are demo codes.",
+  "I10 Entitlement and MSP periods are inclusive of both end dates; 99999999 means open-ended.",
+  "I11 DUPLICATE means CWF history already holds the same MBI, service date and charges; claims in one batch are not compared with each other.",
+  "I12 MSP_PRIMARY_NOT_BILLED means an MSP period covers the service date and the claim's primary payment is exactly 0, regardless of the full flag.",
+  "I13 released_cents equals payment_cents when ACCEPTED and 0 otherwise; payment_cents still shows what was calculated.",
+  "I14 New validation after the flag: MBI (positions 74-84) must be 11 of A-Z/0-9 (BAD_MBI); service date (85-92) must be 8 digits with month 01-12 and day 01-31 (BAD_DATE). Invalid claims are NOT_SENT/CLAIM_INVALID."
+ ],
+ "cases": [
+  {
+   "record_no": 1,
+   "claim_id": "CMS-EX3",
+   "category": "policy-published",
+   "input": {
+    "id": "CMS-EX3",
+    "charges": 1500000,
+    "gross": 1400000,
+    "primary": 1250000,
+    "deductible": 155600,
+    "coinsurance": 0,
+    "contract": 1300000,
+    "full": "N"
+   },
+   "source": "40.8.3 Example 3, PDF pp. 83-84; 40.8.2 p. 79-80 (OTAF is treated as the charges)",
+   "limits_cents": [
+    150000,
+    1244400,
+    50000,
+    1144400
+   ],
+   "arithmetic": "B=A=1300000 (OTAF replaces 1500000 charges). G-P=1400000-1250000=150000; G-T=1400000-155600=1244400; B-P=1300000-1250000=50000; B-T=1300000-155600=1144400. Lowest = 50000 ($500).",
+   "assumptions": "Deductible 155600 is the historical example input. full=N: $13,000 is the obligatory total, the $12,500 primary payment was not itself accepted in full.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 50000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 50000
+   }
+  },
+  {
+   "record_no": 2,
+   "claim_id": "EX3-NO-OTAF",
+   "category": "policy-counterfactual",
+   "input": {
+    "id": "EX3-NO-OTAF",
+    "charges": 1500000,
+    "gross": 1400000,
+    "primary": 1250000,
+    "deductible": 155600,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2-40.8.3 formula with Example 3 amounts but no OTAF supplied",
+   "limits_cents": [
+    150000,
+    1244400,
+    250000,
+    1344400
+   ],
+   "arithmetic": "B=C=1500000. G-P=150000; G-T=1244400; C-P=1500000-1250000=250000; C-T=1500000-155600=1344400. Lowest = 150000 ($1,500): $1,000 more than CMS-EX3.",
+   "assumptions": "Explanatory counterfactual for the business story; not a published example.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 150000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 150000
+   }
+  },
+  {
+   "record_no": 3,
+   "claim_id": "CMS-EX1",
+   "category": "policy-published",
+   "input": {
+    "id": "CMS-EX1",
+    "charges": 2500000,
+    "gross": 2200000,
+    "primary": 2050000,
+    "deductible": 155600,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.3 Example 1, PDF p. 82",
+   "limits_cents": [
+    150000,
+    2044400,
+    450000,
+    2344400
+   ],
+   "arithmetic": "G-P=2200000-2050000=150000; G-T=2200000-155600=2044400; C-P=2500000-2050000=450000; C-T=2500000-155600=2344400. Lowest = 150000.",
+   "assumptions": "Historical deductible input.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 150000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 150000
+   }
+  },
+  {
+   "record_no": 4,
+   "claim_id": "OTAF-T",
+   "category": "policy-contract-cap",
+   "input": {
+    "id": "OTAF-T",
+    "charges": 500000,
+    "gross": 450000,
+    "primary": 10000,
+    "deductible": 60000,
+    "coinsurance": 20000,
+    "contract": 300000,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (OTAF minus deductions controls)",
+   "limits_cents": [
+    440000,
+    370000,
+    290000,
+    220000
+   ],
+   "arithmetic": "T=60000+20000=80000; B=300000. G-P=440000; G-T=370000; B-P=290000; B-T=220000. Lowest = 220000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 220000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 220000
+   }
+  },
+  {
+   "record_no": 5,
+   "claim_id": "GROSS-P",
+   "category": "policy-gross-cap",
+   "input": {
+    "id": "GROSS-P",
+    "charges": 500000,
+    "gross": 300000,
+    "primary": 100000,
+    "deductible": 20000,
+    "coinsurance": 5000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (gross minus primary controls)",
+   "limits_cents": [
+    200000,
+    275000,
+    400000,
+    475000
+   ],
+   "arithmetic": "T=25000. G-P=200000; G-T=275000; C-P=400000; C-T=475000. Lowest = 200000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 200000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 200000
+   }
+  },
+  {
+   "record_no": 6,
+   "claim_id": "GROSS-T",
+   "category": "policy-deductions",
+   "input": {
+    "id": "GROSS-T",
+    "charges": 500000,
+    "gross": 300000,
+    "primary": 20000,
+    "deductible": 100000,
+    "coinsurance": 10000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (gross minus deductions controls); 40.8.3 A uses the larger of deductions or primary",
+   "limits_cents": [
+    280000,
+    190000,
+    480000,
+    390000
+   ],
+   "arithmetic": "T=110000. G-P=280000; G-T=190000; C-P=480000; C-T=390000. Lowest = 190000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 190000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 190000
+   }
+  },
+  {
+   "record_no": 7,
+   "claim_id": "CHARGE-P",
+   "category": "policy-charge-cap",
+   "input": {
+    "id": "CHARGE-P",
+    "charges": 200000,
+    "gross": 350000,
+    "primary": 50000,
+    "deductible": 10000,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (charges minus primary controls)",
+   "limits_cents": [
+    300000,
+    340000,
+    150000,
+    190000
+   ],
+   "arithmetic": "T=10000. G-P=300000; G-T=340000; C-P=150000; C-T=190000. Lowest = 150000.",
+   "assumptions": "Gross above charges is a valid input (README).",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 150000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 150000
+   }
+  },
+  {
+   "record_no": 8,
+   "claim_id": "CHARGE-T",
+   "category": "policy-charge-cap",
+   "input": {
+    "id": "CHARGE-T",
+    "charges": 200000,
+    "gross": 350000,
+    "primary": 10000,
+    "deductible": 40000,
+    "coinsurance": 15000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (charges minus deductions controls)",
+   "limits_cents": [
+    340000,
+    295000,
+    190000,
+    145000
+   ],
+   "arithmetic": "T=55000. G-P=340000; G-T=295000; C-P=190000; C-T=145000. Lowest = 145000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 145000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 145000
+   }
+  },
+  {
+   "record_no": 9,
+   "claim_id": "EQUAL-LIMITS",
+   "category": "policy-equal-limits",
+   "input": {
+    "id": "EQUAL-LIMITS",
+    "charges": 400000,
+    "gross": 400000,
+    "primary": 50000,
+    "deductible": 30000,
+    "coinsurance": 20000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (all four equal)",
+   "limits_cents": [
+    350000,
+    350000,
+    350000,
+    350000
+   ],
+   "arithmetic": "G=C=400000; P=T=50000. Every limit = 350000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 350000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 350000
+   }
+  },
+  {
+   "record_no": 10,
+   "claim_id": "OTAF-EQ-GRS",
+   "category": "policy-equal-limits",
+   "input": {
+    "id": "OTAF-EQ-GRS",
+    "charges": 500000,
+    "gross": 400000,
+    "primary": 100000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 400000,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (OTAF equals gross)",
+   "limits_cents": [
+    300000,
+    400000,
+    300000,
+    400000
+   ],
+   "arithmetic": "B=400000=G. G-P=300000; G-T=400000; B-P=300000; B-T=400000. Lowest = 300000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 300000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 300000
+   }
+  },
+  {
+   "record_no": 11,
+   "claim_id": "OTAF-EQ-CHG",
+   "category": "interface-contract-equal",
+   "input": {
+    "id": "OTAF-EQ-CHG",
+    "charges": 300000,
+    "gross": 500000,
+    "primary": 100000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 300000,
+    "full": "N"
+   },
+   "source": "40.8.2 limits; README: contract equal to charges is allowed (I3)",
+   "limits_cents": [
+    400000,
+    500000,
+    200000,
+    300000
+   ],
+   "arithmetic": "B=300000=C. G-P=400000; G-T=500000; B-P=200000; B-T=300000. Lowest = 200000 (same as no contract).",
+   "assumptions": "I3.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 200000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 200000
+   }
+  },
+  {
+   "record_no": 12,
+   "claim_id": "T-OVER-P-1C",
+   "category": "policy-one-cent",
+   "input": {
+    "id": "T-OVER-P-1C",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 30000,
+    "deductible": 30001,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.3 A: subtract the larger of deductions or primary",
+   "limits_cents": [
+    70000,
+    69999,
+    70000,
+    69999
+   ],
+   "arithmetic": "T=30001 exceeds P=30000 by one cent. G-T=69999 < G-P=70000. Lowest = 69999.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 69999,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 69999
+   }
+  },
+  {
+   "record_no": 13,
+   "claim_id": "P-OVER-T-1C",
+   "category": "policy-one-cent",
+   "input": {
+    "id": "P-OVER-T-1C",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 30001,
+    "deductible": 20000,
+    "coinsurance": 10000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.3 A: subtract the larger of deductions or primary",
+   "limits_cents": [
+    69999,
+    70000,
+    69999,
+    70000
+   ],
+   "arithmetic": "T=30000; P=30001. G-P=69999 < G-T=70000. Lowest = 69999.",
+   "assumptions": "Deductible and coinsurance are summed (T=D+K).",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 69999,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 69999
+   }
+  },
+  {
+   "record_no": 14,
+   "claim_id": "CAP-1C",
+   "category": "policy-one-cent",
+   "input": {
+    "id": "CAP-1C",
+    "charges": 50000,
+    "gross": 50001,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (charges one cent below gross)",
+   "limits_cents": [
+    40001,
+    50001,
+    40000,
+    50000
+   ],
+   "arithmetic": "G-P=40001; G-T=50001; C-P=40000; C-T=50000. Lowest = 40000.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 40000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 40000
+   }
+  },
+  {
+   "record_no": 15,
+   "claim_id": "PRIM-1C-UNDR",
+   "category": "policy-one-cent",
+   "input": {
+    "id": "PRIM-1C-UNDR",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 99999,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8 / 40.8.2: primary one cent below the cap",
+   "limits_cents": [
+    1,
+    100000,
+    1,
+    100000
+   ],
+   "arithmetic": "G-P=C-P=1. Lowest = 1 cent.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 1,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 1
+   }
+  },
+  {
+   "record_no": 16,
+   "claim_id": "PRIM-AT-CAP",
+   "category": "policy-valid-zero",
+   "input": {
+    "id": "PRIM-AT-CAP",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 100000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8, PDF p. 78: no payment when primary equals or exceeds charges or gross",
+   "limits_cents": [
+    0,
+    100000,
+    0,
+    100000
+   ],
+   "arithmetic": "G-P=0. Lowest = 0.",
+   "assumptions": "Reason per I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 17,
+   "claim_id": "PRIM-1C-OVER",
+   "category": "policy-valid-zero",
+   "input": {
+    "id": "PRIM-1C-OVER",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 100001,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8, PDF p. 78",
+   "limits_cents": [
+    -1,
+    100000,
+    -1,
+    100000
+   ],
+   "arithmetic": "G-P=-1, floored at 0. Payment 0.",
+   "assumptions": "Reason per I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 18,
+   "claim_id": "DED-1C-UNDR",
+   "category": "policy-one-cent",
+   "input": {
+    "id": "DED-1C-UNDR",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 99999,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits (deductions one cent below cap)",
+   "limits_cents": [
+    100000,
+    1,
+    100000,
+    1
+   ],
+   "arithmetic": "G-T=C-T=1. Lowest = 1 cent.",
+   "assumptions": "Synthetic amounts.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 1,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 1
+   }
+  },
+  {
+   "record_no": 19,
+   "claim_id": "DED-AT-CAP",
+   "category": "policy-valid-zero",
+   "input": {
+    "id": "DED-AT-CAP",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 60000,
+    "coinsurance": 40000,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits",
+   "limits_cents": [
+    100000,
+    0,
+    100000,
+    0
+   ],
+   "arithmetic": "T=100000=G. G-T=0. Payment 0.",
+   "assumptions": "Reason per I2; no beneficiary liability calculated.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "DEDUCTIONS_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 20,
+   "claim_id": "OTAF-PRIM-AT",
+   "category": "policy-contract-cap",
+   "input": {
+    "id": "OTAF-PRIM-AT",
+    "charges": 500000,
+    "gross": 450000,
+    "primary": 200000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 200000,
+    "full": "N"
+   },
+   "source": "40.8.2: OTAF treated as charges; 40.8 no payment when primary reaches it",
+   "limits_cents": [
+    250000,
+    450000,
+    0,
+    200000
+   ],
+   "arithmetic": "B=200000. B-P=0. Payment 0. (Ignoring the OTAF would pay G-P=250000.)",
+   "assumptions": "Reason per I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 21,
+   "claim_id": "NO-PRIMARY",
+   "category": "policy-valid-zero-input",
+   "input": {
+    "id": "NO-PRIMARY",
+    "charges": 80000,
+    "gross": 80000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits with a zero primary payment",
+   "limits_cents": [
+    80000,
+    80000,
+    80000,
+    80000
+   ],
+   "arithmetic": "All limits 80000.",
+   "assumptions": "Explicit zero amounts are valid, not missing.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 80000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 80000
+   }
+  },
+  {
+   "record_no": 22,
+   "claim_id": "FULL-PAID",
+   "category": "policy-payment-in-full",
+   "input": {
+    "id": "FULL-PAID",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 50000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "Y"
+   },
+   "source": "40.8, PDF p. 78: no payment when primary payment is accepted/required as payment in full",
+   "limits_cents": [
+    50000,
+    100000,
+    50000,
+    100000
+   ],
+   "arithmetic": "Limits would allow 50000, but full=Y gives 0.",
+   "assumptions": "full=Y is an upstream assertion (I7).",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PAYMENT_IN_FULL",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 23,
+   "claim_id": "FULL-PRIM",
+   "category": "interface-precedence",
+   "input": {
+    "id": "FULL-PRIM",
+    "charges": 1000,
+    "gross": 1000,
+    "primary": 2000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "Y"
+   },
+   "source": "40.8 (both conditions give zero); precedence is I1",
+   "limits_cents": [
+    -1000,
+    1000,
+    -1000,
+    1000
+   ],
+   "arithmetic": "Payment 0 either way; full=Y reported first.",
+   "assumptions": "I1.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PAYMENT_IN_FULL",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 24,
+   "claim_id": "PRIM-AND-DED",
+   "category": "interface-precedence",
+   "input": {
+    "id": "PRIM-AND-DED",
+    "charges": 1000,
+    "gross": 1000,
+    "primary": 1000,
+    "deductible": 1000,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits; precedence is I1",
+   "limits_cents": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "arithmetic": "P=T=cap=1000. Payment 0; primary reason first.",
+   "assumptions": "I1, I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 25,
+   "claim_id": "OTAF-ZERO",
+   "category": "interface-contract-zero",
+   "input": {
+    "id": "OTAF-ZERO",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 0,
+    "full": "N"
+   },
+   "source": "40.8.2 limits with B=0; README explicit zero contract (I3)",
+   "limits_cents": [
+    100000,
+    100000,
+    0,
+    0
+   ],
+   "arithmetic": "B=0. B-P=0. Payment 0.",
+   "assumptions": "I2, I3.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 26,
+   "claim_id": "GROSS-ZERO",
+   "category": "policy-valid-zero-input",
+   "input": {
+    "id": "GROSS-ZERO",
+    "charges": 100000,
+    "gross": 0,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits with G=0",
+   "limits_cents": [
+    0,
+    0,
+    100000,
+    100000
+   ],
+   "arithmetic": "G-P=0. Payment 0.",
+   "assumptions": "I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 27,
+   "claim_id": "MAX-PAY",
+   "category": "interface-maximum",
+   "input": {
+    "id": "MAX-PAY",
+    "charges": 9999999999,
+    "gross": 9999999999,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits at the 10-digit field maximum (README)",
+   "limits_cents": [
+    9999999999,
+    9999999999,
+    9999999999,
+    9999999999
+   ],
+   "arithmetic": "All limits 9999999999. Payment 9999999999.",
+   "assumptions": "Maximum per-field amount $99,999,999.99.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 9999999999,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 9999999999
+   }
+  },
+  {
+   "record_no": 28,
+   "claim_id": "MAX-DEDUCT",
+   "category": "interface-maximum",
+   "input": {
+    "id": "MAX-DEDUCT",
+    "charges": 9999999999,
+    "gross": 9999999999,
+    "primary": 0,
+    "deductible": 9999999999,
+    "coinsurance": 9999999999,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits; README 11-digit deduction sum",
+   "limits_cents": [
+    9999999999,
+    -9999999999,
+    9999999999,
+    -9999999999
+   ],
+   "arithmetic": "T=19999999998 (11 digits, no overflow). G-T negative, floored. Payment 0.",
+   "assumptions": "I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "DEDUCTIONS_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 29,
+   "claim_id": "MAX-OTAF",
+   "category": "interface-maximum",
+   "input": {
+    "id": "MAX-OTAF",
+    "charges": 9999999999,
+    "gross": 9999999999,
+    "primary": 9999999998,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 9999999999,
+    "full": "N"
+   },
+   "source": "40.8.2 limits at maximum with a supplied (equal) contract",
+   "limits_cents": [
+    1,
+    9999999999,
+    1,
+    9999999999
+   ],
+   "arithmetic": "B=9999999999. B-P=1. Payment 1 cent.",
+   "assumptions": "I3.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 1,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 1
+   }
+  },
+  {
+   "record_no": 30,
+   "claim_id": "MAX-PRIMARY",
+   "category": "interface-maximum",
+   "input": {
+    "id": "MAX-PRIMARY",
+    "charges": 9999999999,
+    "gross": 9999999999,
+    "primary": 9999999999,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8 at maximum",
+   "limits_cents": [
+    0,
+    9999999999,
+    0,
+    9999999999
+   ],
+   "arithmetic": "G-P=0. Payment 0.",
+   "assumptions": "I2.",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PRIMARY_AT_CAP",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 31,
+   "claim_id": "@0000000031",
+   "category": "interface-malformed",
+   "input": {
+    "id": "LEN-72",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     ""
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "72 bytes (flag removed).",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_LENGTH",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 32,
+   "claim_id": "@0000000032",
+   "category": "interface-malformed",
+   "input": {
+    "id": "LEN-74",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     73,
+     0,
+     "Z"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "74 bytes (extra trailing byte).",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_LENGTH",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 33,
+   "claim_id": "@0000000033",
+   "category": "interface-malformed",
+   "raw_record": "",
+   "source": "README: a blank physical line is an invalid record, not EOF",
+   "arithmetic": "0 bytes.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_LENGTH",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 34,
+   "claim_id": "@0000000034",
+   "category": "interface-malformed",
+   "input": {
+    "id": "IDLOWER",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     0,
+     12,
+     "lower-case  "
+    ]
+   ],
+   "source": "README ID rule (uppercase only)",
+   "arithmetic": "Lowercase ID.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_ID",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 35,
+   "claim_id": "@0000000035",
+   "category": "interface-malformed",
+   "input": {
+    "id": "IDEMBED",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     0,
+     12,
+     "AB CD       "
+    ]
+   ],
+   "source": "README ID rule (right-padded only)",
+   "arithmetic": "Embedded space.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_ID",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 36,
+   "claim_id": "@0000000036",
+   "category": "interface-malformed",
+   "input": {
+    "id": "IDLEAD",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     0,
+     12,
+     " ABC        "
+    ]
+   ],
+   "source": "README ID rule (right-padded only)",
+   "arithmetic": "Leading space.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_ID",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 37,
+   "claim_id": "@0000000037",
+   "category": "interface-precedence",
+   "input": {
+    "id": "IDPREC",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     0,
+     12,
+     "bad-id      "
+    ],
+    [
+     22,
+     10,
+     "          "
+    ]
+   ],
+   "source": "README rejection precedence",
+   "arithmetic": "Bad ID and blank gross: ID reported first.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_ID",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 38,
+   "claim_id": "AMT-SPACE",
+   "category": "interface-malformed",
+   "input": {
+    "id": "AMT-SPACE",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     22,
+     10,
+     "          "
+    ]
+   ],
+   "source": "README: no missing monetary field defaults to zero",
+   "arithmetic": "Blank gross is malformed, not zero.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_AMOUNT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 39,
+   "claim_id": "AMT-PLUS",
+   "category": "interface-malformed",
+   "input": {
+    "id": "AMT-PLUS",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     32,
+     10,
+     "+000000001"
+    ]
+   ],
+   "source": "README: signed fields unsupported",
+   "arithmetic": "Signed primary.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_AMOUNT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 40,
+   "claim_id": "OTAF-ALPHA",
+   "category": "interface-malformed",
+   "input": {
+    "id": "OTAF-ALPHA",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     62,
+     10,
+     "ABCDEFGHIJ"
+    ]
+   ],
+   "source": "README: contract is digits or exactly ----------",
+   "arithmetic": "Alphabetic contract.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_AMOUNT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 41,
+   "claim_id": "OTAF-1C-HIGH",
+   "category": "interface-malformed",
+   "input": {
+    "id": "OTAF-1C-HIGH",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 100001,
+    "full": "N"
+   },
+   "source": "README: contract above charges is invalid (I3)",
+   "arithmetic": "Contract exceeds charges by one cent.",
+   "assumptions": "I3, I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_CONTRACT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 42,
+   "claim_id": "FLAG-LOWER",
+   "category": "interface-malformed",
+   "input": {
+    "id": "FLAG-LOWER",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     "y"
+    ]
+   ],
+   "source": "README: flag exactly Y or N",
+   "arithmetic": "Lowercase y.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_FLAG",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 43,
+   "claim_id": "FLAG-SPACE",
+   "category": "interface-malformed",
+   "input": {
+    "id": "FLAG-SPACE",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     " "
+    ]
+   ],
+   "source": "README: flag exactly Y or N",
+   "arithmetic": "Space flag (record still 73 bytes).",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_FLAG",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 44,
+   "claim_id": "PREC-AMT-FLG",
+   "category": "interface-precedence",
+   "input": {
+    "id": "PREC-AMT-FLG",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     42,
+     10,
+     "00000000.1"
+    ],
+    [
+     72,
+     1,
+     "X"
+    ]
+   ],
+   "source": "README rejection precedence",
+   "arithmetic": "Decimal deductible and bad flag: amount first.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_AMOUNT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 45,
+   "claim_id": "PREC-OTAF-FL",
+   "category": "interface-precedence",
+   "input": {
+    "id": "PREC-OTAF-FL",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 100001,
+    "full": "N"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     "X"
+    ]
+   ],
+   "source": "README rejection precedence",
+   "arithmetic": "Contract above charges and bad flag: contract first.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_CONTRACT",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 46,
+   "claim_id": "@0000000046",
+   "category": "interface-precedence",
+   "input": {
+    "id": "LENPREC",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "patches": [
+    [
+     0,
+     12,
+     "lower       "
+    ],
+    [
+     72,
+     1,
+     ""
+    ]
+   ],
+   "source": "README rejection precedence",
+   "arithmetic": "72 bytes and lowercase ID: length first.",
+   "assumptions": "I4.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_LENGTH",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 47,
+   "claim_id": "RESET-SRC",
+   "category": "interface-state-reset",
+   "input": {
+    "id": "RESET-SRC",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": 0,
+    "full": "N"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     "Q"
+    ]
+   ],
+   "source": "README rejection precedence",
+   "arithmetic": "Valid amounts and zero contract are parsed, then the flag is rejected.",
+   "assumptions": "I4, I5. Sets up the next record.",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_FLAG",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 48,
+   "claim_id": "RESET-NEXT",
+   "category": "interface-state-reset",
+   "input": {
+    "id": "RESET-NEXT",
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N"
+   },
+   "source": "40.8.2 limits; README independent record state (I5)",
+   "limits_cents": [
+    90000,
+    100000,
+    90000,
+    100000
+   ],
+   "arithmetic": "No contract, so B=C. G-P=90000. If record 47's zero contract leaked, this would wrongly be ZERO/PRIMARY_AT_CAP.",
+   "assumptions": "I5.",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 49,
+   "claim_id": "CWF-ENT-FROM",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7WINDOW0001",
+    "dos": "20250201",
+    "id": "CWF-ENT-FROM"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. DOS = entitlement start (inclusive).",
+   "assumptions": "I10",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 50,
+   "claim_id": "CWF-ENT-TO",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7WINDOW0001",
+    "dos": "20250630",
+    "id": "CWF-ENT-TO"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. DOS = entitlement end (inclusive).",
+   "assumptions": "I10",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 51,
+   "claim_id": "CWF-ENT-BEF",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7WINDOW0001",
+    "dos": "20250131",
+    "id": "CWF-ENT-BEF"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. DOS one day before entitlement.",
+   "assumptions": "I9 I10 I13",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "NOT_ENTITLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 52,
+   "claim_id": "CWF-ENT-AFT",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7WINDOW0001",
+    "dos": "20250701",
+    "id": "CWF-ENT-AFT"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. DOS one day after entitlement ended.",
+   "assumptions": "I9 I10 I13",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "NOT_ENTITLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 53,
+   "claim_id": "CWF-NOFILE",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7UNKNOWN001",
+    "id": "CWF-NOFILE"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. MBI not on the CWF file.",
+   "assumptions": "I9",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "NOT_ENTITLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 54,
+   "claim_id": "CWF-DUP",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7HISTORY001",
+    "dos": "20250315",
+    "id": "CWF-DUP"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. History holds 7HISTORY001/20250315/100000.",
+   "assumptions": "I11",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "DUPLICATE",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 55,
+   "claim_id": "CWF-DUP-AMT",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100001,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7HISTORY001",
+    "dos": "20250315",
+    "id": "CWF-DUP-AMT"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100001)=100000; payment=90000. Charges differ by 1 cent from history: not a duplicate.",
+   "assumptions": "I11",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 56,
+   "claim_id": "CWF-DUP-DOS",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7HISTORY001",
+    "dos": "20250316",
+    "id": "CWF-DUP-DOS"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. Next day: not a duplicate.",
+   "assumptions": "I11",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 57,
+   "claim_id": "CWF-MSP-NOPR",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250315",
+    "id": "CWF-MSP-NOPR"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. MSP period covers DOS, primary 0.",
+   "assumptions": "I12 I13",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "MSP_PRIMARY_NOT_BILLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 58,
+   "claim_id": "CWF-MSP-PAID",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250315",
+    "id": "CWF-MSP-PAID"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=min(100000,100000)=100000; payment=100000-max(0,10000)=90000. MSP period covers DOS, primary billed.",
+   "assumptions": "I12",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 90000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 90000
+   }
+  },
+  {
+   "record_no": 59,
+   "claim_id": "CWF-MSP-FROM",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250301",
+    "id": "CWF-MSP-FROM"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. DOS = MSP start (inclusive).",
+   "assumptions": "I10 I12",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "MSP_PRIMARY_NOT_BILLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 60,
+   "claim_id": "CWF-MSP-TO",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250331",
+    "id": "CWF-MSP-TO"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. DOS = MSP end (inclusive).",
+   "assumptions": "I10 I12",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "MSP_PRIMARY_NOT_BILLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 61,
+   "claim_id": "CWF-MSP-OUT",
+   "category": "cwf-boundary",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250401",
+    "id": "CWF-MSP-OUT"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. DOS after MSP period: Medicare primary.",
+   "assumptions": "I10 I12",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 100000
+   }
+  },
+  {
+   "record_no": 62,
+   "claim_id": "CWF-PREC-DUP",
+   "category": "cwf-precedence",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7HISTORY001",
+    "dos": "20250315",
+    "id": "CWF-PREC-DUP"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. Duplicate AND MSP not billed: DUPLICATE wins.",
+   "assumptions": "I9",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "DUPLICATE",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 63,
+   "claim_id": "CWF-PREC-ENT",
+   "category": "cwf-precedence",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "mbi": "7ENDMSP0001",
+    "dos": "20250315",
+    "id": "CWF-PREC-ENT"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "cap=100000; payment=100000-max(0,0)=100000. Not entitled AND MSP not billed: NOT_ENTITLED wins.",
+   "assumptions": "I9",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 100000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "REJECTED",
+    "cwf_reason": "NOT_ENTITLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 64,
+   "claim_id": "CWF-ZERO-REJ",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 0,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "Y",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250315",
+    "id": "CWF-ZERO-REJ"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "full=Y: ZERO PAYMENT_IN_FULL. Still sent to CWF; MSP covers DOS with primary 0.",
+   "assumptions": "I9 I12",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PAYMENT_IN_FULL",
+    "cwf": "REJECTED",
+    "cwf_reason": "MSP_PRIMARY_NOT_BILLED",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 65,
+   "claim_id": "CWF-ZERO-ACC",
+   "category": "cwf-policy",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "Y",
+    "id": "CWF-ZERO-ACC"
+   },
+   "source": "Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "full=Y: ZERO PAYMENT_IN_FULL; accepted, $0 released.",
+   "assumptions": "I9 I13",
+   "expected": {
+    "status": "ZERO",
+    "payment_cents": 0,
+    "reason": "PAYMENT_IN_FULL",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 66,
+   "claim_id": "EX3-MSP",
+   "category": "policy-published",
+   "input": {
+    "charges": 1500000,
+    "gross": 1400000,
+    "primary": 1250000,
+    "deductible": 155600,
+    "coinsurance": 0,
+    "contract": 1300000,
+    "full": "N",
+    "mbi": "7MSPWIN0001",
+    "dos": "20250315",
+    "id": "EX3-MSP"
+   },
+   "source": "40.8.3 Example 3 + Pub. 100-04 Ch. 27 s20, s20.2.2",
+   "arithmetic": "CMS-EX3 amounts (lowest limit 1300000-1250000=50000) for a beneficiary whose MSP period covers DOS; primary billed, so accepted and $500 released.",
+   "assumptions": "I12",
+   "expected": {
+    "status": "PAID",
+    "payment_cents": 50000,
+    "reason": "SECONDARY_PAYABLE",
+    "cwf": "ACCEPTED",
+    "cwf_reason": "DISPOSITION_01",
+    "released_cents": 50000
+   }
+  },
+  {
+   "record_no": 67,
+   "claim_id": "CWF-BAD-MBI",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-BAD-MBI"
+   },
+   "patches": [
+    [
+     73,
+     11,
+     "1eg4te5mk73"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Lowercase MBI.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_MBI",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 68,
+   "claim_id": "CWF-MBI-SPC",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-MBI-SPC"
+   },
+   "patches": [
+    [
+     73,
+     11,
+     "           "
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Blank MBI.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_MBI",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 69,
+   "claim_id": "CWF-BAD-MON",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-BAD-MON"
+   },
+   "patches": [
+    [
+     84,
+     8,
+     "20251301"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Month 13.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_DATE",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 70,
+   "claim_id": "CWF-BAD-DAY",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-BAD-DAY"
+   },
+   "patches": [
+    [
+     84,
+     8,
+     "20250100"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Day 00.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_DATE",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 71,
+   "claim_id": "CWF-DATE-ALP",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-DATE-ALP"
+   },
+   "patches": [
+    [
+     84,
+     8,
+     "2025-3-1"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Non-numeric date.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_DATE",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
+  },
+  {
+   "record_no": 72,
+   "claim_id": "CWF-PREC-FLG",
+   "category": "interface-malformed",
+   "input": {
+    "charges": 100000,
+    "gross": 100000,
+    "primary": 10000,
+    "deductible": 0,
+    "coinsurance": 0,
+    "contract": null,
+    "full": "N",
+    "id": "CWF-PREC-FLG"
+   },
+   "patches": [
+    [
+     72,
+     1,
+     "?"
+    ],
+    [
+     73,
+     11,
+     "???????????"
+    ]
+   ],
+   "source": "README record contract",
+   "arithmetic": "Bad flag AND bad MBI: flag is checked first.",
+   "assumptions": "I14",
+   "expected": {
+    "status": "INVALID",
+    "payment_cents": 0,
+    "reason": "BAD_FLAG",
+    "cwf": "NOT_SENT",
+    "cwf_reason": "CLAIM_INVALID",
+    "released_cents": 0
+   }
   }
+ ],
+ "totals": {
+  "records": 72,
+  "paid": 36,
+  "zero": 13,
+  "invalid": 23,
+  "payment_cents": 10003915000,
+  "accepted": 39,
+  "rejected": 10,
+  "released_cents": 10003055000,
+  "arithmetic": "PAID rows 1-15,18,21,27,29,48 = 20. ZERO rows 16,17,19,20,22-26,28,30 = 11. INVALID rows 31-47 = 17. Sum: 50000+150000+150000+220000+200000+190000+150000+145000+350000+300000+200000+69999+69999+40000+1+1+80000+9999999999+1+90000 = 10002455000. CWF cases 49-72: see each case; accepted=39, rejected=10, released = payment of accepted rows = 10003055000."
+ },
+ "cwf_reference": {
+  "note": "Independent synthetic CWF reference written for this ledger (not fixtures/cwf.json). Cases without mbi/dos use 1EG4TE5MK73 on 20250315.",
+  "beneficiaries": [
+   {
+    "mbi": "1EG4TE5MK73",
+    "entitled_from": "20200101",
+    "entitled_to": "99999999",
+    "msp_from": null,
+    "msp_to": null
+   },
+   {
+    "mbi": "7WINDOW0001",
+    "entitled_from": "20250201",
+    "entitled_to": "20250630",
+    "msp_from": null,
+    "msp_to": null
+   },
+   {
+    "mbi": "7MSPWIN0001",
+    "entitled_from": "20200101",
+    "entitled_to": "99999999",
+    "msp_from": "20250301",
+    "msp_to": "20250331"
+   },
+   {
+    "mbi": "7HISTORY001",
+    "entitled_from": "20200101",
+    "entitled_to": "99999999",
+    "msp_from": "20250101",
+    "msp_to": "20251231"
+   },
+   {
+    "mbi": "7ENDMSP0001",
+    "entitled_from": "20200101",
+    "entitled_to": "20241231",
+    "msp_from": "20250101",
+    "msp_to": "20251231"
+   }
+  ],
+  "history": [
+   {
+    "mbi": "7HISTORY001",
+    "dos": "20250315",
+    "charges": 100000
+   }
+  ]
+ }
 }
