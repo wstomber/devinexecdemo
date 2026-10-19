@@ -1,0 +1,3 @@
+# 2026-10-19T02:23:05Z python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat
+PASS: records and totals match; report=evidence/live/stage4/verify-compare-curated.json
+exit=0

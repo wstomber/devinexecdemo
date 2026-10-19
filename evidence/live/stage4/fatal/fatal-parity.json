@@ -1,0 +1,618 @@
+[
+  {
+    "scenario": "usage-no-args",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "usage-three-args",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "usage-five-args",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: msp-batch INPUT CWF OUTPUT TOTALS\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "same-paths",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "paths must be distinct\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "paths must be distinct\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "missing-input",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 35/  /  \n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 35/  /  \n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "missing-cwf",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status   /  /  \n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status   /  /  \n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "malformed-cwf-type",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "malformed-cwf-blank",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "malformed-cwf-date",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "malformed-cwf-msp-mixed",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "malformed-h-charges",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "cwf-1001-b",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "cwf-1001-h",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "invalid CWF reference record\nfatal batch failure; discard outputs; file status   /  /  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of cwf-file ('CWF')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "line-4097",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "input line exceeds 4096 bytes\nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "input line exceeds 4096 bytes\nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "line-4098-no-newline",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "line-5000",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "line-4097-crlf-ok",
+    "cobol": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputs": {
+        "OUT": "85586af011464dd92351f8a603561e07887c99c546d97d0cb5cfb71a1e011bf3",
+        "TOT": "ec7433c3f9dac5bed2167ee94f80b26a4d71ca59904d6aa753f3ee7cc250415e"
+      }
+    },
+    "python": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "outputs": {
+        "OUT": "85586af011464dd92351f8a603561e07887c99c546d97d0cb5cfb71a1e011bf3",
+        "TOT": "ec7433c3f9dac5bed2167ee94f80b26a4d71ca59904d6aa753f3ee7cc250415e"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "records-10001",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "batch exceeds 10000 records\nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "9a5538d3a53a70dc6d88c6c5ead8a8db29798aabff006bfbe4cbafff62d83955",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "batch exceeds 10000 records\nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "9a5538d3a53a70dc6d88c6c5ead8a8db29798aabff006bfbe4cbafff62d83955",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "duplicate-id",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "duplicate claim ID: F00001      \nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "5ab5735211c1cfdbbd0f119081bc5004e55a2f6c743bb0e96ec55dccdcf3acec",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "duplicate claim ID: F00001      \nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "5ab5735211c1cfdbbd0f119081bc5004e55a2f6c743bb0e96ec55dccdcf3acec",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "duplicate-id-rejected",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "duplicate claim ID: F00001      \nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "duplicate claim ID: F00001      \nfatal batch failure; discard outputs; file status 00/00/00\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('TOT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "b19e5d172aff3bcc4cc7721dd4427938dfbe74e25f3a7233d2d887aea0bac2a8",
+        "TOT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "output-dir-missing",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/30/  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/30/  \nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": null,
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  },
+  {
+    "scenario": "totals-dir-missing",
+    "cobol": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/30\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "TOT": null
+      }
+    },
+    "python": {
+      "exit": 2,
+      "stdout": "",
+      "stderr": "fatal batch failure; discard outputs; file status 00/00/30\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('OUT')\nlibcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('IN')\n",
+      "outputs": {
+        "OUT": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "TOT": null
+      }
+    },
+    "checks": {
+      "exit": true,
+      "stdout": true,
+      "stderr": true,
+      "outputs": true
+    },
+    "match": true
+  }
+]

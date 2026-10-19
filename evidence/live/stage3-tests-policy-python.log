@@ -1,0 +1,20 @@
+# 2026-10-19T02:21:07.053785+00:00 MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v
+test_blank_lines_are_bad_length_records (test_batch.BatchTests) ... ok
+test_byte_level_validation (test_batch.BatchTests) ... ok
+test_crlf_missing_final_newline_and_final_carriage_return (test_batch.BatchTests) ... ok
+test_cwf_record_limits_and_valid_edges (test_batch.BatchTests) ... ok
+test_duplicate_ids_and_invalid_ids (test_batch.BatchTests) ... ok
+test_empty_input (test_batch.BatchTests) ... ok
+test_line_lengths_and_transport_limit (test_batch.BatchTests) ... ok
+test_missing_and_malformed_cwf_files (test_batch.BatchTests) ... ok
+test_record_count_limit (test_batch.BatchTests) ... ok
+test_usage_and_path_errors (test_batch.BatchTests) ... ok
+test_each_case_alone (test_ledger.LedgerTests) ... ok
+test_ledger_batch (test_ledger.LedgerTests) ... ok
+test_ledger_integrity (test_ledger.LedgerTests) ... ok
+test_output_widths (test_ledger.LedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 4.692s
+
+OK

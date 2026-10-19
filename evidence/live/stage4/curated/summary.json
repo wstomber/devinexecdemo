@@ -1,0 +1,68 @@
+{
+  "batch": "curated",
+  "input": "build/curated.dat",
+  "input_sha256": "834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60",
+  "cwf": "build/cwf.dat",
+  "cwf_sha256": "abb08cc783bb21e421af374cc4f0d17c7ff191d1cd23cf304945a2b337e57cf8",
+  "records_cobol": 33,
+  "records_python": 33,
+  "matches": 33,
+  "mismatches": 0,
+  "totals_match": true,
+  "byte_identical": {
+    "results.csv": true,
+    "totals.csv": true
+  },
+  "status_counts": {
+    "PAID": [
+      15,
+      15
+    ],
+    "ZERO": [
+      9,
+      9
+    ],
+    "INVALID": [
+      9,
+      9
+    ]
+  },
+  "cwf_counts": {
+    "ACCEPTED": [
+      21,
+      21
+    ],
+    "REJECTED": [
+      3,
+      3
+    ],
+    "NOT_SENT": [
+      9,
+      9
+    ]
+  },
+  "totals_cobol": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "totals_python": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "stdout_empty": [
+    true,
+    true
+  ]
+}

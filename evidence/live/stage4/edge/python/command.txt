@@ -1,0 +1,1 @@
+python3 python/msp.py evidence/live/stage4/edge/edge.dat evidence/live/stage4/edge/edge-cwf.dat evidence/live/stage4/edge/python/results.csv evidence/live/stage4/edge/python/totals.csv

@@ -1,0 +1,42 @@
+# GnuCOBOL 3.1.2 CWF line-sequential reader probes (Stage 1, build/msp-batch from be0b00e)
+# columns: case exit_code [stderr] result-row
+ok 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+nofinalnl 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+crlf 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+blankline 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+trailspaces64 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+trailspaces65 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+trailspaces100 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+long_garbage65 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+B28 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+Bpartialdash 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+Bdash_and_space 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+lowerb 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+mbispaces 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+mbilower 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,REJECTED,NOT_ENTITLED,0000000000']
+tab 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+H_ok 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,REJECTED,NOT_ENTITLED,0000000000']
+H_trail 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+H_short 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+empty 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,REJECTED,NOT_ENTITLED,0000000000']
+onlynl 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+nul 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+B_badentdate 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,REJECTED,NOT_ENTITLED,0000000000']
+B1000 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,REJECTED,NOT_ENTITLED,0000000000']
+B1001 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+cr_mid 2 invalid CWF reference record | fatal batch failure; discard outputs; file status   /  /    None
+dupB_first_wins 0  ['0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000']
+# second set (input record intentionally irrelevant; only exit code matters)
+crcr 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+cr_only_line 2 None
+cr_eof_nolf 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+ff 2 None
+ff_start 2 None
+cr_at_65 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+X_at_64 2 None
+highbyte_after64 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+nul_after64 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+tab_after64 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+sp_then_cr 0 ['0000000001,@0000000001,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000']
+B_lead_space_line 2 None
+# third set (CR placement): mid_cr_space 0, cr_space 0, cr_in_mbi 0 ('B2MSP\r0000001...' loads as B2MSP0000001), crcrcr 0, sp_cr_sp_cr 0 -> CR bytes are dropped anywhere in the line
