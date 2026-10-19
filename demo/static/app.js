@@ -324,10 +324,10 @@ R.ex3 = async () => {
    <li>Python tests: <code>test_cms_ex3_contract_replaces_charges_and_pays_500</code>, <code>test_cms_ex3_without_contract_would_pay_1500</code></li>
    <li>Comparison row: <a href="#compare" data-goto-ex3="1">curated batch, CMS-EX3</a></li></ul></div></div>`;
 };
-R.pilot = async () => `<h1>8 · Pilot: CWF MSP payments in four weeks</h1>
-  <p class="lede">The same steps you just saw, on the real MSP payment module used in CWF claims processing. Security sets the rules first, then tries to break them.</p>
+R.pilot = async () => `<h1>8 · Pilot: MSP payments (MSPPAY) in four weeks</h1>
+  <p class="lede">The same steps you just saw, on MSPPAY, the real CMS module that calculates Medicare secondary payments. Security sets the rules first, then tries to break them.</p>
   <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>
-  <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the CWF MSP payment module and give read access to its repository and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
+  <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the MSPPAY module and give read access to its repository and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
 R.security = async () => `<h1>7 · Security &amp; data</h1>
   <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;

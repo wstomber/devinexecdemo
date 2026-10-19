@@ -33,7 +33,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
 | +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
 | 18–20 | 7 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition publishes (ZDR with the model labs, Outposts), and what we will confirm with Cognition. |
-| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on the real CWF MSP payment module." Walk the four weeks; point at the "Security's role" column and the in-scope table. | The pilot is one named CWF module, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
+| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on MSPPAY, the real CMS module that calculates secondary payments. CWF supplies the who-pays-first records." Walk the four weeks; point at the "Security's role" column and the in-scope table. | The pilot is one named MSPPAY module, not a CWF or platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
 
 ## 15-minute route
 
