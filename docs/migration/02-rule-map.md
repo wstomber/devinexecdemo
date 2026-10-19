@@ -29,7 +29,7 @@ COBOL-vs-Python comparisons in `evidence/rehearsal/stage4-comparison/`
 
 | # | Rule | COBOL | Layer A tests | Python | Layer B tests | Result |
 |---|---|---|---|---|---|---|
-| V1 | A record is exactly 73 bytes after framing, else `BAD_LENGTH` | `validate.cob` 33–35 | @…31, @…32, @…33 | `validate` (`RECORD_LENGTH`) | `ValidateTests.test_length_and_identity` | PASS · parity |
+| V1 | A record is exactly 92 bytes after framing, else `BAD_LENGTH` | `validate.cob` 13 | @…31, @…32, @…33 | `validate` (`RECORD_LENGTH`) | `ValidateTests.test_length_and_identity` | PASS · parity |
 | V2 | ID: uppercase A–Z, 0–9, `-`, `_`, left-aligned, right-padded with spaces, not blank, else `BAD_ID` | `validate.cob` 36–55 | @…34, @…35, @…36, @…37 | `valid_claim_id` (`ID_CHARACTERS`) | `test_length_and_identity` | PASS · parity, incl. NUL/tab/high-byte edge batch |
 | V3 | The five amount fields must be all digits (COBOL `NUMERIC` class test), else `BAD_AMOUNT`. Nothing defaults to zero | `validate.cob` 56–61 | AMT-SPACE, AMT-PLUS | `is_numeric` (`DIGITS`) | `test_numeric_class_matches_cobol` | PASS · parity |
 | V4 | Contract is exactly `----------` (absent) or all digits, else `BAD_AMOUNT` | `validate.cob` 62–66 | OTAF-ALPHA | `validate` (`ABSENT_CONTRACT`) | `test_numeric_class_matches_cobol` | PASS · parity |
@@ -38,11 +38,26 @@ COBOL-vs-Python comparisons in `evidence/rehearsal/stage4-comparison/`
 | V7 | Rejection precedence: LENGTH → ID → AMOUNT → CONTRACT → FLAG | order of `move … to claim-reason` / `goback` in `validate.cob` | @…46, PREC-AMT-FLG, PREC-OTAF-FL | order of checks in `validate` | `test_rejection_precedence` | PASS · parity |
 | V8 | No numeric conversion before the class tests pass | `validate.cob` 67–72 | AMT-SPACE, AMT-PLUS | `int(...)` only after `is_numeric` | `test_numeric_class_matches_cobol` | PASS · parity |
 
+## CWF pre-payment check (runs after the payment is calculated)
+
+Sources: CMS Pub. 100-04 Ch. 27 §20, §20.2.2 (price, then CWF pre-payment
+validation and authorization, then pay or deny); Pub. 100-05 Ch. 5 §10.1 (MSP
+records on CWF). Reject codes are demo-defined; only disposition 01 is a CWF code.
+
+| # | Rule | COBOL | Layer A cases | Python | Result |
+|---|---|---|---|---|---|
+| C0 | MBI is 11 of `A–Z 0–9` (`BAD_MBI`); service date is 8 digits with month 01–12 and day 01–31 (`BAD_DATE`). Invalid claims are not sent to CWF (`NOT_SENT`/`CLAIM_INVALID`, 0 released) | `validate.cob` 58–71; `batch.cob` 163–167 | CWF-BAD-MBI, CWF-MBI-SPC, CWF-BAD-MON | `validate`, `Batch.process` | PASS · parity |
+| C1 | MBI not on file, or service date outside the inclusive entitlement period → `NOT_ENTITLED` | `cwf.cob` 17–32 | CWF-NOFILE, CWF-ENT-FROM, CWF-ENT-TO, CWF-ENT-BEF, CWF-ENT-AFT | `cwf_check` | PASS · parity |
+| C2 | Same MBI, service date and charges as a posted claim (`H` record) → `DUPLICATE` | `cwf.cob` 33–41 | CWF-DUP, CWF-DUP-AMT, CWF-DUP-DOS, CWF-PREC-DUP | `cwf_check` | PASS · parity |
+| C3 | MSP period covers the service date and primary payment is 0 → `MSP_PRIMARY_NOT_BILLED` | `cwf.cob` 42–48 | CWF-MSP-NOPR, CWF-MSP-PAID, CWF-MSP-FROM, CWF-MSP-TO, CWF-MSP-OUT | `cwf_check` | PASS · parity |
+| C4 | Otherwise `ACCEPTED` / `DISPOSITION_01` and released = calculated payment; any rejection releases 0 but keeps the calculated payment; ZERO claims are still checked | `cwf.cob` 49–51 | CMS-EX3, CWF-ZERO-REJ, CWF-ZERO-ACC, CWF-PREC-ENT | `cwf_check`, `Batch` totals | PASS · parity |
+| C5 | CWF reference file: `B` and `H` records; any malformed record, or more than 1,000 of either, is fatal (exit 2) | `batch.cob` 189–230 (`load-cwf`, `parse-cwf`) | malformed-CWF batch tests | `load_cwf` | PASS · fatal parity |
+
 ## Batch rules (all interface decisions)
 
 | # | Rule | COBOL | Layer A tests | Python | Layer B tests | Result |
 |---|---|---|---|---|---|---|
-| B1 | Exactly three distinct positional paths `INPUT OUTPUT TOTALS`, else exit 2; the Python CLI also accepts optional `--summary-json PATH` | `batch.cob` 47–61 (three paths only) | `test_usage_errors_exit_2` | `main`, `parse_args` | `MainTests.test_usage_and_failure_exit_2` | PASS |
+| B1 | Exactly four distinct positional paths `INPUT CWF OUTPUT TOTALS`, else exit 2; the Python CLI also accepts optional `--summary-json PATH` | `batch.cob` 59–61 (four paths only) | `test_usage_errors_exit_2` | `main`, `parse_args` | `MainTests.test_usage_and_failure_exit_2` | PASS |
 | B2 | Framing: LF; one trailing CR stripped; final line without newline is a record; blank line is a `BAD_LENGTH` record | `batch.cob` 78–94, 105–118 | `test_crlf_and_missing_final_newline_match_lf`, @…33 | `read_records`, `finish_line` | `FramingTests` | PASS · parity (edge batch: no final newline, bare CR, CRLF) |
 | B3 | A line over 4,096 bytes is fatal. A 4,096-byte line is an ordinary `BAD_LENGTH` record | `batch.cob` 88, 112–115 | `test_line_of_4096_bytes_is_invalid_record_and_4097_is_fatal` | `read_records` (`MAX_LINE_BYTES`) | `test_transport_limit`, `test_line_spanning_read_chunks` | PASS · fatal parity |
 | B4 | More than 10,000 records is fatal | `batch.cob` 120–123 | `test_10000_records_succeed_and_10001_is_fatal` | `Batch.process` (`MAX_RECORDS`) | `BatchTests.test_record_limit` | PASS · fatal parity |
@@ -56,12 +71,12 @@ COBOL-vs-Python comparisons in `evidence/rehearsal/stage4-comparison/`
 
 ## Results behind the "Result" column
 
-- Layer A, 16 tests against COBOL before any Python existed:
-  `evidence/rehearsal/stage2-pre-migration-tests/`. The same 16 passed
-  against Python on the first run: `stage3-python/policy-tests-python-first-run.log`.
-- Layer B, 20 Python unit tests: `stage3-python/python-unit-tests.log`. One
-  test-authoring defect was found and fixed; there was no implementation
-  change (`stage3-python/corrections.md`).
-- Layer C: curated 30/30, synthetic 1,000/1,000, adversarial edge batch 24/24,
+- Layer A, the hand-derived ledger run against COBOL before any Python existed:
+  `evidence/rehearsal/stage2-pre-migration-tests/`. The same tests passed
+  against Python, unchanged: `stage3-python/policy-tests-python-first-run.log`.
+- Layer B, focused Python unit tests: `stage3-python/python-unit-tests.log`.
+  Every correction and its cause is in `stage3-python/corrections.md`.
+- Layer C (calculated payment, CWF decision and released amount): curated 33/33,
+  synthetic 1,000/1,000, adversarial edge batch 2,099/2,099, 22 fatal paths,
   all byte-identical; fatal cases identical (`stage4-comparison/`).
   `tools/verify.py` also reports PASS for the curated and synthetic batches.

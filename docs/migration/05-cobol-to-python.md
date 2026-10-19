@@ -11,7 +11,7 @@ COBOL behaviors were kept exactly and which were only re-expressed.
 | COBOL construct (where) | Python in `python/msp.py` | What changed and why |
 |---|---|---|
 | Copybook `claim.cpy`, a shared mutable block | `@dataclass(frozen=True) Claim` and `Result` | Immutable values replace by-reference mutation. A new object per record makes state reset structural instead of something you must remember (`INITIALIZE`) |
-| `claim-raw` group overlay (`move input-record(1:73) to claim-raw`) | `ID_FIELD`, `AMOUNT_FIELDS`, `CONTRACT_FIELD`, `FULL_FLAG` slices | Byte positions are now named constants. Same offsets (0-based in Python, 1-based in COBOL) |
+| `claim-raw` group overlay (`move input-record(1:92) to claim-raw`) | `ID_FIELD`, `AMOUNT_FIELDS`, `CONTRACT_FIELD`, `FULL_FLAG` slices | Byte positions are now named constants. Same offsets (0-based in Python, 1-based in COBOL) |
 | `pic 9(10) comp-3` packed decimal | `int` cents | Both are exact. Python `int` is unbounded; the 10-digit input width still bounds every value (see "Overflow" below) |
 | `claim-has-contract` + `claim-contract` | `contract: Optional[int]` | One field instead of two that must agree |
 | `IS NUMERIC` on `pic x(10)` | `is_numeric`: every byte in `DIGITS` | **Not** `str.isdigit()`, which accepts Unicode digits such as `"²"` and `"٣"`. **Not** `int()`, which accepts `"+5"`, `" 5"` and `"1_000"` |
@@ -77,3 +77,12 @@ or raises the record limit, re-check the COBOL widths before comparing.
   default.
 - stderr wording: kept similar, but not byte-identical, and not part of the
   contract.
+
+## The CWF check
+
+| COBOL | Python | Note |
+| --- | --- | --- |
+| `cwf.cpy` `occurs 1000 times` tables + `perform varying` linear search | `CwfReference.beneficiaries` (dict, first entry wins) and `history` (frozenset of `(mbi, dos, charges)`) | Same answers; first-entry-wins kept so duplicate `B` records behave alike |
+| `load-cwf` / `parse-cwf`, fatal on any bad record | `load_cwf` raising `FatalBatchError` | Bytes in, CR stripped, same limits |
+| `check-claim`: set reason, test, `goback` | `cwf_check` returning a new `Result` via `replace` | Same order: entitlement, duplicate, MSP primary not billed |
+| `move claim-payment to claim-released` only when accepted | `released_cents=result.payment_cents` only when `ACCEPTED` | A rejection keeps the calculated payment and releases 0 |
