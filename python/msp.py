@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Medicare Secondary Payer prospective-payment batch: Python replacement for cobol/.
 
-Usage: python3 python/msp.py [--summary-json PATH] INPUT OUTPUT TOTALS
+Usage: python3 python/msp.py [--summary-json PATH] INPUT CWF OUTPUT TOTALS
 
 Synthetic educational module derived from CMS Pub. 100-05 Ch. 5 §§40.8-40.8.3.
 All money is integer cents (Python int); binary floating point is never used.
@@ -12,24 +12,29 @@ import json
 import os
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterator, Optional
 
-RECORD_LENGTH = 73
+RECORD_LENGTH = 92
 MAX_LINE_BYTES = 4096
 MAX_RECORDS = 10_000
 ABSENT_CONTRACT = b"----------"
 ID_CHARACTERS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 DIGITS = frozenset(b"0123456789")
-RESULTS_HEADER = "record_no,claim_id,status,payment_cents,reason"
-TOTALS_HEADER = "records,paid,zero,invalid,payment_cents"
+RESULTS_HEADER = "record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents"
+TOTALS_HEADER = "records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents"
+MBI_CHARACTERS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+CWF_RECORD_BYTES = 64
+MAX_CWF_ENTRIES = 1000
 
-# Byte slices of the 73-byte record (README "Positions" table, 0-based here).
+# Byte slices of the 92-byte record (README "Positions" table, 0-based here).
 ID_FIELD = slice(0, 12)
 AMOUNT_FIELDS = {"charges": slice(12, 22), "gross": slice(22, 32), "primary": slice(32, 42),
                  "deductible": slice(42, 52), "coinsurance": slice(52, 62)}
 CONTRACT_FIELD = slice(62, 72)
 FULL_FLAG = slice(72, 73)
+MBI_FIELD = slice(73, 84)
+DOS_FIELD = slice(84, 92)
 
 
 class FatalBatchError(Exception):
@@ -46,6 +51,8 @@ class Claim:
     coinsurance: int
     contract: Optional[int]
     paid_in_full: bool
+    mbi: str = ""
+    dos: int = 0
 
 
 @dataclass(frozen=True)
@@ -54,6 +61,23 @@ class Result:
     status: str
     payment_cents: int
     reason: str
+    cwf: str = "NOT_SENT"
+    cwf_reason: str = "CLAIM_INVALID"
+    released_cents: int = 0
+
+
+@dataclass(frozen=True)
+class Beneficiary:
+    entitled_from: int
+    entitled_to: int
+    msp_period: Optional[tuple]
+
+
+@dataclass(frozen=True)
+class CwfReference:
+    """What the CWF Host knows (cwf.cpy tables): entitlement/MSP periods and posted claims."""
+    beneficiaries: dict
+    history: frozenset
 
 
 def read_records(stream) -> Iterator[bytes]:
@@ -125,7 +149,74 @@ def validate(record: bytes, record_no: int):
     flag = record[FULL_FLAG]
     if flag not in (b"Y", b"N"):
         return None, invalid(claim_id, "BAD_FLAG")
-    return Claim(claim_id, contract=contract, paid_in_full=flag == b"Y", **amounts), None
+    mbi = record[MBI_FIELD]
+    if not all(byte in MBI_CHARACTERS for byte in mbi):
+        return None, invalid(claim_id, "BAD_MBI")
+    dos = record[DOS_FIELD]
+    if not is_numeric(dos) or not (b"01" <= dos[4:6] <= b"12") or not (b"01" <= dos[6:8] <= b"31"):
+        return None, invalid(claim_id, "BAD_DATE")
+    return Claim(claim_id, contract=contract, paid_in_full=flag == b"Y", mbi=mbi.decode("ascii"),
+                 dos=int(dos), **amounts), None
+
+
+def load_cwf(path: str) -> CwfReference:
+    """batch.cob load-cwf/parse-cwf: B and H records; any malformed record is fatal."""
+    try:
+        with open(path, "rb") as stream:
+            data = stream.read()
+    except OSError as exc:
+        raise FatalBatchError(f"cannot open CWF reference: {exc}") from exc
+    lines = data.split(b"\n")
+    if lines and lines[-1] == b"":
+        lines.pop()
+    beneficiaries, history, posted = {}, set(), 0
+    for line in lines:
+        line = line.rstrip(b"\r")
+        if len(line) > CWF_RECORD_BYTES:
+            raise FatalBatchError("invalid CWF reference record")
+        line = line.ljust(CWF_RECORD_BYTES)
+        kind, mbi = line[:1], line[1:12]
+        if kind == b"B":
+            if line[44:].strip(b" ") or not mbi.strip(b" ") or not is_numeric(line[12:28]) \
+                    or posted_count(beneficiaries) >= MAX_CWF_ENTRIES:
+                raise FatalBatchError("invalid CWF reference record")
+            msp = line[28:44]
+            if msp == b"-" * 16:
+                period = None
+            elif is_numeric(msp):
+                period = (int(msp[:8]), int(msp[8:]))
+            else:
+                raise FatalBatchError("invalid CWF reference record")
+            beneficiaries.setdefault(mbi.decode("ascii"), []).append(
+                Beneficiary(int(line[12:20]), int(line[20:28]), period))
+        elif kind == b"H":
+            if line[30:].strip(b" ") or not mbi.strip(b" ") or not is_numeric(line[12:30]) \
+                    or posted >= MAX_CWF_ENTRIES:
+                raise FatalBatchError("invalid CWF reference record")
+            posted += 1
+            history.add((mbi.decode("ascii"), int(line[12:20]), int(line[20:30])))
+        else:
+            raise FatalBatchError("invalid CWF reference record")
+    # The COBOL table search stops at the first entry for an MBI.
+    first = {mbi: entries[0] for mbi, entries in beneficiaries.items()}
+    return CwfReference(first, frozenset(history))
+
+
+def posted_count(beneficiaries: dict) -> int:
+    return sum(len(entries) for entries in beneficiaries.values())
+
+
+def cwf_check(claim: Claim, result: Result, reference: CwfReference) -> Result:
+    """cwf.cob cwf-check: first failure wins; only an accepted claim releases its payment."""
+    beneficiary = reference.beneficiaries.get(claim.mbi)
+    if beneficiary is None or not beneficiary.entitled_from <= claim.dos <= beneficiary.entitled_to:
+        return replace(result, cwf="REJECTED", cwf_reason="NOT_ENTITLED", released_cents=0)
+    if (claim.mbi, claim.dos, claim.charges) in reference.history:
+        return replace(result, cwf="REJECTED", cwf_reason="DUPLICATE", released_cents=0)
+    msp = beneficiary.msp_period
+    if msp is not None and msp[0] <= claim.dos <= msp[1] and claim.primary == 0:
+        return replace(result, cwf="REJECTED", cwf_reason="MSP_PRIMARY_NOT_BILLED", released_cents=0)
+    return replace(result, cwf="ACCEPTED", cwf_reason="DISPOSITION_01", released_cents=result.payment_cents)
 
 
 def charge_basis(claim: Claim) -> int:
@@ -156,8 +247,10 @@ def calculate(claim: Claim) -> Result:
 class Batch:
     """Per-batch identity tracking and totals (batch.cob process-record and main)."""
 
-    def __init__(self):
+    def __init__(self, reference: CwfReference):
+        self.reference = reference
         self.records = self.paid = self.zero = self.invalid = self.payment_cents = 0
+        self.accepted = self.rejected = self.released_cents = 0
         self.seen_ids = set()
 
     def process(self, record: bytes) -> Result:
@@ -171,7 +264,12 @@ class Batch:
                 raise FatalBatchError(f"duplicate claim ID: {identity}")
             self.seen_ids.add(identity)
         if claim:
-            result = calculate(claim)
+            result = cwf_check(claim, calculate(claim), self.reference)
+        if result.cwf == "ACCEPTED":
+            self.accepted += 1
+        elif result.cwf == "REJECTED":
+            self.rejected += 1
+        self.released_cents += result.released_cents
         if result.status == "PAID":
             self.paid += 1
         elif result.status == "ZERO":
@@ -183,7 +281,8 @@ class Batch:
 
     def totals_row(self) -> str:
         return (f"{self.records:010d},{self.paid:010d},{self.zero:010d},"
-                f"{self.invalid:010d},{self.payment_cents:015d}")
+                f"{self.invalid:010d},{self.payment_cents:015d},{self.accepted:010d},"
+                f"{self.rejected:010d},{self.released_cents:015d}")
 
     def summary(self) -> dict:
         return {
@@ -192,11 +291,15 @@ class Batch:
             "zero": self.zero,
             "invalid": self.invalid,
             "payment_cents": self.payment_cents,
+            "accepted": self.accepted,
+            "rejected": self.rejected,
+            "released_cents": self.released_cents,
         }
 
 
 def result_row(record_no: int, result: Result) -> str:
-    return f"{record_no:010d},{result.claim_id},{result.status},{result.payment_cents:010d},{result.reason}"
+    return f"{record_no:010d},{result.claim_id},{result.status},{result.payment_cents:010d},{result.reason}," \
+           f"{result.cwf},{result.cwf_reason},{result.released_cents:010d}"
 
 
 def open_output(path: str):
@@ -235,8 +338,8 @@ def write_summary(path: str, summary: dict) -> None:
         raise FatalBatchError(f"cannot write summary JSON: {exc}") from exc
 
 
-def run(input_path: str, output_path: str, totals_path: str, summary_path=None) -> None:
-    batch = Batch()
+def run(input_path: str, cwf_path: str, output_path: str, totals_path: str, summary_path=None) -> None:
+    batch = Batch(load_cwf(cwf_path))
     try:
         source = open(input_path, "rb")
     except OSError as exc:
@@ -263,17 +366,17 @@ def parse_args(args):
         token = args[index]
         if token == "--summary-json":
             if summary_seen:
-                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                print("usage: msp-batch [--summary-json PATH] INPUT CWF OUTPUT TOTALS", file=sys.stderr)
                 return 2
             summary_seen = True
             index += 1
             if index >= len(args) or args[index] == "":
-                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                print("usage: msp-batch [--summary-json PATH] INPUT CWF OUTPUT TOTALS", file=sys.stderr)
                 return 2
             summary_path = args[index]
         elif token.startswith("--summary-json="):
             if summary_seen or token.partition("=")[2] == "":
-                print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+                print("usage: msp-batch [--summary-json PATH] INPUT CWF OUTPUT TOTALS", file=sys.stderr)
                 return 2
             summary_seen = True
             summary_path = token.partition("=")[2]
@@ -300,17 +403,17 @@ def main(argv=None) -> int:
     if parsed == 2:
         return 2
     positionals, summary_path = parsed
-    if len(positionals) != 3:
+    if len(positionals) != 4:
         if summary_path is None:
-            print("usage: msp-batch INPUT OUTPUT TOTALS", file=sys.stderr)
+            print("usage: msp-batch INPUT CWF OUTPUT TOTALS", file=sys.stderr)
         else:
-            print("usage: msp-batch [--summary-json PATH] INPUT OUTPUT TOTALS", file=sys.stderr)
+            print("usage: msp-batch [--summary-json PATH] INPUT CWF OUTPUT TOTALS", file=sys.stderr)
         return 2
-    if len(set(positionals)) != 3:
+    if len(set(positionals)) != 4:
         print("paths must be distinct", file=sys.stderr)
         return 2
     if summary_path is not None and summary_path_collides(summary_path, positionals):
-        print("--summary-json PATH must differ from INPUT, OUTPUT and TOTALS", file=sys.stderr)
+        print("--summary-json PATH must differ from INPUT, CWF, OUTPUT and TOTALS", file=sys.stderr)
         return 2
     try:
         run(*positionals, summary_path=summary_path)

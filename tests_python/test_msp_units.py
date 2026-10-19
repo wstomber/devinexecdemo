@@ -16,10 +16,19 @@ import msp  # noqa: E402
 
 
 def raw(claim_id="T1", charges=100000, gross=100000, primary=10000, deductible=0,
-        coinsurance=0, contract=None, full="N"):
+        coinsurance=0, contract=None, full="N", mbi="1EG4TE5MK73", dos="20250315"):
     contract_field = "----------" if contract is None else f"{contract:010d}"
     return (claim_id.ljust(12) + f"{charges:010d}{gross:010d}{primary:010d}{deductible:010d}"
-            f"{coinsurance:010d}" + contract_field + full).encode("ascii")
+            f"{coinsurance:010d}" + contract_field + full + mbi + dos).encode("ascii")
+
+
+REFERENCE = msp.CwfReference(
+    {"1EG4TE5MK73": msp.Beneficiary(20200101, 99999999, None),
+     "7WINDOW0001": msp.Beneficiary(20250201, 20250630, None),
+     "7MSPWIN0001": msp.Beneficiary(20200101, 99999999, (20250301, 20250331))},
+    frozenset({("7WINDOW0001", 20250315, 100000)}))
+CWF_TEXT = ("B1EG4TE5MK732020010199999999----------------\n"
+            "B7MSPWIN00012020010199999999202503012025033 1\n")
 
 
 def claim(**kw):
@@ -83,7 +92,7 @@ class ValidateTests(unittest.TestCase):
 
     def test_valid_record_parses_all_fields(self):
         c = claim(claim_id="A_B-9", charges=1, gross=2, primary=3, deductible=4, coinsurance=5, contract=0, full="Y")
-        self.assertEqual(c, msp.Claim("A_B-9", 1, 2, 3, 4, 5, 0, True))
+        self.assertEqual(c, msp.Claim("A_B-9", 1, 2, 3, 4, 5, 0, True, "1EG4TE5MK73", 20250315))
         self.assertIsNone(claim().contract)
 
     def test_length_and_identity(self):
@@ -143,15 +152,23 @@ class FramingTests(unittest.TestCase):
 
 class BatchTests(unittest.TestCase):
     def test_counts_totals_and_formatting(self):
-        b = msp.Batch()
+        b = msp.Batch(REFERENCE)
         rows = [msp.result_row(i + 1, b.process(r)) for i, r in enumerate([raw("P1"), raw("Z1", full="Y"), b"SHORT"])]
-        self.assertEqual(rows, ["0000000001,P1,PAID,0000090000,SECONDARY_PAYABLE",
-                                "0000000002,Z1,ZERO,0000000000,PAYMENT_IN_FULL",
-                                "0000000003,@0000000003,INVALID,0000000000,BAD_LENGTH"])
-        self.assertEqual(b.totals_row(), "0000000003,0000000001,0000000001,0000000001,000000000090000")
+        self.assertEqual(rows, ["0000000001,P1,PAID,0000090000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000090000",
+                                "0000000002,Z1,ZERO,0000000000,PAYMENT_IN_FULL,ACCEPTED,DISPOSITION_01,0000000000",
+                                "0000000003,@0000000003,INVALID,0000000000,BAD_LENGTH,NOT_SENT,CLAIM_INVALID,0000000000"])
+        self.assertEqual(b.totals_row(), "0000000003,0000000001,0000000001,0000000001,000000000090000,"
+                                         "0000000002,0000000000,000000000090000")
+
+    def test_rejected_claim_keeps_calculation_but_releases_nothing(self):
+        b = msp.Batch(REFERENCE)
+        result = b.process(raw("R1", mbi="7WINDOW0001", dos="20250701"))
+        self.assertEqual((result.payment_cents, result.cwf, result.cwf_reason, result.released_cents),
+                         (90000, "REJECTED", "NOT_ENTITLED", 0))
+        self.assertEqual((b.payment_cents, b.released_cents, b.accepted, b.rejected), (90000, 0, 0, 1))
 
     def test_duplicate_identifiable_ids_are_fatal_but_reserved_ids_are_not(self):
-        b = msp.Batch()
+        b = msp.Batch(REFERENCE)
         b.process(b"SHORT")
         b.process(b"SHORT")
         b.process(raw("D1"))
@@ -159,15 +176,71 @@ class BatchTests(unittest.TestCase):
             b.process(raw("D1", full="?"))
 
     def test_record_limit(self):
-        b = msp.Batch()
+        b = msp.Batch(REFERENCE)
         b.records = msp.MAX_RECORDS
         with self.assertRaises(msp.FatalBatchError):
             b.process(raw())
 
     def test_no_state_carries_between_records(self):
-        b = msp.Batch()
+        b = msp.Batch(REFERENCE)
         self.assertEqual(b.process(raw("S1", contract=0, full="Q")).reason, "BAD_FLAG")
         self.assertEqual(b.process(raw("S2")).payment_cents, 90000)
+
+
+class CwfCheckTests(unittest.TestCase):
+    def check(self, **kw):
+        c = claim(**kw)
+        r = msp.cwf_check(c, msp.calculate(c), REFERENCE)
+        return r.cwf, r.cwf_reason, r.released_cents
+
+    def test_entitlement_period_is_inclusive(self):
+        for dos, expected in (("20250131", "NOT_ENTITLED"), ("20250201", "DISPOSITION_01"),
+                              ("20250630", "DISPOSITION_01"), ("20250701", "NOT_ENTITLED")):
+            with self.subTest(dos=dos):
+                self.assertEqual(self.check(mbi="7WINDOW0001", dos=dos, charges=100001)[1], expected)
+
+    def test_unknown_beneficiary_is_not_entitled(self):
+        self.assertEqual(self.check(mbi="9NOTONFILE9"), ("REJECTED", "NOT_ENTITLED", 0))
+
+    def test_duplicate_needs_same_beneficiary_date_and_charges(self):
+        self.assertEqual(self.check(mbi="7WINDOW0001", dos="20250315")[1], "DUPLICATE")
+        self.assertEqual(self.check(mbi="7WINDOW0001", dos="20250315", charges=100001)[1], "DISPOSITION_01")
+        self.assertEqual(self.check(mbi="7WINDOW0001", dos="20250316")[1], "DISPOSITION_01")
+
+    def test_msp_period_requires_a_primary_payment(self):
+        self.assertEqual(self.check(mbi="7MSPWIN0001", primary=0), ("REJECTED", "MSP_PRIMARY_NOT_BILLED", 0))
+        self.assertEqual(self.check(mbi="7MSPWIN0001", primary=1), ("ACCEPTED", "DISPOSITION_01", 99999))
+        self.assertEqual(self.check(mbi="7MSPWIN0001", primary=0, dos="20250401"), ("ACCEPTED", "DISPOSITION_01", 100000))
+
+    def test_cms_ex3_is_accepted_and_releases_500(self):
+        self.assertEqual(self.check(mbi="7MSPWIN0001", charges=1500000, gross=1400000, primary=1250000,
+                                    deductible=155600, contract=1300000), ("ACCEPTED", "DISPOSITION_01", 50000))
+
+    def test_new_fields_validate_after_flag(self):
+        record = raw()
+        self.assertEqual(msp.validate(record[:73] + b"1eg4te5mk73" + record[84:], 1)[1].reason, "BAD_MBI")
+        self.assertEqual(msp.validate(record[:84] + b"20251301", 1)[1].reason, "BAD_DATE")
+        self.assertEqual(msp.validate(record[:84] + b"20250100", 1)[1].reason, "BAD_DATE")
+        self.assertEqual(msp.validate(record[:72] + b"?" + b"!" * 19, 1)[1].reason, "BAD_FLAG")
+        self.assertEqual(msp.validate(record, 1)[1], None)
+
+    def test_load_cwf_reads_both_record_types_and_rejects_bad_ones(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "cwf.dat"
+            path.write_text("B1EG4TE5MK732020010199999999----------------\n"
+                            "B7MSPWIN000120200101999999992025030120250331\n"
+                            "H7MSPWIN0001202503150000100000\n")
+            reference = msp.load_cwf(str(path))
+            self.assertEqual(reference.beneficiaries["7MSPWIN0001"].msp_period, (20250301, 20250331))
+            self.assertIsNone(reference.beneficiaries["1EG4TE5MK73"].msp_period)
+            self.assertEqual(reference.history, frozenset({("7MSPWIN0001", 20250315, 100000)}))
+            for bad in ("X1EG4TE5MK73\n", "B1EG4TE5MK7320200101\n", CWF_TEXT,
+                        "H7MSPWIN0001202503150000100000 Z\n", "\n", "B" + "1" * 70 + "\n"):
+                with self.subTest(bad=bad), self.assertRaises(msp.FatalBatchError):
+                    path.write_text(bad)
+                    msp.load_cwf(str(path))
+            with self.assertRaises(msp.FatalBatchError):
+                msp.load_cwf(str(Path(directory) / "absent.dat"))
 
 
 class MainTests(unittest.TestCase):
@@ -176,28 +249,33 @@ class MainTests(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         self.p = Path(self.dir.name)
         (self.p / "in.dat").write_bytes(raw() + b"\n")
+        (self.p / "cwf.dat").write_text("B1EG4TE5MK732020010199999999----------------\n")
 
     def paths(self, *names):
         return [str(self.p / n) for n in names]
 
     def test_success_writes_exact_files(self):
-        self.assertEqual(msp.main(self.paths("in.dat", "r.csv", "t.csv")), 0)
+        self.assertEqual(msp.main(self.paths("in.dat", "cwf.dat", "r.csv", "t.csv")), 0)
         self.assertEqual((self.p / "r.csv").read_text(),
-                         "record_no,claim_id,status,payment_cents,reason\n0000000001,T1,PAID,0000090000,SECONDARY_PAYABLE\n")
+                         "record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents\n"
+                         "0000000001,T1,PAID,0000090000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000090000\n")
         self.assertEqual((self.p / "t.csv").read_text(),
-                         "records,paid,zero,invalid,payment_cents\n0000000001,0000000001,0000000000,0000000000,000000000090000\n")
+                         "records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents\n"
+                         "0000000001,0000000001,0000000000,0000000000,000000000090000,0000000001,0000000000,000000000090000\n")
 
     def test_usage_and_failure_exit_2(self):
-        self.assertEqual(msp.main(self.paths("in.dat", "r.csv")), 2)
-        self.assertEqual(msp.main(self.paths("in.dat", "r.csv", "r.csv")), 2)
-        self.assertEqual(msp.main(self.paths("absent.dat", "r.csv", "t.csv")), 2)
-        self.assertEqual(msp.main(self.paths("in.dat", "missing-dir/r.csv", "t.csv")), 2)
+        self.assertEqual(msp.main(self.paths("in.dat", "cwf.dat", "r.csv")), 2)
+        self.assertEqual(msp.main(self.paths("in.dat", "in.dat", "r.csv", "t.csv")), 2)
+        self.assertEqual(msp.main(self.paths("in.dat", "absent-cwf.dat", "r.csv", "t.csv")), 2)
+        self.assertEqual(msp.main(self.paths("in.dat", "cwf.dat", "r.csv", "r.csv")), 2)
+        self.assertEqual(msp.main(self.paths("absent.dat", "cwf.dat", "r.csv", "t.csv")), 2)
+        self.assertEqual(msp.main(self.paths("in.dat", "cwf.dat", "missing-dir/r.csv", "t.csv")), 2)
 
     def test_totals_open_failure_closes_results_handle(self):
         (self.p / "t-dir").mkdir()
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", ResourceWarning)
-            self.assertEqual(msp.main(self.paths("in.dat", "r.csv", "t-dir")), 2)
+            self.assertEqual(msp.main(self.paths("in.dat", "cwf.dat", "r.csv", "t-dir")), 2)
             gc.collect()
         self.assertEqual([w for w in caught if issubclass(w.category, ResourceWarning)], [])
 
