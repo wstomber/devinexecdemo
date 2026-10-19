@@ -61,6 +61,7 @@ function stepLine(key) { const s = liveStep(key); return s ? `${LIVE} ${badge(s.
 
 const ex3Case = () => E.expectations?.cases?.find(c => c.claim_id === "CMS-EX3");
 const findRow = (cmp, id) => cmp?.rows?.find(r => r[1] === id);
+const cwfBadge = (d, why) => d ? `${badge(d === "ACCEPTED" ? "PASSED" : d === "REJECTED" ? "FAILED" : "NOT_RUN", d === "NOT_SENT" ? "NOT SENT" : d)}${why && d !== "NOT_SENT" ? ` <code class="small">${esc(why)}</code>` : ""}` : "—";
 
 const VIEWS = [["overview", "The problem"], ["baseline", "1 · COBOL baseline"], ["explain", "2 · Devin explains COBOL"], ["tests", "3 · Tests came first"],
   ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["review", "6 · Review & repeat"], ["security", "7 · Security & data"], ["pilot", "8 · Pilot plan"]];
@@ -70,7 +71,7 @@ R.overview = async () => {
   const s = E.saved, c = s.comparisons, total = Object.values(c).reduce((n, x) => n + (x.records?.python || 0), 0);
   const allPassed = Object.values(c).every(x => x.status === "PASSED");
   return `<h1>Can Devin safely modernize code nobody understands anymore?</h1>
-  <p class="lede">A synthetic COBOL module that calculates Medicare Secondary Payer payments — when Medicare pays after another insurer. Devin had to understand it, recover the policy behind it, test it, migrate it to Python, and prove the result.</p>
+  <p class="lede">A synthetic COBOL module that follows a Medicare Secondary Payer claim — when Medicare pays after another insurer — the way CMS documents it: first it <b>calculates</b> what Medicare owes, then a <b>CWF check</b> approves or rejects the claim, and only an approved claim's payment is released. Devin had to understand it, recover the policy behind it, test it, migrate it to Python, and prove the result.</p>
   <div class="flow">
     <div class="card"><h3>1. Run the original</h3>${badge(s.baseline.status)}<div class="small">COBOL baseline kept as the yardstick</div></div><div class="arrow">→</div>
     <div class="card"><h3>2. Explain it</h3><div class="small">Plain-English guide + DeepWiki for new engineers</div></div><div class="arrow">→</div>
@@ -79,49 +80,51 @@ R.overview = async () => {
   </div>
   <h2>Devin, working live</h2><div id="devinslot">${devinCard()}</div>
   <h2>The case that matters</h2>
-  <div class="card"><b>CMS-EX3:</b> the provider agreed to accept $13,000 in total. The primary insurer paid $12,500. Medicare owes <b>$500</b> — not $1,500. <a href="#ex3">See the full walkthrough →</a></div>
+  <div class="card"><b>CMS-EX3:</b> the provider agreed to accept $13,000 in total. The primary insurer paid $12,500. Medicare owes <b>$500</b> — not $1,500 — and CWF approves the claim, so the $500 is released. Three look-alike claims with the same amounts are rejected by CWF and release $0. <a href="#ex3">See the full walkthrough →</a></div>
   <h2>Scope — be honest about it</h2>
-  <ul><li>This is a <b>synthetic, educational</b> example based on public CMS manual rules. It is not CMS production code and not a complete Medicare claims system.</li>
+  <ul><li>This is a <b>synthetic, educational</b> example based on public CMS manual rules. It is not CMS production code and not a complete Medicare claims system: the CWF step is three illustrative checks (entitled on the service date, not already paid, other insurer billed first), not all of CWF.</li>
   <li>“Match” means old and new behave identically on the batches tested here — not that the rules are complete Medicare policy.</li>
   <li>No speed or cost savings are claimed.</li></ul>`;
 };
-const CLAIM_FIELDS = [["claim ID", 12], ["charges", 10], ["approved", 10], ["primary", 10], ["deduct", 10], ["coins", 10], ["contract", 10], ["F", 1]];
+const CLAIM_FIELDS = [["claim ID", 12], ["charges", 10], ["approved", 10], ["primary", 10], ["deduct", 10], ["coins", 10], ["contract", 10], ["F", 1], ["MBI", 11], ["svc date", 8]];
+const ymd = t => /^\d{8}$/.test(t) ? `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6)}` : esc(t);
 const dollars = t => /^\d{10}$/.test(t) ? $$(+t) : t.trim() === "" ? "(blank)" : /^-+$/.test(t) ? "none" : esc(t);
 function claimLine(l) {
   let o = 0; return CLAIM_FIELDS.map(([, w], k) => { const t = l.slice(o, o + w); o += w; return `<span class="f${k % 2}">${esc(t)}</span>`; }).join("") + esc(l.slice(o));
 }
 async function baselineTerminal(b) {
-  const [dat, res, tot, log] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"])]);
+  const [dat, res, tot, log, cwf] = await Promise.all([file(b.raw["curated.dat"]), file(b.raw["curated-results.csv"]), file(b.raw["curated-totals.csv"]), file(b.raw["commands.log"]), b.raw["cwf.dat"] ? file(b.raw["cwf.dat"]) : null]);
   if (dat == null || res == null) return `<p class="err">Saved baseline files are missing.</p>`;
   const lines = t => { const a = t.split("\n"); if (a[a.length - 1] === "") a.pop(); return a; };
   const SHOWN = 15, more = (n, path) => n > SHOWN ? L("c", `# … first ${SHOWN} of ${n} claims shown · ${raw(path, "full file")}`) : "";
   const L = (cls, html) => `<div class="${cls}">${html}</div>`, hl = l => /CMS-EX3/.test(l) ? " hl" : "";
   const run = (log || "").split("\n"), at = run.findIndex(l => /^\$ build\/msp-batch \S*curated\.dat/.test(l));
-  const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat curated-results.csv curated-totals.csv";
+  const cmdText = at >= 0 ? run[at].slice(2) : "build/msp-batch curated.dat cwf.dat curated-results.csv curated-totals.csv";
   const exit = at >= 0 ? (run.slice(at + 1, at + 5).find(l => /^\[exit/.test(l)) || "") : "";
   const ruler = CLAIM_FIELDS.map(([n, w], k) => `<span class="f${k % 2}">${esc(n.padEnd(w).slice(0, w))}</span>`).join("");
   const ex3 = lines(dat).find(l => l.startsWith("CMS-EX3"));
   const ex3out = lines(res).map(l => l.split(",")).find(r => r[1] === "CMS-EX3");
-  let decode = ""; if (ex3) { let o = 0; decode = CLAIM_FIELDS.map(([n, w]) => { const t = ex3.slice(o, o + w); o += w; return n === "claim ID" ? `<b>${esc(t.trim())}</b>` : n === "F" ? `paid in full: ${esc(t)}` : `${n} ${dollars(t)}`; }).join(" · "); }
-  return `<div class="term">${L("p", "$ cat curated.dat")}${L("c", "# the input: one claim per line, fixed-width, 73 characters, amounts in cents")}${L("ruler", ruler)}
+  let decode = ""; if (ex3) { let o = 0; decode = CLAIM_FIELDS.map(([n, w]) => { const t = ex3.slice(o, o + w); o += w; return n === "claim ID" ? `<b>${esc(t.trim())}</b>` : n === "F" ? `paid in full: ${esc(t)}` : n === "MBI" ? `beneficiary ${esc(t)}` : n === "svc date" ? `service date ${ymd(t)}` : `${n} ${dollars(t)}`; }).join(" · "); }
+  return `<div class="term">${L("p", "$ cat curated.dat")}${L("c", "# the input: one claim per line, fixed-width, 92 characters, amounts in cents")}${L("ruler", ruler)}
   ${lines(dat).slice(0, SHOWN).map(l => L("ln" + hl(l), claimLine(l))).join("")}${more(lines(dat).length, b.raw["curated.dat"])}
+  ${cwf != null ? `${L("p", "$ cat cwf.dat")}${L("c", "# CWF reference data: B = beneficiary (entitled from/to, MSP period), H = a claim already paid")}${lines(cwf).map(l => L("ln", esc(l))).join("")}` : ""}
   ${L("p", "$ " + esc(cmdText))}${exit ? L("c", esc(exit)) : ""}
   ${L("p", "$ cat curated-results.csv")}${L("c", "# the output: one result per claim, in the same order")}
   ${lines(res).slice(0, SHOWN + 1).map(l => L("ln" + hl(l), esc(l))).join("")}${more(lines(res).length - 1, b.raw["curated-results.csv"])}
   ${L("p", "$ cat curated-totals.csv")}${tot ? lines(tot).map(l => L("ln", esc(l))).join("") : L("err", "curated-totals.csv is missing from the saved run")}</div>
-  ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}).` : ""}</p>` : ""}`;
+  ${decode ? `<p class="small">The highlighted input line, decoded: ${decode}. ${ex3out ? ` The COBOL's answer for it: calculated <b>${esc(ex3out[2])} ${$$(+ex3out[3])}</b> (${esc(ex3out[4])}); CWF <b>${esc(ex3out[5] || "?")}</b> (${esc(ex3out[6] || "?")}); released <b>${$$(+(ex3out[7] || 0))}</b>.` : ""}</p>` : ""}`;
 }
 R.baseline = async () => {
   const b = E.saved.baseline, ct = b.curated_totals, st = b.synthetic_totals, m = b.manifest || {};
   const stat = (n, l) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
   return `<h1>1 · The original COBOL program, run first</h1>
-  <p class="lede">The program reads a batch of claims (one fixed-width line each) and writes one result per claim — PAID, ZERO or INVALID with a payment and a reason — plus a totals line.</p>
-  <p>This is the real terminal session from the saved run: the 30 claims that went in, the command, and exactly what the old COBOL wrote out. CMS-EX3 is highlighted.</p>
+  <p class="lede">The program reads a batch of claims (one fixed-width line each) and Medicare's CWF reference file. For each claim it calculates the payment (PAID, ZERO or INVALID, with a reason), then runs the CWF check (ACCEPTED or REJECTED, with a reason), and writes the amount released — plus a totals line.</p>
+  <p>This is the real terminal session from the saved run: the claims that went in, the CWF reference data, the command, and exactly what the old COBOL wrote out. CMS-EX3 is highlighted.</p>
   ${await baselineTerminal(b)}
-  <h2>Curated 30-claim batch, summarised ${SAVED} ${badge(b.status)}</h2>
-  <div class="grid g4">${ct ? stat(ct.records, "claims") + stat(ct.paid, "paid") + stat(ct.zero, "zero (valid, nothing owed)") + stat(ct.invalid, "rejected as malformed") + stat(money(ct.payment_cents), "total paid by COBOL") : `<div class="err">Totals file missing</div>`}</div>
+  <h2>Curated ${ct?.records ?? ""}-claim batch, summarised ${SAVED} ${badge(b.status)}</h2>
+  <div class="grid g4">${ct ? stat(ct.records, "claims") + stat(ct.paid, "paid") + stat(ct.zero, "zero (valid, nothing owed)") + stat(ct.invalid, "malformed, never sent to CWF") + stat(money(ct.payment_cents), "calculated by COBOL") + stat(ct.accepted, "approved by CWF") + stat(ct.rejected, "rejected by CWF") + stat(money(ct.released_cents), "released after CWF") : `<div class="err">Totals file missing</div>`}</div>
   <h2>1,000-claim synthetic batch ${SAVED}</h2>
-  <div class="grid g4">${st ? stat(st.records.toLocaleString(), "claims") + stat(st.paid, "paid") + stat(st.zero, "zero") + stat(st.invalid, "rejected") + stat(money(st.payment_cents), "total paid by COBOL") : `<div class="err">Totals file missing</div>`}</div>
+  <div class="grid g4">${st ? stat(st.records.toLocaleString(), "claims") + stat(st.paid, "paid") + stat(st.zero, "zero") + stat(st.invalid, "malformed") + stat(money(st.payment_cents), "calculated by COBOL") + stat(st.accepted, "approved by CWF") + stat(st.rejected, "rejected by CWF") + stat(money(st.released_cents), "released after CWF") : `<div class="err">Totals file missing</div>`}</div>
   <h2>Live re-run</h2><div class="card">${stepLine("build")}<br>${stepLine("baseline")}<div class="small muted" style="margin-top:6px">Live runs write to a new folder each time and never change the saved rehearsal.</div></div>
   <details><summary>Technical detail: identity, environment, raw files</summary>
    <p>Starter commit (COBOL only): ${commit(E.git.starter)} · captured ${esc(m.captured_at_utc || "UNKNOWN")} · verifier result ${badge(b.status)} (expected-results check, migration comparison ${esc(b.report?.migration_comparison || "UNKNOWN")})</p>
@@ -131,18 +134,26 @@ R.baseline = async () => {
 };
 R.explain = async () => {
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /function min/);
+  const cwf = await codeSnippet("cobol/cwf.cob", /^check-claim\./, /move claim-payment to claim-released/);
   return `<h1>2 · Devin explains the legacy code</h1>
-  <p class="lede">Four COBOL files. Devin documented what each does, in plain language, for engineers who have never seen COBOL.</p>
-  <div class="grid g4">
-   <div class="card"><h3>batch.cob — the driver</h3>Reads the file line by line, checks for duplicate claim IDs, writes each result and the totals. Stops the whole batch on fatal problems.</div>
-   <div class="card"><h3>validate.cob — the gatekeeper</h3>Checks each line in a fixed order (length, ID, amounts, contract, flag) and names the first problem it finds.</div>
-   <div class="card"><h3>claim.cpy — the record layout</h3>A “copybook”: one shared definition of the 73-character claim line, used by all programs.</div>
-   <div class="card"><h3>payment.cob — the money</h3>Works out what Medicare owes as the secondary payer, in exact cents.</div></div>
+  <p class="lede">Six COBOL files. Devin documented what each does, in plain language, for engineers who have never seen COBOL.</p>
+  <div class="grid g3">
+   <div class="card"><h3>batch.cob — the driver</h3>Loads the CWF reference file, reads the claims line by line, checks for duplicate claim IDs, calls the payment step and then the CWF check, writes each result and the totals. Stops the whole batch on fatal problems.</div>
+   <div class="card"><h3>validate.cob — the gatekeeper</h3>Checks each line in a fixed order (length, ID, amounts, contract, flag, beneficiary ID, service date) and names the first problem it finds.</div>
+   <div class="card"><h3>claim.cpy — the record layout</h3>A “copybook”: one shared definition of the 92-character claim line and its results, used by all programs.</div>
+   <div class="card"><h3>payment.cob — the money</h3>Works out what Medicare owes as the secondary payer, in exact cents.</div>
+   <div class="card"><h3>cwf.cob — the CWF check</h3>After the payment is calculated: is the person entitled on the service date, was this claim already paid, and if another insurer pays first, did they pay? Only an approved claim releases its payment.</div>
+   <div class="card"><h3>cwf.cpy — Medicare's reference data</h3>Tables of beneficiaries (entitlement and MSP periods) and claims already paid, loaded once from the CWF file.</div></div>
   <h2>The key rule: the provider's contract replaces the charges</h2>
   <div class="grid g2"><div>${pay}</div><div class="card">
    <p><b>In plain English:</b> start with the provider's charges. <b>If the claim has a contractual amount</b> (<code>claim-has-contract = 1</code>), use that instead (<code>move claim-contract to charge-basis</code>). The payment can never be more than the <b>lower</b> of what Medicare would normally pay and that basis (<code>function min</code>).</p>
    <p>For CMS-EX3 that basis is $13,000, not $15,000 — which is why the answer is $500. <a href="#ex3">Walk through it →</a></p>
    <p class="small muted">COBOL terms: a <i>paragraph</i> (<code>calculate-prospective-payment.</code>) is a named block, like a function. <code>comp-3</code> is packed decimal — exact whole numbers, so no rounding drift.</p></div></div>
+  <h2>Then the CWF check decides whether it is paid</h2>
+  <div class="grid g2"><div>${cwf}</div><div class="card">
+   <p><b>In plain English:</b> CMS's claims manual (Pub. 100-04, Ch. 27 §20) says the contractor prices the claim first, then sends it to the Common Working File for pre-payment validation. This program does three of those checks, in order, and the first failure wins: <b>not entitled</b> on the service date, <b>duplicate</b> of a claim already paid, or <b>MSP primary not billed</b> (Medicare's file says another insurer pays first, but the claim shows nothing paid by them).</p>
+   <p>If none fail, CWF accepts it as is (disposition 01) and the calculated payment is released. Otherwise the calculation is kept for review, but <b>$0</b> is released.</p>
+   <p class="small muted">COBOL terms: <code>perform varying … until</code> is a loop; <code>goback</code> returns to the caller, here as soon as one check fails.</p></div></div>
   <h2>For new engineers</h2>
   <p><a href="${esc(E.status?.deepwiki || "https://app.devin.ai/wiki/wstomber/devinexecdemo")}" target="_blank">Open the DeepWiki</a> — Devin's generated guide: COBOL for new engineers, each program explained, COBOL→Python mapping.</p>
   ${await mdBlock("docs/migration/03-cobol-primer.md", "COBOL primer (written against this code)")}
@@ -153,17 +164,17 @@ R.tests = async () => {
   const x = E.expectations, p = E.git.tests_before_python, s2 = E.git.stages.stage2, s3 = E.git.stages.stage3;
   const cases = x?.cases || [];
   return `<h1>3 · The tests came before the migration</h1>
-  <p class="lede">Devin worked out the right answers by hand from the CMS manual — not by copying what the COBOL printed — and checked the COBOL against them before any Python existed.</p>
+  <p class="lede">Devin worked out the right answers by hand from the CMS manuals — the payment, the CWF decision and the amount released — not by copying what the COBOL printed, and checked the COBOL against them before any Python existed.</p>
   <div class="grid g2"><div class="card"><h3>Tests came first ${badge(p.status, p.status === "PASSED" ? "VERIFIED FROM GIT" : p.status)}</h3>
     <p>Tests committed in ${commit(s2?.sha)} (${esc(s2?.date || "")})<br>Python first appears in ${commit(s3?.sha)} (${esc(s3?.date || "")})</p>
     <p class="small">Checked now from git history: <code>python/msp.py</code> ${p.python_absent_at_stage2 ? "did <b>not</b> exist" : "<b>existed</b>"} at the test commit; test commit ${p.stage2_before_stage3 ? "precedes" : "does <b>not</b> precede"} the Python commit.</p></div>
    ${testStatus(E.saved.policy_tests_cobol, E.live?.policy_tests_cobol, "Independent policy tests against COBOL")}</div>
   <h2>The hand-derived ledger: ${cases.length} cases</h2>
   <p class="small muted">${esc(x?.derivation || "")}</p>
-  <div class="tablewrap"><table><thead><tr><th>#</th><th>Claim</th><th>Category</th><th>Expected</th><th class="num">Expected payment</th><th>Reason</th><th>Source</th></tr></thead><tbody>
-  ${cases.map((c, k) => `<tr class="click${c.claim_id === "CMS-EX3" ? " hl" : ""}" data-case="${k}"><td>${c.record_no}</td><td><code>${esc(c.claim_id)}</code></td><td>${esc(c.category)}</td><td>${badge(c.expected.status === "PAID" ? "PASSED" : c.expected.status === "ZERO" ? "NOT_RUN" : "FAILED", c.expected.status)}</td><td class="num">${money(c.expected.payment_cents)}</td><td><code>${esc(c.expected.reason)}</code></td><td class="small">${esc(c.source || "")}</td></tr>`).join("")}
+  <div class="tablewrap"><table><thead><tr><th>#</th><th>Claim</th><th>Category</th><th>Expected</th><th class="num">Expected payment</th><th>Reason</th><th>CWF</th><th class="num">Released</th><th>Source</th></tr></thead><tbody>
+  ${cases.map((c, k) => `<tr class="click${c.claim_id === "CMS-EX3" ? " hl" : ""}" data-case="${k}"><td>${c.record_no}</td><td><code>${esc(c.claim_id)}</code></td><td>${esc(c.category)}</td><td>${badge(c.expected.status === "PAID" ? "PASSED" : c.expected.status === "ZERO" ? "NOT_RUN" : "FAILED", c.expected.status)}</td><td class="num">${money(c.expected.payment_cents)}</td><td><code>${esc(c.expected.reason)}</code></td><td>${cwfBadge(c.expected.cwf, c.expected.cwf_reason)}</td><td class="num">${money(c.expected.released_cents)}</td><td class="small">${esc(c.source || "")}</td></tr>`).join("")}
   </tbody></table></div>
-  <p class="small">Ledger totals (hand-derived): ${x?.totals ? `${x.totals.records} records · ${x.totals.paid} paid · ${x.totals.zero} zero · ${x.totals.invalid} invalid · ${money(x.totals.payment_cents)}` : "missing"} · ${raw("tests_policy/expectations.json", "expectations.json")} · ${raw("tests_policy/test_policy.py", "test_policy.py")}</p>
+  <p class="small">Ledger totals (hand-derived): ${x?.totals ? `${x.totals.records} records · ${x.totals.paid} paid · ${x.totals.zero} zero · ${x.totals.invalid} invalid · ${money(x.totals.payment_cents)} calculated · CWF ${x.totals.accepted} approved, ${x.totals.rejected} rejected · ${money(x.totals.released_cents)} released` : "missing"} · ${raw("tests_policy/expectations.json", "expectations.json")} · ${raw("tests_policy/test_policy.py", "test_policy.py")}</p>
   <h2>Separate: starter infrastructure tests</h2><div class="card small">These came with the starter repo and check the COBOL harness itself; they are not Devin's independent policy tests. ${stepLine("starter-tests")}</div>
   ${cmd("python3 -m unittest discover -s tests_policy -v")}`;
 };
@@ -185,7 +196,19 @@ const RULE_STEPS = [
    ex: c => `${$$(c.deductible + c.coinsurance)}: ${c.deductible + c.coinsurance >= capOf(c) ? "yes → $0" : "less than the limit → keep going"}`},
   {say: "Otherwise Medicare pays the limit minus the bigger of those two amounts.",
    cob: [[/compute reduction-amount/, /SECONDARY_PAYABLE/]], py: [[/return Result\(claim\.claim_id, "PAID"/, /./]],
-   ex: c => `${$$(capOf(c))} − ${$$(Math.max(c.primary, c.deductible + c.coinsurance))} = <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))}</b>`}];
+   ex: c => `${$$(capOf(c))} − ${$$(Math.max(c.primary, c.deductible + c.coinsurance))} = <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))}</b>`},
+  {say: "CWF check 1: is the person entitled to Medicare on the service date? If not, reject.", file: "cwf",
+   cob: [[/if bene-found = 0 goback/, /./], [/if claim-dos < bene-from/, /end-if/]], py: [[/beneficiary = reference\.beneficiaries\.get/, /NOT_ENTITLED/]],
+   ex: (c, b) => b ? `${esc(c.mbi)} entitled ${ymd(b.entitled_from)} to ${b.entitled_to === "99999999" ? "open-ended" : ymd(b.entitled_to)}; service ${ymd(c.dos)} → yes` : "not on file → reject"},
+  {say: "CWF check 2: was this exact claim already paid? Then reject it as a duplicate.", file: "cwf",
+   cob: [[/perform varying hist-index/, /end-perform/]], py: [[/if \(claim\.mbi, claim\.dos, claim\.charges\) in reference\.history/, /DUPLICATE/]],
+   ex: (c, b, h) => h.some(x => x.mbi === c.mbi && x.dos === c.dos && x.charges === c.charges) ? "already paid → reject" : "not in the paid-claims history → keep going"},
+  {say: "CWF check 3: if Medicare's MSP file says another insurer pays first, did they pay something? If not, reject.", file: "cwf",
+   cob: [[/if bene-has-msp\(bene-found\) = 1/, /end-if/]], py: [[/msp = beneficiary\.msp_period/, /MSP_PRIMARY_NOT_BILLED/]],
+   ex: (c, b) => b?.msp_from ? `MSP period ${ymd(b.msp_from)} to ${ymd(b.msp_to)} covers the service date; other insurer paid ${$$(c.primary)} → keep going` : "no MSP period → keep going"},
+  {say: "Approved: release the calculated payment. A rejected claim releases $0.", file: "cwf",
+   cob: [[/move "ACCEPTED" to claim-cwf/, /move claim-payment to claim-released/]], py: [[/return replace\(result, cwf="ACCEPTED"/, /./]],
+   ex: c => `ACCEPTED → <b>${$$(capOf(c) - Math.max(c.primary, c.deductible + c.coinsurance))} released</b>`}];
 const $$ = cents => "$" + (cents / 100).toLocaleString("en-US", {maximumFractionDigits: 2});
 const capOf = c => Math.min(c.gross, c.contract ?? c.charges);
 const MISSING = `<p class="err">Not found in the source.</p>`;
@@ -199,13 +222,14 @@ function ruleLines(text, ranges) {
   return out.join(`<div class="ln gap"><span>⋮</span><span></span></div>`);
 }
 async function ruleMatch() {
-  const [cob, py, fx] = await Promise.all([file("cobol/payment.cob"), file("python/msp.py"), file("fixtures/curated.json")]);
-  if (cob == null || py == null) return `<p class="err">Source files are missing.</p>`;
-  let ex = null; try { ex = JSON.parse(fx).map(r => r.input).find(r => r?.id === "CMS-EX3"); } catch (e) { ex = null; }
+  const [cob, cwfSrc, py, fx, ref] = await Promise.all([file("cobol/payment.cob"), file("cobol/cwf.cob"), file("python/msp.py"), file("fixtures/curated.json"), file("fixtures/cwf.json")]);
+  if (cob == null || cwfSrc == null || py == null) return `<p class="err">Source files are missing.</p>`;
+  let ex = null, bene = null, hist = []; try { ex = JSON.parse(fx).map(r => r.input).find(r => r?.id === "CMS-EX3"); const rf = JSON.parse(ref); bene = rf.beneficiaries.find(b => b.mbi === ex?.mbi); hist = rf.history; } catch (e) { ex = null; }
   if (ex && ex.contract === undefined) ex.contract = null;
+  if (ex) { ex.mbi = ex.mbi || "1EG4TE5MK73"; ex.dos = ex.dos || "20250315"; }
   return `<table class="rulematch"><thead><tr><th>Step</th><th>COBOL (before)</th><th>Python (after)</th>${ex ? "<th>CMS-EX3, step by step</th>" : ""}</tr></thead><tbody>
   ${RULE_STEPS.map((st, k) => `<tr><td><span class="stepno">${k + 1}</span> ${esc(st.say)}</td>
-    <td><div class="code">${ruleLines(cob, st.cob)}</div></td><td><div class="code">${ruleLines(py, st.py)}</div></td>${ex ? `<td>${st.ex(ex)}</td>` : ""}</tr>`).join("")}
+    <td><div class="code">${st.file === "cwf" ? '<div class="small muted">cwf.cob</div>' : ""}${ruleLines(st.file === "cwf" ? cwfSrc : cob, st.cob)}</div></td><td><div class="code">${ruleLines(py, st.py)}</div></td>${ex ? `<td>${st.ex(ex, bene, hist)}</td>` : ""}</tr>`).join("")}
   </tbody></table>`;
 }
 R.python = async () => {
@@ -213,10 +237,10 @@ R.python = async () => {
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
   const u = E.saved.python_unit_tests;
   return `<h1>4 · The new Python, and its own tests</h1>
-  <p class="lede">The same rule, now in readable Python. It passed the independent tests on its first run.</p>
-  <p>The rule that decides what Medicare pays, one step per row. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows CMS-EX3 through each step.</p>
+  <p class="lede">The same payment rule and CWF check, now in readable Python, held to the same independent tests.</p>
+  <p>The rules that decide what Medicare pays, one step per row: steps 1–6 calculate the payment, steps 7–10 are the CWF check that decides whether it is released. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows CMS-EX3 through each step.</p>
   ${await ruleMatch()}
-  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest.</p>
+  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
   <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
   <p class="small muted">“Same independent tests” = the hand-worked answers from screen 3, now run against the Python. “Unit tests” = smaller checks of each piece of the Python on its own.</p>
@@ -225,7 +249,9 @@ R.python = async () => {
    <div class="card"><h3>Optional contract</h3>“----------” means no contract; a number replaces the charges.</div>
    <div class="card"><h3>Same validation order</h3>The first problem found decides the reason code, so the order matters.</div>
    <div class="card"><h3>Valid zero ≠ malformed</h3>A correct claim that owes $0 is ZERO; a broken line is INVALID.</div>
-   <div class="card"><h3>Batch rules</h3>Same line framing, duplicate-ID stop, counts, totals, and fatal exit code 2.</div></div>
+   <div class="card"><h3>Batch rules</h3>Same line framing, duplicate-ID stop, counts, totals, and fatal exit code 2.</div>
+   <div class="card"><h3>CWF order</h3>Entitlement, then duplicate, then MSP billing; the first failure wins. A rejected claim keeps its calculation but releases $0.</div>
+   <div class="card"><h3>Same reference data</h3>Both read the same CWF file the same way, and both stop on a malformed CWF record.</div></div>
   <details><summary>Unit tests run (${u.tests ?? "?"})</summary><ul>${(u.cases || []).map(c => `<li>${badge(c.result === "ok" ? "PASSED" : "FAILED", c.result)} <code>${esc(c.name)}</code></li>`).join("")}</ul></details>
   <details data-md="${esc(E.saved.corrections)}"><summary>Corrections Devin made along the way</summary><div class="muted small">Loading…</div></details>
   ${await mdBlock("docs/migration/05-cobol-to-python.md", "COBOL → Python translation guide")}
@@ -260,13 +286,14 @@ R.compare = async () => {
   if (cmpFilter === "mismatch") rows = rows.filter(r => r[8] !== "MATCH");
   if (cmpFilter === "paid") rows = rows.filter(r => r[2] === "PAID");
   if (cmpFilter === "invalid") rows = rows.filter(r => r[2] === "INVALID");
+  if (cmpFilter === "cwf") rows = rows.filter(r => r[10] === "REJECTED" || r[11] === "REJECTED");
   if (q) rows = rows.filter(r => r.join(" ").toUpperCase().includes(q));
   const per = 200, pages = Math.max(1, Math.ceil(rows.length / per)); cmpPage = Math.min(cmpPage, pages - 1);
   const shown = rows.slice(cmpPage * per, cmpPage * per + per);
   const stat = (n, l, s) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div>${s || ""}</div>`;
   const t = c.totals || {};
   return `<h1>5 · Old vs new, claim by claim</h1>
-  <p class="lede">The original COBOL and the new Python were run on the same input. This table is rebuilt from both programs' raw output files.</p>
+  <p class="lede">The original COBOL and the new Python were run on the same claims and the same CWF reference file. For every claim they must agree on the calculated payment, the CWF decision and the amount released. This table is rebuilt from both programs' raw output files.</p>
   ${bugBanner() || breakCard()}
   <div class="toolbar">${src.map(([k, v]) => `<button class="btn${k === cmpKey ? " on" : ""}" data-cmp="${k}">${k.startsWith("live") ? "LIVE" : "SAVED"} · ${esc(k.split(":")[1])} (${v.records?.python ?? "?"})</button>`).join("")}</div>
   <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <span class="muted small">${esc(c.title)}</span></div>
@@ -274,22 +301,22 @@ R.compare = async () => {
   <div class="grid g4" style="margin-top:10px">
    ${stat((c.rows || []).length.toLocaleString(), "claims compared", `<div class="small">COBOL ${c.records?.cobol ?? "?"} · Python ${c.records?.python ?? "?"}</div>`)}
    ${stat(c.mismatches ?? "?", "mismatches", badge(c.mismatches === 0 ? "MATCH" : "MISMATCH", c.mismatches === 0 ? "NONE" : "INSPECT"))}
-   ${stat(money(t.cobol?.payment_cents), "COBOL total paid")}
-   ${stat(money(t.python?.payment_cents), "Python total paid", badge(c.totals_match ? "MATCH" : "MISMATCH", c.totals_match ? "TOTALS MATCH" : "TOTALS DIFFER"))}
+   ${stat(money(t.cobol?.released_cents), "COBOL released after CWF", `<div class="small">${money(t.cobol?.payment_cents)} calculated · ${t.cobol?.rejected ?? "?"} rejected by CWF</div>`)}
+   ${stat(money(t.python?.released_cents), "Python released after CWF", `<div class="small">${money(t.python?.payment_cents)} calculated · ${t.python?.rejected ?? "?"} rejected by CWF</div>` + badge(c.totals_match ? "MATCH" : "MISMATCH", c.totals_match ? "TOTALS MATCH" : "TOTALS DIFFER"))}
    ${stat(badge(c.verifier?.status || "UNKNOWN"), "strict verifier (tools/verify.py)", `<div class="small">${c.verifier?.report ? raw(c.verifier.report, "report") : esc(c.verifier?.detail === "not applicable" ? "not run for this batch — table only" : c.verifier?.detail || "")}</div>`)}
    ${stat(c.byte_identical ? "Yes" : "No", "output files byte-identical")}</div>
   ${c.duplicates?.length ? `<div class="err">Duplicate claim IDs: ${esc(c.duplicates.join(", "))}</div>` : ""}
-  <div class="toolbar"><input type="search" id="cmpq" placeholder="Search claim ID, status, reason…" value="${esc(cmpQuery)}">
-   ${[["all", "All"], ["mismatch", "Mismatches only"], ["paid", "Paid"], ["invalid", "Rejected"]].map(([k, l]) => `<button class="btn${cmpFilter === k ? " on" : ""}" data-f="${k}">${l}</button>`).join("")}
+  <div class="toolbar"><input type="search" id="cmpq" placeholder="Search claim ID, status, reason, CWF decision…" value="${esc(cmpQuery)}">
+   ${[["all", "All"], ["mismatch", "Mismatches only"], ["paid", "Paid"], ["invalid", "Malformed"], ["cwf", "Rejected by CWF"]].map(([k, l]) => `<button class="btn${cmpFilter === k ? " on" : ""}" data-f="${k}">${l}</button>`).join("")}
    <button class="btn" data-jump="CMS-EX3">Find CMS-EX3</button><span class="muted small">${rows.length.toLocaleString()} rows${pages > 1 ? ` · page ${cmpPage + 1}/${pages} <button class="btn sm" data-pg="-1">‹</button><button class="btn sm" data-pg="1">›</button>` : ""}</span></div>
-  <div class="tablewrap"><table><thead><tr><th>#</th><th>Claim ID</th><th>COBOL</th><th>Python</th><th class="num">COBOL pays</th><th class="num">Python pays</th><th>COBOL reason</th><th>Python reason</th><th>Result</th></tr></thead><tbody>
-  ${shown.length ? shown.map(r => `<tr class="click${r[1] === "CMS-EX3" ? " hl" : ""}" data-row="${r[0]}"><td>${r[0]}</td><td><code>${esc(r[1])}</code></td><td>${esc(r[2] ?? "—")}</td><td>${esc(r[3] ?? "—")}</td><td class="num">${money(r[4])}</td><td class="num">${money(r[5])}</td><td><code>${esc(r[6] ?? "—")}</code></td><td><code>${esc(r[7] ?? "—")}</code></td><td>${badge(r[8])}</td></tr>`).join("") : `<tr><td colspan="9" class="muted">${cmpFilter === "mismatch" ? "No mismatches in this batch." : "No rows match."}</td></tr>`}
+  <div class="tablewrap"><table><thead><tr><th>#</th><th>Claim ID</th><th>COBOL</th><th>Python</th><th class="num">COBOL calculates</th><th class="num">Python calculates</th><th>COBOL reason</th><th>Python reason</th><th>COBOL CWF</th><th>Python CWF</th><th class="num">COBOL releases</th><th class="num">Python releases</th><th>Result</th></tr></thead><tbody>
+  ${shown.length ? shown.map(r => `<tr class="click${r[1] === "CMS-EX3" ? " hl" : ""}" data-row="${r[0]}"><td>${r[0]}</td><td><code>${esc(r[1])}</code></td><td>${esc(r[2] ?? "—")}</td><td>${esc(r[3] ?? "—")}</td><td class="num">${money(r[4])}</td><td class="num">${money(r[5])}</td><td><code>${esc(r[6] ?? "—")}</code></td><td><code>${esc(r[7] ?? "—")}</code></td><td>${cwfBadge(r[10], r[12])}</td><td>${cwfBadge(r[11], r[13])}</td><td class="num">${money(r[14])}</td><td class="num">${money(r[15])}</td><td>${badge(r[8])}</td></tr>`).join("") : `<tr><td colspan="13" class="muted">${cmpFilter === "mismatch" ? "No mismatches in this batch." : "No rows match."}</td></tr>`}
   </tbody></table></div>
   <details><summary>Technical detail: command, identity, raw files</summary>
    <p>Input <code>${esc(c.input || "UNKNOWN")}</code> · sha256 <code>${esc(c.input_sha256 || "UNKNOWN")}</code></p>
    <p>${c.kind === "live" ? `Live run ${esc(E.live.id)} · started ${esc(E.live.started_at)} · commit ${commit(E.live.commit)}${E.live.dirty ? " (uncommitted changes present)" : ""}` : `Saved in ${commit(E.git.stages.stage4?.sha)} (${esc(E.git.stages.stage4?.date || "")})`}</p>
    <p>${Object.entries(c.raw || {}).map(([n, p]) => raw(p, n)).join(" · ")}${E.saved.fatal_parity ? " · " + raw(E.saved.fatal_parity, "fatal-path parity (duplicate ID, 4,097-byte line, 10,001 records)") : ""}</p>
-   ${cmd("make compare CANDIDATE='python3 python/msp.py'")}${cmd("python3 tools/demo_compare.py --input build/synthetic.dat --out build/cmp/synthetic")}
+   ${cmd("make compare CANDIDATE='python3 python/msp.py'")}${cmd("python3 tools/demo_compare.py --input build/synthetic.dat --cwf build/cwf.dat --out build/cmp/synthetic")}
    <p class="small muted">A green table is not the proof on its own — the strict verifier (tools/verify.py) checks every field and the totals independently.</p></details>`;
 };
 R.ex3 = async () => {
@@ -299,6 +326,7 @@ R.ex3 = async () => {
   const exprs = [[i.gross, i.primary], [i.gross, i.deductible + i.coinsurance], [i.contract, i.primary], [i.contract, i.deductible + i.coinsurance]];
   const sc = E.saved.comparisons.curated, rowS = findRow(sc, "CMS-EX3"), rowL = findRow(E.live?.comparisons?.curated, "CMS-EX3");
   const noOtaf = E.expectations.cases.find(x => x.claim_id === "EX3-NO-OTAF");
+  let ex3fx = null; try { ex3fx = JSON.parse(await file("fixtures/curated.json")).map(x => x.input).find(x => x?.id === "CMS-EX3"); } catch (e) { ex3fx = null; }
   const pay = await codeSnippet("cobol/payment.cob", /move claim-charges to charge-basis/, /function min/);
   return `<h1>★ CMS-EX3 — the contractual cap</h1>${bugBanner()}
   <p class="lede">From the CMS manual (${esc(c.source)}). The hospital agreed to accept <b>$13,000 in total</b>. The primary insurer paid $12,500. What does Medicare owe?</p>
@@ -311,23 +339,33 @@ R.ex3 = async () => {
    <div class="card"><h3>Medicare pays the lowest of four limits</h3>
    ${L.map((v, k) => `<div class="limit${v === low ? " low" : ""}"><span>${names[k]}<br><span class="small muted">${money(exprs[k][0])} − ${money(exprs[k][1])}</span></span><span>${money(v)}</span></div>`).join("")}
    <p style="margin-top:12px">Answer: <span class="big">${money(c.expected.payment_cents)}</span><br>$13,000 − $12,500 = $500</p></div></div>
+  <h2>Then CWF approves it, so the $500 is released</h2>
+  <div class="grid g2"><div class="card"><h3>The CWF check, in order</h3>
+   <div class="limit"><span>1. Entitled to Medicare on the service date?<br><span class="small muted">beneficiary ${esc(ex3fx?.mbi || "?")}, service ${ymd(ex3fx?.dos || "")}</span></span><span>Yes</span></div>
+   <div class="limit"><span>2. Already paid on another claim?</span><span>No</span></div>
+   <div class="limit"><span>3. Medicare's MSP file says another insurer pays first — did they pay?</span><span>Yes, ${money(i.primary)}</span></div>
+   <p style="margin-top:12px">Decision: <b>ACCEPTED</b> (CWF disposition 01) → <span class="big">${money(rowS?.[14] ?? c.expected.released_cents)}</span> released</p></div>
+   <div class="card"><h3>Same amounts, different CWF answer</h3><p>These curated claims copy CMS-EX3's amounts. The payment step works the same way, but CWF rejects each one, so nothing is released:</p>
+   <table>${["EX3-NOT-ENT", "EX3-DUP", "EX3-MSP-NOBL"].map(id => { const rr = findRow(sc, id); return `<tr><td><code>${id}</code></td><td class="num">${money(rr?.[4])} calculated</td><td>${cwfBadge(rr?.[10], rr?.[12])}</td><td class="num">${money(rr?.[14])} released</td></tr>`; }).join("")}</table>
+   <p class="small muted">Entitlement ended before the service date · the same claim was already paid · the other insurer was never billed. The reject codes are this demo's own; only "accepted as is" (01) is a CWF code.</p></div></div>
   <h2>Both programs agree</h2><div class="grid g4">
    <div class="card stat"><div class="n">${money(c.expected.payment_cents)}</div><div class="l">Expected (hand-derived)</div></div>
-   <div class="card stat"><div class="n">${money(rowS?.[4])}</div><div class="l">COBOL ${SAVED}</div></div>
-   <div class="card stat"><div class="n">${money(rowS?.[5])}</div><div class="l">Python ${SAVED} ${rowS ? badge(rowS[8]) : badge("UNKNOWN")}</div></div>
-   <div class="card stat"><div class="n">${rowL ? money(rowL[4]) + " / " + money(rowL[5]) : "—"}</div><div class="l">COBOL / Python ${LIVE} ${rowL ? badge(rowL[8]) : badge("NOT_RUN")}</div></div></div>
+   <div class="card stat"><div class="n">${money(rowS?.[14])}</div><div class="l">COBOL released, CWF ${esc(rowS?.[10] || "?")} ${SAVED}</div></div>
+   <div class="card stat"><div class="n">${money(rowS?.[15])}</div><div class="l">Python released, CWF ${esc(rowS?.[11] || "?")} ${SAVED} ${rowS ? badge(rowS[8]) : badge("UNKNOWN")}</div></div>
+   <div class="card stat"><div class="n">${rowL ? money(rowL[14]) + " / " + money(rowL[15]) : "—"}</div><div class="l">COBOL / Python released ${LIVE} ${rowL ? badge(rowL[8]) : badge("NOT_RUN")}</div></div></div>
   <h2>Why the contract rule matters</h2><div class="warn">Without the contractual cap, the lowest limit would be ${money(i.gross - i.primary)} — so the payment would be <span class="strike">${money(noOtaf?.expected?.payment_cents ?? 150000)}</span>, <b>${money((noOtaf?.expected?.payment_cents ?? 150000) - c.expected.payment_cents)} too much</b>. This is an explanatory counterfactual (test case <code>EX3-NO-OTAF</code>), not a defect found in the COBOL.</div>
   <h2>Where this rule lives</h2><div class="grid g2"><div>${pay}</div><div class="card"><ul>
    <li>Policy: ${raw("docs/cms-example-3.md", "docs/cms-example-3.md")} · ${raw("docs/rules.md", "docs/rules.md")}</li>
    <li>Independent expectation: ledger row 1 in ${raw("tests_policy/expectations.json", "expectations.json")}</li>
    <li>Independent test: <code>test_cms_ex3_pays_500_dollars_not_1500</code> in ${raw("tests_policy/test_policy.py", "test_policy.py")}</li>
-   <li>Python tests: <code>test_cms_ex3_contract_replaces_charges_and_pays_500</code>, <code>test_cms_ex3_without_contract_would_pay_1500</code></li>
+   <li>Independent CWF test: <code>test_cms_ex3_is_accepted_and_releases_500_dollars</code></li>
+   <li>Python tests: <code>test_cms_ex3_contract_replaces_charges_and_pays_500</code>, <code>test_cms_ex3_without_contract_would_pay_1500</code>, <code>test_cms_ex3_is_accepted_and_releases_500</code></li>
    <li>Comparison row: <a href="#compare" data-goto-ex3="1">curated batch, CMS-EX3</a></li></ul></div></div>`;
 };
-R.pilot = async () => `<h1>8 · Pilot: CWF MSP payments in four weeks</h1>
-  <p class="lede">The same steps you just saw, on the real MSP payment module used in CWF claims processing. Security sets the rules first, then tries to break them.</p>
+R.pilot = async () => `<h1>8 · Pilot: one CWF MSP claim path in four weeks</h1>
+  <p class="lede">The same steps you just saw, on the real code: the MSP payment calculation and the CWF edits that approve or reject the claim before payment. Security sets the rules first, then tries to break them.</p>
   <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>
-  <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the CWF MSP payment module and give read access to its repository and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
+  <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the CWF MSP claim path and give read access to the MSP payment and CWF edit repositories and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
 R.security = async () => `<h1>7 · Security &amp; data</h1>
   <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
@@ -341,14 +379,14 @@ R.review = async () => {
   <h2>Playbooks — Devin can repeat this</h2><div class="grid g2">${(st.playbooks || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">${esc(p.title)}</a></h3><div class="small"><code>${esc(p.id)}</code> · starts from <code>${esc(p.start_ref)}</code> · source ${raw(p.source)}</div>
    <p>Rehearsal run: ${badge(p.fresh_run?.status || "UNKNOWN")} <a href="${esc(p.fresh_run?.session || "#")}" target="_blank">session</a>${p.fresh_run?.pr ? ` · <a href="${esc(p.fresh_run.pr)}" target="_blank">PR</a>` : ""}</p></div>`).join("")}</div>
   <h2>Watch Devin do it again, live</h2><div id="devinslot">${devinCard()}</div>
-  <h2>Assumptions &amp; limits</h2><ul><li>Synthetic, educational module based on public CMS rules — not CMS production code, not complete Medicare policy.</li><li>Parity is proven for the tested batches (curated 30, synthetic 1,000, edge 24, fatal paths) — not for every possible input.</li><li>Both versions stop on lines over 4,096 bytes or more than 10,000 claims, deliberately identical.</li><li>No performance or cost claims.</li></ul>
+  <h2>Assumptions &amp; limits</h2><ul><li>Synthetic, educational module based on public CMS rules — not CMS production code, not complete Medicare policy.</li><li>Parity is proven for the tested batches (curated ${E.saved.comparisons.curated?.records?.python ?? "?"}, synthetic ${(E.saved.comparisons.synthetic?.records?.python ?? 0).toLocaleString()}, edge ${E.saved.comparisons.edge?.records?.python ?? "?"}, fatal paths) — not for every possible input.</li><li>The CWF step is three illustrative pre-payment checks on synthetic reference data, not a copy of CWF.</li><li>Both versions stop on lines over 4,096 bytes or more than 10,000 claims, deliberately identical.</li><li>No performance or cost claims.</li></ul>
   ${(E.expectations?.interface_assumptions) ? `<details><summary>Interface assumptions Devin recorded</summary><pre>${esc(JSON.stringify(E.expectations.interface_assumptions, null, 1))}</pre></details>` : ""}
   ${await mdBlock("docs/migration/02-rule-map.md", "Rule map: policy → COBOL → test → Python")}
   <details><summary>Human interventions and review time (${ev.length} events)</summary><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Human time</th></tr></thead><tbody>${ev.map(e => `<tr><td class="small">${esc(e.timestamp_utc)}</td><td>${esc(e.actor)}</td><td>${esc(e.event)}</td><td>${esc(e.human_intervention_seconds)}</td></tr>`).join("")}</tbody></table><p class="small muted">UNKNOWN means not measured — it is not zero. No efficiency claim is made.</p></details>`;
 };
 
-const MANUAL = "Run this on wstomber/devinexecdemo starting from branch demo/starter-37ceca1.";
-const manualSteps = () => `<ol><li>Open <a href="https://app.devin.ai" target="_blank">app.devin.ai</a> and start a new session.</li><li>In the Playbook picker, choose <b>MSP COBOL to Python with evidence</b>.</li>
+const manualPrompt = () => `Run this on wstomber/devinexecdemo starting from branch ${D?.start_branch || "the pinned starter branch"}.`;
+const manualSteps = (MANUAL = manualPrompt()) => `<ol><li>Open <a href="https://app.devin.ai" target="_blank">app.devin.ai</a> and start a new session.</li><li>In the Playbook picker, choose <b>MSP COBOL to Python with evidence</b>.</li>
    <li>Paste: <div class="cmd"><code>${MANUAL}</code><button class="btn sm" data-copy="${MANUAL}">Copy</button></div></li></ol>`;
 function devinLabel(s) {
   if (s.status === "running") return ({waiting_for_user: ["Waiting for input", "UNKNOWN"], waiting_for_approval: ["Waiting for approval", "UNKNOWN"], finished: ["Finished", "PASSED"]})[s.status_detail] || ["Working", "RUNNING"];
@@ -400,7 +438,7 @@ function showCase(k) {
   const c = E.expectations.cases[k]; $("#drawer").hidden = false;
   $("#drawer").innerHTML = `<button class="btn" data-close="1" style="float:right">Close</button><h2><code>${esc(c.claim_id)}</code></h2><p>${esc(c.category)} · ${esc(c.source || "")}</p>
    <h3>Input</h3><pre>${esc(JSON.stringify(c.input, null, 1))}</pre><h3>Hand-derived arithmetic</h3><p>${esc(c.arithmetic || "—")}</p>
-   ${c.assumptions ? `<h3>Assumptions</h3><p>${esc(c.assumptions)}</p>` : ""}<h3>Expected</h3><p>${esc(c.expected.status)} · ${money(c.expected.payment_cents)} · <code>${esc(c.expected.reason)}</code></p>`;
+   ${c.assumptions ? `<h3>Assumptions</h3><p>${esc(c.assumptions)}</p>` : ""}<h3>Expected</h3><p>${esc(c.expected.status)} · ${money(c.expected.payment_cents)} calculated · <code>${esc(c.expected.reason)}</code><br>CWF ${cwfBadge(c.expected.cwf, c.expected.cwf_reason)} · ${money(c.expected.released_cents)} released</p>`;
 }
 function showRow(no) {
   const c = cmpSources().find(s => s[0] === cmpKey)[1], r = c.rows.find(x => x[0] === no); if (!r) return;
@@ -409,8 +447,10 @@ function showRow(no) {
   $("#drawer").innerHTML = `<button class="btn" data-close="1" style="float:right">Close</button><h2>Record ${r[0]} · <code>${esc(r[1])}</code></h2><p>${badge(r[8])} ${c.kind === "live" ? LIVE : SAVED}</p>
    <table><thead><tr><th></th><th>COBOL (original)</th><th>Python (new)</th></tr></thead><tbody>
    <tr><td>Status</td><td>${esc(r[2] ?? "—")}</td><td>${esc(r[3] ?? "—")}</td></tr><tr><td>Payment</td><td class="num">${money(r[4])}<br><span class="small">${cents(r[4])}</span></td><td class="num">${money(r[5])}<br><span class="small">${cents(r[5])}</span></td></tr>
-   <tr><td>Reason</td><td><code>${esc(r[6] ?? "—")}</code></td><td><code>${esc(r[7] ?? "—")}</code></td></tr></tbody></table>
-   ${ex ? `<h3>Independent expectation</h3><p>${esc(ex.expected.status)} · ${money(ex.expected.payment_cents)} · <code>${esc(ex.expected.reason)}</code> ${badge(ex.expected.payment_cents === r[5] && ex.expected.status === r[3] ? "MATCH" : "MISMATCH")}</p><p class="small">${esc(ex.arithmetic || "")}</p>` : ""}
+   <tr><td>Reason</td><td><code>${esc(r[6] ?? "—")}</code></td><td><code>${esc(r[7] ?? "—")}</code></td></tr>
+   <tr><td>CWF decision</td><td>${cwfBadge(r[10], r[12])}</td><td>${cwfBadge(r[11], r[13])}</td></tr>
+   <tr><td>Released</td><td class="num">${money(r[14])}<br><span class="small">${cents(r[14])}</span></td><td class="num">${money(r[15])}<br><span class="small">${cents(r[15])}</span></td></tr></tbody></table>
+   ${ex ? `<h3>Independent expectation</h3><p>${esc(ex.expected.status)} · ${money(ex.expected.payment_cents)} · <code>${esc(ex.expected.reason)}</code> · CWF ${esc(ex.expected.cwf)} · ${money(ex.expected.released_cents)} released ${badge(ex.expected.payment_cents === r[5] && ex.expected.status === r[3] && ex.expected.cwf === r[11] && ex.expected.released_cents === r[15] ? "MATCH" : "MISMATCH")}</p><p class="small">${esc(ex.arithmetic || "")}</p>` : ""}
    ${r[1] === "CMS-EX3" ? `<p><a href="#ex3">Open the CMS-EX3 walkthrough →</a></p>` : ""}`;
 }
 

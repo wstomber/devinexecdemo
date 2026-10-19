@@ -35,22 +35,33 @@ plans, procurement interest, or performance improvements.
 
 ## Why this application and this example
 
-The application calculates a small scoped Medicare Secondary Payer (MSP) payment
+The application follows one claim through the documented Medicare order of
+work. First it calculates a small scoped Medicare Secondary Payer (MSP) payment
 after another insurer has paid. It accepts covered charges, gross Medicare payable,
 primary payment for covered services, applicable deductible/coinsurance, an optional
-lower obligatory acceptance amount, and a full-payment indicator.
+lower obligatory acceptance amount, a full-payment indicator, the beneficiary's
+identifier (synthetic MBI) and the date of service. Then the claim goes to a small
+synthetic slice of the Common Working File (CWF) pre-payment check, which accepts or
+rejects it against Medicare's reference data: is the person entitled on that date,
+was this claim already paid, and, when the MSP file says another insurer pays first,
+was that insurer billed? Only an accepted claim releases its calculated payment.
 
-Eligibility, coverage determination, primary and Medicare pricing, and applicable
-deductions have already been established upstream. We are demonstrating one
-payment module, with fictional claims and stable IDs, rather than rebuilding a
-claims system. The public source is CMS Pub. 100-05, Chapter 5, §§40.8–40.8.3;
-see rules.md and the included cms-example-3.md excerpt for provenance and limits.
+Coverage determination, primary and Medicare pricing, and applicable deductions
+have already been established upstream. We are demonstrating the payment step and
+three CWF checks, with fictional claims, fictional beneficiaries and stable IDs,
+rather than rebuilding a claims system or CWF. The public sources are CMS Pub.
+100-05, Chapter 5, §§10.1 and 40.8–40.8.3, and Pub. 100-04, Chapter 27, §20; see
+rules.md and the included cms-example-3.md excerpt for provenance and limits.
 
 The memorable case is **CMS-EX3**. Charges are $15,000, gross Medicare payable
 $14,000, primary payment $12,500, and the provider's obligatory total acceptance
 amount $13,000. The remaining deductible is $1,556, a **historical example input**,
 and coinsurance is $0. The scoped payment is **$500**. Ignoring the acceptance
-limit would yield **$1,500**, a $1,000 overstatement in this example.
+limit would yield **$1,500**, a $1,000 overstatement in this example. CWF accepts
+CMS-EX3 (the beneficiary is entitled, the claim is new, and the other insurer was
+billed), so the $500 is released. Three look-alike claims with the same amounts are
+rejected by CWF and release $0: one for a person whose entitlement had ended, one
+already paid, and one where the other insurer was never billed.
 
 That difference makes understanding the rule visible to a business audience. It
 also gives a technical reviewer a specific paragraph, independent calculation,

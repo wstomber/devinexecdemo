@@ -21,9 +21,10 @@ STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("stage3", "Stage 3: Python + unit tests"),
                  ("stage4", "Stage 4: COBOL vs Python comparison"),
                  ("docs", "Maintainer docs")]
-DATASETS = {"curated": "Curated 30-record policy batch",
+DATASETS = {"curated": "Curated 33-record policy batch",
             "synthetic": "Deterministic 1,000-record synthetic batch (seed 20261017)",
-            "edge": "Adversarial 24-record byte-level edge batch"}
+            "edge": "Adversarial 33-record byte-level edge batch"}
+FIELDS = ("claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents")
 
 
 def rel(path):
@@ -124,7 +125,7 @@ def comparison(folder, verifier_report, label, kind):
         by_no_c = {r["record_no"]: r for r in cobol}
         by_no_p = {r["record_no"]: r for r in python}
         for r in cobol + python:
-            r["claim_id"], r["status"], r["payment_cents"], r["reason"]
+            [r[k] for k in FIELDS]
     except (KeyError, TypeError) as exc:
         return {**base, "status": "UNKNOWN", "problem": f"result file is malformed (missing column {exc})", "rows": []}
     rows, mismatches = [], 0
@@ -133,11 +134,13 @@ def comparison(folder, verifier_report, label, kind):
         if c is None or p is None:
             result = "MISSING_IN_COBOL" if c is None else "MISSING_IN_PYTHON"
         else:
-            result = "MATCH" if all(c[k] == p[k] for k in ("claim_id", "status", "payment_cents", "reason")) else "MISMATCH"
+            result = "MATCH" if all(c[k] == p[k] for k in FIELDS) else "MISMATCH"
         mismatches += result != "MATCH"
         rows.append([int(no), (c or p)["claim_id"], c and c["status"], p and p["status"],
                      c and cents_int(c["payment_cents"]), p and cents_int(p["payment_cents"]),
-                     c and c["reason"], p and p["reason"], result, (p or c)["claim_id"]])
+                     c and c["reason"], p and p["reason"], result, (p or c)["claim_id"],
+                     c and c["cwf"], p and p["cwf"], c and c["cwf_reason"], p and p["cwf_reason"],
+                     c and cents_int(c["released_cents"]), p and cents_int(p["released_cents"])])
     ids = [r["claim_id"] for r in python if not r["claim_id"].startswith("@")]
     duplicates = sorted({i for i in ids if ids.count(i) > 1})
     ct, pt = totals_row(folder / "cobol-totals.csv"), totals_row(folder / "python-totals.csv")
