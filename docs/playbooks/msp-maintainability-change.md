@@ -4,7 +4,8 @@
 Show that the migrated Python MSP module in `wstomber/devinexecdemo` can be
 safely maintained. Implement the synthetic `--summary-json` option from
 `docs/follow-up-exercise.md`, tests first, without changing any existing CSV
-output. This is a synthetic exercise, not a CMS requirement.
+output: the calculated payment, the CWF decision and reason, or the released
+amount. This is a synthetic exercise, not a CMS requirement.
 
 ## What's Needed From User
 - The branch or PR containing the finished migration (`python/msp.py`). Default:
@@ -23,7 +24,7 @@ output. This is a synthetic exercise, not a CMS requirement.
 3. **Tests first.** Write tests for the exact JSON contract in
    `docs/follow-up-exercise.md`: field names, types, the integer-cents total,
    behavior when the option is absent, a fatal batch, and the option combined with
-   positional paths, an empty batch, a mixed-validity batch, a destination equal to
+   the four positional paths (`INPUT CWF OUTPUT TOTALS`), an empty batch, a mixed-validity batch, a destination equal to
    any positional path (rejected, exit 2), and an unwritable JSON destination
    (exit 2; never report success without the summary). Run them, confirm they
    fail for the right reason, and commit.
@@ -32,8 +33,9 @@ output. This is a synthetic exercise, not a CMS requirement.
 5. Re-run every layer. Then show that the CSVs are unchanged: run
    `python3 tools/demo_compare.py --input build/curated.dat` and the synthetic
    batch with `--python 'python3 python/msp.py --summary-json build/s.json'`. Both
-   must still be byte-identical to the COBOL, and CMS-EX3 must still pay 50,000
-   cents. Record old/new invocation examples.
+   must still be byte-identical to the COBOL, every CWF decision and released
+   amount must still match, and CMS-EX3 must still calculate 50,000 cents, be
+   `ACCEPTED` by CWF, and release 50,000 cents. Record old/new invocation examples.
 6. Update the rule map and maintenance guide. Record the commands in
    `docs/templates/session-events.csv`. Open a PR titled
    `[maintainability] --summary-json for python/msp.py`, describing what changed
@@ -42,10 +44,10 @@ output. This is a synthetic exercise, not a CMS requirement.
 ## Specifications
 - The test commit precedes the implementation commit.
 - All prior tests pass. COBOL parity stays at 0 mismatches. The JSON totals equal
-  `totals.csv`.
+  `totals.csv`, including `accepted`, `rejected` and `released_cents`.
 - The COBOL and the starter files are unchanged.
 
 ## Forbidden Actions
-- Do not change the CSV format, the reason codes, or the payment logic.
+- Do not change the CSV format, the reason codes, the payment logic, or the CWF check.
 - Do not modify `cobol/`, `fixtures/`, `tools/verify.py` or the starter tests.
 - Do not merge.
