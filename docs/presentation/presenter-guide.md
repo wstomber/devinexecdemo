@@ -92,5 +92,5 @@ PR and Playbook status shown on screen comes from `demo/status.json` and is labe
 
 **Start Devin live** (optional): set `DEVIN_API_KEY` to a Devin service-user key (role with `UseDevinSessions`), then run `make demo-live`. It refuses to start without the key, so the button can't quietly fall back to manual steps. The startup line `Start Devin live: ready` confirms it.
 The server calls the Devin API v3 to create a session with the Playbook `playbook-f242f29f76f8440ea96928dfeec1d441`, starting from
-`demo/starter-37ceca1`; the key never leaves the server. The latest launched session is kept in `build/devin-runs/latest.json`
+`demo/starter-be0b00e`; the key never leaves the server. The latest launched session is kept in `build/devin-runs/latest.json`
 (delete it to reset the card). Without the key the card shows the manual steps instead. Org can be overridden with `DEVIN_ORG_ID`.

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REHEARSAL = ROOT / "evidence" / "rehearsal"
 RUNS = ROOT / "build" / "demo-runs"
-STARTER = "37ceca17f110536d55261d5d19aa187781dd8851"
+STARTER = "be0b00ec5a2369d50a34d351694b187ae2300fe4"
 STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("stage2", "Stage 2: independent tests against COBOL"),
                  ("stage3", "Stage 3: Python + unit tests"),

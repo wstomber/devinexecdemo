@@ -44,7 +44,7 @@ class Launcher(unittest.TestCase):
         method, path, body = call.call_args.args
         self.assertEqual((method, path), ("POST", "/sessions"))
         self.assertEqual(body["playbook_id"], devin_launch.PLAYBOOK_ID)
-        self.assertIn("demo/starter-37ceca1", body["prompt"])
+        self.assertIn("demo/starter-be0b00e", body["prompt"])
         self.assertEqual(payload["session"]["url"], CREATED["url"])
         self.assertNotIn(KEY, json.dumps(payload) + self.state.read_text())
 
