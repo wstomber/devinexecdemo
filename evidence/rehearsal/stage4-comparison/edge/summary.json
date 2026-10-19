@@ -1,42 +1,68 @@
 {
-  "title": "COBOL vs Python: adversarial byte-level edge batch",
-  "input": "evidence/rehearsal/stage4-comparison/edge/edge-cases.dat",
-  "input_sha256": "2f36675df28170a6c8100168ee5e58765787952caeb1fca23e7e1ddecfcb7e4a",
-  "verdict": "MATCH",
-  "records_compared": 24,
-  "record_mismatches": 0,
+  "batch": "edge",
+  "input": "evidence/live/stage4/edge/edge.dat",
+  "input_sha256": "c94905bd43e8a2a27c8ff30f11b759cadaf685629f93bee65cfc424f0fc4079e",
+  "cwf": "evidence/live/stage4/edge/edge-cwf.dat",
+  "cwf_sha256": "a21f9e2a83dc71894fe6593d5332670d030722930533ab9d94eefbe7b83010a7",
+  "records_cobol": 2099,
+  "records_python": 2099,
+  "matches": 2099,
+  "mismatches": 0,
   "totals_match": true,
-  "exit_codes": [
-    0,
-    0
-  ],
-  "byte_identical_outputs": true,
-  "cobol": {
-    "command": "build/msp-batch",
-    "results_sha256": "e15c6d4f969a4df80345ace1a235147cdc1c2e9655aa6e93ce5a5c8766e0bcec",
-    "totals_sha256": "9918112b2aa6c995d1aff07a9f586881c8a6d573398f74bebc94f8e98c7a0353",
-    "totals": [
-      {
-        "records": "0000000024",
-        "paid": "0000000005",
-        "zero": "0000000004",
-        "invalid": "0000000015",
-        "payment_cents": "000010000270000"
-      }
+  "byte_identical": {
+    "results.csv": true,
+    "totals.csv": true
+  },
+  "status_counts": {
+    "PAID": [
+      272,
+      272
+    ],
+    "ZERO": [
+      570,
+      570
+    ],
+    "INVALID": [
+      1257,
+      1257
     ]
   },
-  "python": {
-    "command": "python3 python/msp.py",
-    "results_sha256": "e15c6d4f969a4df80345ace1a235147cdc1c2e9655aa6e93ce5a5c8766e0bcec",
-    "totals_sha256": "9918112b2aa6c995d1aff07a9f586881c8a6d573398f74bebc94f8e98c7a0353",
-    "totals": [
-      {
-        "records": "0000000024",
-        "paid": "0000000005",
-        "zero": "0000000004",
-        "invalid": "0000000015",
-        "payment_cents": "000010000270000"
-      }
+  "cwf_counts": {
+    "ACCEPTED": [
+      564,
+      564
+    ],
+    "REJECTED": [
+      278,
+      278
+    ],
+    "NOT_SENT": [
+      1257,
+      1257
     ]
-  }
+  },
+  "totals_cobol": {
+    "records": "0000002099",
+    "paid": "0000000272",
+    "zero": "0000000570",
+    "invalid": "0000001257",
+    "payment_cents": "000072570433965",
+    "accepted": "0000000564",
+    "rejected": "0000000278",
+    "released_cents": "000053945942182"
+  },
+  "totals_python": {
+    "records": "0000002099",
+    "paid": "0000000272",
+    "zero": "0000000570",
+    "invalid": "0000001257",
+    "payment_cents": "000072570433965",
+    "accepted": "0000000564",
+    "rejected": "0000000278",
+    "released_cents": "000053945942182"
+  },
+  "stdout_empty": [
+    true,
+    true
+  ]
 }

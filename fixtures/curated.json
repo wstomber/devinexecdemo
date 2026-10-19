@@ -8,7 +8,8 @@
       "deductible": 155600,
       "coinsurance": 0,
       "contract": null,
-      "full": "N"
+      "full": "N",
+      "mbi": "2MSP0000001"
     }
   },
   {
@@ -20,7 +21,8 @@
       "deductible": 155600,
       "coinsurance": 0,
       "contract": 1300000,
-      "full": "N"
+      "full": "N",
+      "mbi": "2MSP0000001"
     }
   },
   {
@@ -397,6 +399,46 @@
       "coinsurance": 0,
       "contract": null,
       "full": "N"
+    }
+  },
+  {
+    "input": {
+      "id": "EX3-NOT-ENT",
+      "charges": 1500000,
+      "gross": 1400000,
+      "primary": 1250000,
+      "deductible": 155600,
+      "coinsurance": 0,
+      "contract": 1300000,
+      "full": "N",
+      "mbi": "3ENDED00001"
+    }
+  },
+  {
+    "input": {
+      "id": "EX3-DUP",
+      "charges": 1500000,
+      "gross": 1400000,
+      "primary": 1250000,
+      "deductible": 155600,
+      "coinsurance": 0,
+      "contract": 1300000,
+      "full": "N",
+      "mbi": "5HIST000001",
+      "dos": "20250315"
+    }
+  },
+  {
+    "input": {
+      "id": "EX3-MSP-NOBL",
+      "charges": 1500000,
+      "gross": 1400000,
+      "primary": 0,
+      "deductible": 155600,
+      "coinsurance": 0,
+      "contract": 1300000,
+      "full": "N",
+      "mbi": "2MSP0000001"
     }
   }
 ]

@@ -9,14 +9,21 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from fixtures import case_record
+from fixtures import case_record, serialize_cwf
 
-RESULT_FIELDS = ["record_no", "claim_id", "status", "payment_cents", "reason"]
-TOTAL_FIELDS = ["records", "paid", "zero", "invalid", "payment_cents"]
+RESULT_FIELDS = ["record_no", "claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents"]
+TOTAL_FIELDS = ["records", "paid", "zero", "invalid", "payment_cents", "accepted", "rejected", "released_cents"]
+DEFAULT_CWF = Path("build/cwf.dat")
+RECORD_LENGTH = 92
 REASONS = {
     "PAID": {"SECONDARY_PAYABLE"},
     "ZERO": {"PAYMENT_IN_FULL", "PRIMARY_AT_CAP", "DEDUCTIONS_AT_CAP"},
-    "INVALID": {"BAD_LENGTH", "BAD_ID", "BAD_AMOUNT", "BAD_CONTRACT", "BAD_FLAG"},
+    "INVALID": {"BAD_LENGTH", "BAD_ID", "BAD_AMOUNT", "BAD_CONTRACT", "BAD_FLAG", "BAD_MBI", "BAD_DATE"},
+}
+CWF_REASONS = {
+    "ACCEPTED": {"DISPOSITION_01"},
+    "REJECTED": {"NOT_ENTITLED", "DUPLICATE", "MSP_PRIMARY_NOT_BILLED"},
+    "NOT_SENT": {"CLAIM_INVALID"},
 }
 
 
@@ -66,25 +73,38 @@ def read_results(output, totals, identities):
         amount = integer(row["payment_cents"], 9_999_999_999)
         if (status == "PAID") != (amount > 0):
             raise VerificationError(f"record {number}: inconsistent status/payment")
+        cwf = row["cwf"]
+        if cwf not in CWF_REASONS or row["cwf_reason"] not in CWF_REASONS[cwf]:
+            raise VerificationError(f"record {number}: invalid CWF decision/reason")
+        if (cwf == "NOT_SENT") != (status == "INVALID"):
+            raise VerificationError(f"record {number}: only invalid claims skip CWF")
+        released = integer(row["released_cents"], 9_999_999_999)
+        if released != (amount if cwf == "ACCEPTED" else 0):
+            raise VerificationError(f"record {number}: released amount inconsistent with CWF decision")
         results[number] = {"claim_id": row["claim_id"], "status": status,
-                           "payment_cents": amount, "reason": row["reason"]}
+                           "payment_cents": amount, "reason": row["reason"],
+                           "cwf": cwf, "cwf_reason": row["cwf_reason"], "released_cents": released}
     if set(results) != set(identities):
         raise VerificationError(f"missing records {sorted(set(identities) - set(results))[:10]}")
     total_rows = read_csv(totals, TOTAL_FIELDS)
     if len(total_rows) != 1:
         raise VerificationError("totals must contain exactly one data row")
-    supplied = {k: integer(v, 99_999_999_990_000 if k == "payment_cents" else 10000)
+    supplied = {k: integer(v, 99_999_999_990_000 if k.endswith("_cents") else 10000)
                 for k, v in total_rows[0].items()}
     calculated = {"records": len(results), "paid": 0, "zero": 0, "invalid": 0,
-                  "payment_cents": sum(r["payment_cents"] for r in results.values())}
+                  "payment_cents": sum(r["payment_cents"] for r in results.values()),
+                  "accepted": 0, "rejected": 0,
+                  "released_cents": sum(r["released_cents"] for r in results.values())}
     for row in results.values():
         calculated[row["status"].lower()] += 1
+        if row["cwf"] != "NOT_SENT":
+            calculated[row["cwf"].lower()] += 1
     if supplied != calculated:
         raise VerificationError(f"batch totals mismatch: {supplied} != {calculated}")
     return results, supplied
 
 
-def run(command, input_path, identities, timeout):
+def run(command, input_path, identities, timeout, cwf_path=DEFAULT_CWF):
     argv = shlex.split(command)
     if not argv:
         raise VerificationError("empty executable command")
@@ -92,7 +112,7 @@ def run(command, input_path, identities, timeout):
         output, totals = Path(directory) / "results.csv", Path(directory) / "totals.csv"
         try:
             completed = subprocess.run(
-                argv + [str(input_path.resolve()), str(output), str(totals)],
+                argv + [str(input_path.resolve()), str(Path(cwf_path).resolve()), str(output), str(totals)],
                 capture_output=True, timeout=timeout, check=False,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
@@ -114,7 +134,7 @@ def batch_identities(path):
     identities = {}
     for i, line in enumerate(records, 1):
         raw_id = line[:12].rstrip(" ")
-        identities[i] = raw_id if len(line) == 73 and re.fullmatch(r"[A-Z0-9_-]{1,12}", raw_id) else f"@{i:010d}"
+        identities[i] = raw_id if len(line) == RECORD_LENGTH and re.fullmatch(r"[A-Z0-9_-]{1,12}", raw_id) else f"@{i:010d}"
     return identities
 
 
@@ -131,6 +151,9 @@ def main():
     parser.add_argument("--cases", type=Path, default=Path("fixtures/curated.json"))
     parser.add_argument("--expected", type=Path, default=Path("fixtures/expected.json"))
     parser.add_argument("--input", type=Path, default=Path("build/synthetic.dat"))
+    parser.add_argument("--cwf", type=Path, default=DEFAULT_CWF, help="CWF reference file (compare mode)")
+    parser.add_argument("--cwf-reference", type=Path, default=Path("fixtures/cwf.json"),
+                        help="CWF reference JSON serialized for baseline mode")
     parser.add_argument("--report", type=Path, default=Path("build/verification.json"))
     parser.add_argument("--timeout", type=float, default=10)
     args = parser.parse_args()
@@ -157,8 +180,11 @@ def main():
             with tempfile.TemporaryDirectory() as directory:
                 batch = Path(directory) / "curated.dat"
                 batch.write_text("".join(case_record(c) + "\n" for c in cases), encoding="ascii")
+                cwf = Path(directory) / "cwf.dat"
+                cwf.write_text("".join(line + "\n" for line in serialize_cwf(json.loads(args.cwf_reference.read_text()))),
+                               encoding="ascii")
                 identities = batch_identities(batch)
-                actual, totals = run(args.command, batch, identities, args.timeout)
+                actual, totals = run(args.command, batch, identities, args.timeout, cwf)
             report["differences"] = differences(actual, expected)
             report["totals"] = totals
             if totals != expected_file["totals"]:
@@ -169,8 +195,8 @@ def main():
         else:
             report["migration_comparison"] = "ATTEMPTED"
             identities = batch_identities(args.input)
-            baseline, totals = run(args.command, args.input, identities, args.timeout)
-            candidate, candidate_totals = run(args.candidate, args.input, identities, args.timeout)
+            baseline, totals = run(args.command, args.input, identities, args.timeout, args.cwf)
+            candidate, candidate_totals = run(args.candidate, args.input, identities, args.timeout, args.cwf)
             report["migration_comparison"] = "RUN"
             report["differences"] = differences(candidate, baseline)
             report["baseline_totals"], report["candidate_totals"] = totals, candidate_totals

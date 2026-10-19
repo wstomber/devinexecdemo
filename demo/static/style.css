@@ -12,7 +12,7 @@ nav .tog{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6
 main{max-width:1240px;margin:0 auto;padding:20px 24px 80px}
 h1{font-size:26px;margin:4px 0 4px}h2{font-size:19px;margin:28px 0 10px}h3{font-size:16px;margin:16px 0 6px}
 .lede{font-size:17px;color:#2b3a4a;max-width:900px;margin:0 0 16px}
-.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
 .card h3{margin-top:0}.stat .n{font-size:clamp(17px,2vw,26px);font-weight:700;overflow-wrap:anywhere}.stat .l{color:var(--muted);font-size:13px}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;white-space:nowrap}

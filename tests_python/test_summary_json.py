@@ -13,11 +13,11 @@ SCRIPT = ROOT / "python" / "msp.py"
 
 
 def raw(claim_id="T1", charges=100000, gross=100000, primary=10000, deductible=0,
-        coinsurance=0, contract=None, full="N"):
+        coinsurance=0, contract=None, full="N", mbi="1EG4TE5MK73", dos="20250315"):
     contract_field = "----------" if contract is None else f"{contract:010d}"
     record = (claim_id.ljust(12) + f"{charges:010d}{gross:010d}{primary:010d}{deductible:010d}"
-              f"{coinsurance:010d}" + contract_field + full).encode("ascii")
-    assert len(record) == 73
+              f"{coinsurance:010d}" + contract_field + full + mbi + dos).encode("ascii")
+    assert len(record) == 92
     return record
 
 
@@ -30,6 +30,8 @@ class SummaryJsonTests(unittest.TestCase):
         self.results = self.directory / "results.csv"
         self.totals = self.directory / "totals.csv"
         self.summary = self.directory / "summary.json"
+        self.cwf = self.directory / "cwf.dat"
+        self.cwf.write_text("B1EG4TE5MK732020010199999999----------------\n")
 
     def write_input(self, data):
         self.input.write_bytes(data)
@@ -49,7 +51,7 @@ class SummaryJsonTests(unittest.TestCase):
         self.assertIsInstance(summary, dict)
         self.assertEqual(
             set(summary),
-            {"records", "paid", "zero", "invalid", "payment_cents"},
+            {"records", "paid", "zero", "invalid", "payment_cents", "accepted", "rejected", "released_cents"},
         )
         for value in summary.values():
             self.assertIs(type(value), int)
@@ -57,7 +59,7 @@ class SummaryJsonTests(unittest.TestCase):
         self.assertEqual(
             summary,
             dict(zip(
-                ("records", "paid", "zero", "invalid", "payment_cents"),
+                ("records", "paid", "zero", "invalid", "payment_cents", "accepted", "rejected", "released_cents"),
                 map(int, totals_fields),
             )),
         )
@@ -67,27 +69,27 @@ class SummaryJsonTests(unittest.TestCase):
         self.write_input(raw() + b"\n")
         plain_results = self.directory / "plain-results.csv"
         plain_totals = self.directory / "plain-totals.csv"
-        plain = self.cli(self.input, plain_results, plain_totals)
+        plain = self.cli(self.input, self.cwf, plain_results, plain_totals)
         self.assertEqual(plain.returncode, 0, plain.stderr.decode("ascii"))
         self.assertEqual(
             plain_results.read_text(encoding="ascii"),
-            "record_no,claim_id,status,payment_cents,reason\n"
-            "0000000001,T1,PAID,0000090000,SECONDARY_PAYABLE\n",
+            "record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents\n"
+            "0000000001,T1,PAID,0000090000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000090000\n",
         )
         self.assertEqual(
             plain_totals.read_text(encoding="ascii"),
-            "records,paid,zero,invalid,payment_cents\n"
-            "0000000001,0000000001,0000000000,0000000000,000000000090000\n",
+            "records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents\n"
+            "0000000001,0000000001,0000000000,0000000000,000000000090000,0000000001,0000000000,000000000090000\n",
         )
         self.assertEqual(
             sorted(path.name for path in self.directory.iterdir()),
-            ["input.dat", "plain-results.csv", "plain-totals.csv"],
+            ["cwf.dat", "input.dat", "plain-results.csv", "plain-totals.csv"],
         )
 
         flagged_results = self.directory / "flagged-results.csv"
         flagged_totals = self.directory / "flagged-totals.csv"
         flagged = self.cli(
-            self.input, flagged_results, flagged_totals, "--summary-json", self.summary
+            self.input, self.cwf, flagged_results, flagged_totals, "--summary-json", self.summary
         )
         self.assertEqual(flagged.returncode, 0, flagged.stderr.decode("ascii"))
         self.assertEqual(flagged_results.read_bytes(), plain_results.read_bytes())
@@ -95,11 +97,12 @@ class SummaryJsonTests(unittest.TestCase):
 
     def test_summary_contract_matches_totals(self):
         self.write_input(raw() + b"\n")
-        proc = self.cli(self.input, self.results, self.totals, "--summary-json", self.summary)
+        proc = self.cli(self.input, self.cwf, self.results, self.totals, "--summary-json", self.summary)
         self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
         _, summary = self.assert_summary_matches_totals(self.summary, self.totals)
         self.assertEqual(summary, {
             "records": 1, "paid": 1, "zero": 0, "invalid": 0, "payment_cents": 90000,
+            "accepted": 1, "rejected": 0, "released_cents": 90_000,
         })
 
     def test_integer_cents_are_exact(self):
@@ -113,23 +116,24 @@ class SummaryJsonTests(unittest.TestCase):
         # CMS-EX3 pays 1,300,000 - max(1,250,000, 155,600) = 50,000 cents;
         # each maximum claim pays 9,999,999,999 cents, with no rounding.
         self.write_input(b"\n".join(records) + b"\n")
-        proc = self.cli(self.input, self.results, self.totals, "--summary-json", self.summary)
+        proc = self.cli(self.input, self.cwf, self.results, self.totals, "--summary-json", self.summary)
         self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
         text, summary = self.assert_summary_matches_totals(self.summary, self.totals)
         self.assertEqual(summary["payment_cents"], 50_000 + 2 * maximum)
         numeric_tokens = re.findall(r":\s*([^,}\s]+)", text)
-        self.assertEqual(len(numeric_tokens), 5)
+        self.assertEqual(len(numeric_tokens), 8)
         for token in numeric_tokens:
             self.assertTrue(token.isdigit(), token)
             self.assertNotRegex(token, r"[.eE]")
 
     def test_empty_batch_summary_matches_totals(self):
         self.write_input(b"")
-        proc = self.cli(self.input, self.results, self.totals, "--summary-json", self.summary)
+        proc = self.cli(self.input, self.cwf, self.results, self.totals, "--summary-json", self.summary)
         self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
         _, summary = self.assert_summary_matches_totals(self.summary, self.totals)
         self.assertEqual(summary, {
             "records": 0, "paid": 0, "zero": 0, "invalid": 0, "payment_cents": 0,
+            "accepted": 0, "rejected": 0, "released_cents": 0,
         })
 
     def test_mixed_validity_counts_match_totals(self):
@@ -145,20 +149,21 @@ class SummaryJsonTests(unittest.TestCase):
         # One paid record pays 100,000 - max(10,000, 0) = 90,000 cents;
         # the next two are zero and the four malformed records are invalid.
         self.write_input(b"\n".join(records) + b"\n")
-        proc = self.cli(self.input, self.results, self.totals, "--summary-json", self.summary)
+        proc = self.cli(self.input, self.cwf, self.results, self.totals, "--summary-json", self.summary)
         self.assertEqual(proc.returncode, 0, proc.stderr.decode("ascii"))
         _, summary = self.assert_summary_matches_totals(self.summary, self.totals)
         self.assertEqual(summary, {
             "records": 7, "paid": 1, "zero": 2, "invalid": 4, "payment_cents": 90_000,
+            "accepted": 3, "rejected": 0, "released_cents": 90_000,
         })
 
     def test_option_positions_and_equals_form(self):
         self.write_input(raw() + b"\n")
         invocations = [
-            ("before", lambda p: ("--summary-json", p, self.input, p.parent / "r.csv", p.parent / "t.csv")),
-            ("between", lambda p: (self.input, "--summary-json", p, p.parent / "r.csv", p.parent / "t.csv")),
-            ("after", lambda p: (self.input, p.parent / "r.csv", p.parent / "t.csv", "--summary-json", p)),
-            ("equals", lambda p: (self.input, p.parent / "r.csv", p.parent / "t.csv", f"--summary-json={p}")),
+            ("before", lambda p: ("--summary-json", p, self.input, self.cwf, p.parent / "r.csv", p.parent / "t.csv")),
+            ("between", lambda p: (self.input, self.cwf, "--summary-json", p, p.parent / "r.csv", p.parent / "t.csv")),
+            ("after", lambda p: (self.input, self.cwf, p.parent / "r.csv", p.parent / "t.csv", "--summary-json", p)),
+            ("equals", lambda p: (self.input, self.cwf, p.parent / "r.csv", p.parent / "t.csv", f"--summary-json={p}")),
         ]
         outputs = []
         for name, args_for in invocations:
@@ -179,7 +184,7 @@ class SummaryJsonTests(unittest.TestCase):
 
     def test_fatal_duplicate_does_not_write_or_replace_summary(self):
         self.write_input(raw("DUP") + b"\n" + raw("DUP") + b"\n")
-        proc = self.cli(self.input, self.results, self.totals, "--summary-json", self.summary)
+        proc = self.cli(self.input, self.cwf, self.results, self.totals, "--summary-json", self.summary)
         self.assertEqual(proc.returncode, 2)
         self.assertIn(b"discard outputs", proc.stderr)
         self.assertFalse(self.summary.exists())
@@ -187,7 +192,7 @@ class SummaryJsonTests(unittest.TestCase):
         previous = b'{"previous":"summary"}\n'
         self.summary.write_bytes(previous)
         proc = self.cli(
-            self.input, self.directory / "again-results.csv", self.directory / "again-totals.csv",
+            self.input, self.cwf, self.directory / "again-results.csv", self.directory / "again-totals.csv",
             "--summary-json", self.summary,
         )
         self.assertEqual(proc.returncode, 2)
@@ -217,7 +222,7 @@ class SummaryJsonTests(unittest.TestCase):
             with self.subTest(collision=label):
                 original_input = self.input.read_bytes()
                 proc = self.cli(
-                    self.input, output, totals, "--summary-json", summary_path
+                    self.input, self.cwf, output, totals, "--summary-json", summary_path
                 )
                 self.assertEqual(proc.returncode, 2)
                 self.assertIn(b"--summary-json", proc.stderr)
@@ -255,7 +260,7 @@ class SummaryJsonTests(unittest.TestCase):
                 if kind == "readonly":
                     readonly_parent.chmod(0o555)
                 try:
-                    proc = self.cli(input_path, output_path, totals_path, "--summary-json", summary_path)
+                    proc = self.cli(input_path, self.cwf, output_path, totals_path, "--summary-json", summary_path)
                 finally:
                     if kind == "readonly":
                         readonly_parent.chmod(0o755)
@@ -278,14 +283,14 @@ class SummaryJsonTests(unittest.TestCase):
     def test_summary_option_usage_errors(self):
         self.write_input(raw() + b"\n")
         cases = [
-            ("missing-value", (self.input, self.results, self.totals, "--summary-json")),
-            ("empty-equals", (self.input, self.results, self.totals, "--summary-json=")),
-            ("empty-separated", (self.input, self.results, self.totals, "--summary-json", "")),
+            ("missing-value", (self.input, self.cwf, self.results, self.totals, "--summary-json")),
+            ("empty-equals", (self.input, self.cwf, self.results, self.totals, "--summary-json=")),
+            ("empty-separated", (self.input, self.cwf, self.results, self.totals, "--summary-json", "")),
             ("repeated", (
-                "--summary-json", self.summary, self.input, self.results, self.totals,
+                "--summary-json", self.summary, self.input, self.cwf, self.results, self.totals,
                 "--summary-json=again.json",
             )),
-            ("only-two-positionals", (self.input, self.results, "--summary-json", self.summary)),
+            ("only-two-positionals", (self.input, self.cwf, self.results, "--summary-json", self.summary)),
         ]
         for label, args in cases:
             with self.subTest(error=label):

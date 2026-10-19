@@ -15,15 +15,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REHEARSAL = ROOT / "evidence" / "rehearsal"
 RUNS = ROOT / "build" / "demo-runs"
-STARTER = "37ceca17f110536d55261d5d19aa187781dd8851"
+STARTER = "be0b00ec5a2369d50a34d351694b187ae2300fe4"
+REHEARSAL_HEAD = "18e3c1b5dce28b31138f9037b15904f0dd40df14"  # PR #23, fresh Playbook run from the starter
 STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("stage2", "Stage 2: independent tests against COBOL"),
                  ("stage3", "Stage 3: Python + unit tests"),
                  ("stage4", "Stage 4: COBOL vs Python comparison"),
                  ("docs", "Maintainer docs")]
-DATASETS = {"curated": "Curated 30-record policy batch",
+DATASETS = {"curated": "Curated 33-record policy batch",
             "synthetic": "Deterministic 1,000-record synthetic batch (seed 20261017)",
-            "edge": "Adversarial 24-record byte-level edge batch"}
+            "edge": "Adversarial byte-level edge batch (CWF and record edge cases)"}
+FIELDS = ("claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents")
 
 
 def rel(path):
@@ -124,7 +126,7 @@ def comparison(folder, verifier_report, label, kind):
         by_no_c = {r["record_no"]: r for r in cobol}
         by_no_p = {r["record_no"]: r for r in python}
         for r in cobol + python:
-            r["claim_id"], r["status"], r["payment_cents"], r["reason"]
+            [r[k] for k in FIELDS]
     except (KeyError, TypeError) as exc:
         return {**base, "status": "UNKNOWN", "problem": f"result file is malformed (missing column {exc})", "rows": []}
     rows, mismatches = [], 0
@@ -133,11 +135,13 @@ def comparison(folder, verifier_report, label, kind):
         if c is None or p is None:
             result = "MISSING_IN_COBOL" if c is None else "MISSING_IN_PYTHON"
         else:
-            result = "MATCH" if all(c[k] == p[k] for k in ("claim_id", "status", "payment_cents", "reason")) else "MISMATCH"
+            result = "MATCH" if all(c[k] == p[k] for k in FIELDS) else "MISMATCH"
         mismatches += result != "MATCH"
         rows.append([int(no), (c or p)["claim_id"], c and c["status"], p and p["status"],
                      c and cents_int(c["payment_cents"]), p and cents_int(p["payment_cents"]),
-                     c and c["reason"], p and p["reason"], result, (p or c)["claim_id"]])
+                     c and c["reason"], p and p["reason"], result, (p or c)["claim_id"],
+                     c and c["cwf"], p and p["cwf"], c and c["cwf_reason"], p and p["cwf_reason"],
+                     c and cents_int(c["released_cents"]), p and cents_int(p["released_cents"])])
     ids = [r["claim_id"] for r in python if not r["claim_id"].startswith("@")]
     duplicates = sorted({i for i in ids if ids.count(i) > 1})
     ct, pt = totals_row(folder / "cobol-totals.csv"), totals_row(folder / "python-totals.csv")
@@ -149,7 +153,10 @@ def comparison(folder, verifier_report, label, kind):
                        and sha256(folder / "cobol-totals.csv") == sha256(folder / "python-totals.csv"))
     totals_match = ct is not None and ct == pt
     input_name = (summary or {}).get("input")
-    input_records = count_records(ROOT / input_name) if input_name else None
+    input_path = ROOT / input_name if input_name else None
+    if input_path is not None and not input_path.exists() and (folder / input_path.name).exists():
+        input_path = folder / input_path.name  # saved with the comparison
+    input_records = count_records(input_path) if input_path else None
     complete = input_records is not None and len(cobol) == len(python) == input_records
     if mismatches or duplicates or not totals_match or verifier == "FAILED" or (input_records is not None and not complete):
         status = "FAILED"
@@ -240,7 +247,8 @@ def latest_live():
 
 
 def history():
-    log = git("log", "--format=%H%x09%h%x09%cI%x09%s", "-n", "60") or ""
+    ref = REHEARSAL_HEAD if git("cat-file", "-e", REHEARSAL_HEAD + "^{commit}") is not None else "HEAD"
+    log = git("log", "--format=%H%x09%h%x09%cI%x09%s", "-n", "60", ref) or ""
     commits = [dict(zip(("sha", "short", "date", "subject"), line.split("\t"))) for line in log.splitlines()]
     stages = {}
     for c in commits:
@@ -257,7 +265,7 @@ def history():
                  "stage2": stages["stage2"]["short"], "stage3": stages["stage3"]["short"]}
     return {"head": git("rev-parse", "HEAD"), "head_short": git("rev-parse", "--short", "HEAD"),
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"), "dirty": bool(git("status", "--porcelain")),
-            "starter": STARTER, "stages": stages, "tests_before_python": proof, "commits": commits[:15]}
+            "starter": STARTER, "stages": stages, "stages_ref": ref, "tests_before_python": proof, "commits": commits[:15]}
 
 
 def build():

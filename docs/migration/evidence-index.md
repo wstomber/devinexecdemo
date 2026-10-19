@@ -1,22 +1,27 @@
 # Evidence index and seven-step presentation guide
 
-Rehearsal run in Devin session
-https://app.devin.ai/sessions/227ede5941704863b4c28458ebdba9ff, from starter
-commit `37ceca1`, on branch `devin/1760736000-msp-python-migration`.
-Toolchain: GnuCOBOL 3.1.2.0, Python 3.10.12, GCC 11.4.0, GNU Make 4.3
-(`evidence/rehearsal/environment.txt`).
+Saved rehearsal: a fresh Devin session running the native Playbook from starter
+`demo/starter-be0b00e` (commit `be0b00e`):
+https://app.devin.ai/sessions/a3533bd2e40d4c81a8a9df1e852c235e, pull request
+https://github.com/wstomber/devinexecdemo/pull/23. Stage commits: Stage 1 `85238e3`,
+Stage 2 `7e33cf0`, Stage 3 `68cd058`, Stage 4 `3ec97cc`, docs `18e3c1b`
+(`evidence/rehearsal/PROVENANCE.md`). Toolchain in `evidence/rehearsal/environment.txt`.
+
+Each claim is processed in CMS's documented order: the MSP payment is calculated,
+then the synthetic CWF pre-payment check accepts or rejects it, and only an accepted
+claim releases its payment.
 
 ## Seven steps (`docs/demo-runbook.md`)
 
 | # | Step | Show this | What it proves | Commit |
 |---|---|---|---|---|
-| 1 | Baseline | `evidence/rehearsal/stage1-baseline.log`, `stage1-cobol-baseline/manifest.json` | The unchanged COBOL builds and runs here. Curated: 30 records, 12 paid / 9 zero / 9 invalid, 10,000,450,202 cents. Synthetic: 1,000 records, 271 / 729 / 0, 514,352,570,951 cents. Hashes match the retained starter baseline | `28520cd` |
-| 2 | Explanation | `docs/migration/01-cobol-explanation.md`, then `03-cobol-primer.md` and `04-legacy-walkthrough.md` | The legacy program is understood, including the `claim-has-contract` branch and the OTAF-vs-payment-in-full distinction | `28520cd` + docs |
-| 3 | Tests before migration | `tests_policy/expectations.json`, `stage2-pre-migration-tests/cobol-run.log` | 48 hand-derived cases (with policy citations and arithmetic, none copied from COBOL output) passed against COBOL **before any Python existed** | `f49e97d` |
-| 4 | Python and tests | `python/msp.py`, `tests_python/test_msp_units.py`, `stage3-python/` | The same independent tests passed against Python on the first run; 20 focused unit tests pass. One test-authoring defect was corrected (`corrections.md`) | `dd83cd0` |
-| 5 | Comparison | `stage4-comparison/curated/side-by-side.md`, `synthetic/side-by-side.md`, `edge/side-by-side.md`, `fatal-parity.md`, `comparison-report.json` | Per-record MATCH on 30 + 1,000 + 24 records, byte-identical outputs and totals, identical fatal behavior. Zero mismatches, so there were none to investigate | `7b411e5` |
-| 6 | CMS-EX3 | `docs/cms-example-3.md`; `curated/side-by-side.md` CMS-EX3 section; `04-legacy-walkthrough.md` "CMS-EX3 through the code" | $13,000 OTAF − $12,500 primary = **$500.00** in policy, tests, COBOL and Python. Ignoring the OTAF gives $1,500 (EX3-NO-OTAF), a $1,000 overpayment | — |
-| 7 | Reviewable change | the PR, `02-rule-map.md`, `05-cobol-to-python.md`, `06-maintaining.md` | Each rule traced from policy → COBOL → test → Python → result; the PR is left unmerged for human review | PR |
+| 1 | Baseline | `evidence/rehearsal/stage1-baseline.log`, `stage1-cobol-baseline/manifest.json` | The unchanged COBOL builds and runs. Curated: 33 records, 15 paid / 9 zero / 9 invalid, 10,001,694,602 cents calculated; CWF 21 accepted / 3 rejected; 10,000,450,202 cents released. Synthetic: 1,000 records, 271 paid / 729 zero; CWF 736 accepted / 264 rejected | `85238e3` |
+| 2 | Explanation | `docs/migration/01-cobol-explanation.md`, then `03-cobol-primer.md` and `04-legacy-walkthrough.md` | The legacy program is understood: the `claim-has-contract` branch, the OTAF-vs-payment distinction, and the CWF check order in `cobol/cwf.cob` | `85238e3` |
+| 3 | Tests before migration | `tests_policy/expectations.json`, `stage2-pre-migration-tests/cobol-run.log` | Hand-derived payment and CWF cases (policy citations and arithmetic, none copied from COBOL output) passed against COBOL before any Python existed | `7e33cf0` |
+| 4 | Python and tests | `python/msp.py`, `tests_python/`, `stage3-python/` | The same independent tests pass against Python; focused unit tests cover the payment and `cwf_check`; corrections are logged | `68cd058` |
+| 5 | Comparison | `stage4-comparison/curated/side-by-side.md`, `synthetic/side-by-side.md`, `edge/side-by-side.md`, `fatal-parity.md`, `comparison-report.json` | Per-record MATCH on calculated payment, CWF decision and released amount: 33 + 1,000 + 2,099 records, byte-identical outputs; 22 fatal paths match | `3ec97cc` |
+| 6 | CMS-EX3 | `docs/cms-example-3.md`; `curated/side-by-side.md`; `04-legacy-walkthrough.md` "CMS-EX3 through the code" | $13,000 OTAF − $12,500 primary = **$500.00**, CWF accepts it, $500 released, in policy, tests, COBOL and Python; the look-alikes EX3-NOT-ENT, EX3-DUP and EX3-MSP-NOBL release $0 | `3ec97cc` |
+| 7 | Reviewable change | the PR, `02-rule-map.md`, `05-cobol-to-python.md`, `06-maintaining.md` | Each rule traced from policy → COBOL → test → Python → result; the PR is left unmerged for human review | PR #23 |
 
 ## What the evidence does and does not show
 

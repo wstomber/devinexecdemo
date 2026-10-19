@@ -17,7 +17,7 @@ API = os.environ.get("DEVIN_API_BASE", "https://api.devin.ai/v3")
 ORG_ID = os.environ.get("DEVIN_ORG_ID", "org-3c6501402dcf4b9190f5cdf0fc60b67c")
 PLAYBOOK_ID = "playbook-f242f29f76f8440ea96928dfeec1d441"
 REPO = "wstomber/devinexecdemo"
-START_BRANCH = "demo/starter-37ceca1"
+START_BRANCH = "demo/starter-be0b00e"
 TITLE = "Live demo: MSP COBOL to Python from the COBOL-only starter"
 PROMPT = (f"Run this Playbook on {REPO} starting from branch {START_BRANCH}. "
           f"This is a live demo run: open the pull request into {START_BRANCH}, never into main.")

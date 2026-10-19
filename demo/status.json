@@ -39,6 +39,14 @@
       "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/6",
       "role": "The app you are looking at"
+    },
+    {
+      "number": 23,
+      "title": "[live run] MSP COBOL → Python with evidence (CWF step)",
+      "state": "OPEN",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/23",
+      "commits_url": "https://github.com/wstomber/devinexecdemo/pull/23/commits",
+      "role": "A separate Devin session ran the migration Playbook from scratch on demo/starter-be0b00e (payment + CWF check); its evidence is the saved rehearsal. Rehearsal only, never merged"
     }
   ],
   "playbooks": [
@@ -47,11 +55,11 @@
       "id": "playbook-f242f29f76f8440ea96928dfeec1d441",
       "url": "https://app.devin.ai/settings/playbooks/f242f29f76f8440ea96928dfeec1d441",
       "source": "docs/playbooks/msp-cobol-to-python.md",
-      "start_ref": "demo/starter-37ceca1",
+      "start_ref": "demo/starter-be0b00e",
       "fresh_run": {
-        "session": "https://app.devin.ai/sessions/237943a1ebdc487a92de2320fc5d281f",
+        "session": "https://app.devin.ai/sessions/a3533bd2e40d4c81a8a9df1e852c235e",
         "status": "PASSED",
-        "pr": "https://github.com/wstomber/devinexecdemo/pull/5"
+        "pr": "https://github.com/wstomber/devinexecdemo/pull/23"
       }
     },
     {

@@ -1,5 +1,5 @@
 $ git -c safe.directory=/home/ubuntu/repos/devinexecdemo rev-parse HEAD
-37ceca17f110536d55261d5d19aa187781dd8851
+be0b00ec5a2369d50a34d351694b187ae2300fe4
 [exit 0]
 
 $ cobc -V
@@ -14,8 +14,12 @@ Packaged  Dec 23 2020 12:04:58 UTC
 C version "11.2.0"
 [exit 0]
 
+$ /usr/bin/python3 tools/fixtures.py --cwf-source fixtures/cwf.json --output build/baseline/cwf.dat
+Serialized 6 CWF reference records to build/baseline/cwf.dat
+[exit 0]
+
 $ /usr/bin/python3 tools/fixtures.py --source fixtures/curated.json --output build/baseline/curated.dat
-Serialized 30 records to build/baseline/curated.dat
+Serialized 33 records to build/baseline/curated.dat
 [exit 0]
 
 $ /usr/bin/python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/baseline/synthetic.dat
@@ -27,8 +31,8 @@ PASS: records and totals match; report=build/baseline/curated-verification.json
 Migration comparison: NOT_RUN (baseline verification only)
 [exit 0]
 
-$ build/msp-batch build/baseline/curated.dat build/baseline/curated-results.csv build/baseline/curated-totals.csv
+$ build/msp-batch build/baseline/curated.dat build/baseline/cwf.dat build/baseline/curated-results.csv build/baseline/curated-totals.csv
 [exit 0]
 
-$ build/msp-batch build/baseline/synthetic.dat build/baseline/synthetic-results.csv build/baseline/synthetic-totals.csv
+$ build/msp-batch build/baseline/synthetic.dat build/baseline/cwf.dat build/baseline/synthetic-results.csv build/baseline/synthetic-totals.csv
 [exit 0]

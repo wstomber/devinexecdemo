@@ -125,7 +125,7 @@ overflow impossible, so the behavior is identical. The maximum-value tests
 
 ```cobol
 01 claim-interface.              *> group: the whole parameter block
-   05 claim-raw.                 *> group: the 73 raw bytes
+   05 claim-raw.                 *> group: the 92 raw bytes
       10 raw-id       pic x(12). *> bytes 1-12
       10 raw-charges  pic x(10). *> bytes 13-22
       …
@@ -134,12 +134,12 @@ overflow impossible, so the behavior is identical. The maximum-value tests
 
 - **Level numbers** (01, 05, 10) express nesting. A group item with no PIC is
   simply the concatenation of its children's bytes.
-- `move input-record(1:73) to claim-raw` (`batch.cob` 129) copies 73 bytes
+- `move input-record(1:92) to claim-raw` (`batch.cob` 146) copies 92 bytes
   into the group. That **simultaneously fills all eight raw fields by
   position**. No parsing happens; the layout *is* the parser. Python does this
   with explicit slices (`ID_FIELD = slice(0, 12)`, and so on).
 - **`COPY "claim.cpy"`** pastes the copybook text in at compile time, like a C
-  `#include`. All three programs copy the same layout, which is how they agree
+  `#include`. All four programs (batch, validate, payment, cwf) copy the same layout, which is how they agree
   on the shape of a claim. A copybook is therefore an interface definition.
   Changing it means recompiling every program that copies it. In Python the
   equivalent is the shared `Claim` and `Result` dataclasses.
@@ -234,5 +234,5 @@ fd claims-file record contains 1 characters.
    garbage, not an error. That is why the comment at `validate.cob` 67 states
    that no numeric move precedes the class tests.
 
-Next: `04-legacy-walkthrough.md` applies all of this to the three programs line
+Next: `04-legacy-walkthrough.md` applies all of this to the four programs line
 by line, and `05-cobol-to-python.md` shows what changed in the migration.

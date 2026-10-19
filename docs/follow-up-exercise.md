@@ -5,10 +5,10 @@ in the starter. Devin performs it after completing and verifying the migration.
 
 Customer-style request: consumers want a JSON summary alongside the existing CSV
 files. Add an optional `--summary-json PATH` flag to the Python CLI. The original
-three positional paths and invocation without flags must continue to work.
+four positional paths and invocation without flags must continue to work.
 
 The JSON object must contain integer fields `records`, `paid`, `zero`, `invalid`,
-and `payment_cents`, with the same values as the existing totals CSV. It must use
+`payment_cents`, `accepted`, `rejected` and `released_cents`, with the same values as the existing totals CSV. It must use
 the batch's actual counters and total, not a new payment calculator. Require a
 separate destination that does not overwrite input or existing CSV outputs. Define
 and test failure behavior when JSON cannot be written; never silently report

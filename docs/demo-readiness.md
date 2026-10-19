@@ -11,11 +11,11 @@ tests native Devin Playbooks. No Python payment replacement is in this starter.
 | Runnable COBOL, shared copybook, record contract | Ready: cobol/ and README.md |
 | Reproducible compiler/Python/test environment | Ready: Dockerfile and installation commands; Python standard library only |
 | Exact compile/run commands | Ready: `make doctor build baseline generate test capture-baseline` |
-| Fictional stable claims, deterministic input | Ready: 30 curated cases; seeded 1,000-record generator |
+| Fictional stable claims, deterministic input | Ready: 33 curated cases; seeded 1,000-record generator; synthetic CWF reference file (fixtures/cwf.json) |
 | Actual retained baseline outputs and inputs | Ready after capture: docs/evidence/cobol-baseline/; new captures under build/baseline/ |
 | Committed starting state | Record the preparation commit SHA before starting Devin; source hashes and the prior source commit are retained in the capture manifest |
 | CMS §40.8.3 Example 3 excerpt | Ready: docs/cms-example-3.md, official link, pages, retrieval date, PDF hash |
-| Module boundary | Ready: eligibility, coverage, primary/gross pricing and deductions supplied upstream |
+| Module boundary | Ready: payment calculation plus three CWF pre-payment checks (entitlement, duplicate, MSP primary billed); coverage, primary/gross pricing and deductions supplied upstream |
 | Existing independent expectation ledger | Ready: fixtures/expected.json; keep unchanged; observed output is not its source |
 | New policy-derived tests before migration | Pending: Devin creates, runs against COBOL, and commits separately BEFORE Python |
 | Python replacement and focused unit tests | Pending: Devin |

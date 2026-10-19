@@ -13,13 +13,19 @@
     "paid": 271,
     "zero": 729,
     "invalid": 0,
-    "payment_cents": 514352570951
+    "payment_cents": 485289809347,
+    "accepted": 736,
+    "rejected": 264,
+    "released_cents": 344091123732
   },
   "candidate_totals": {
     "records": 1000,
     "paid": 271,
     "zero": 729,
     "invalid": 0,
-    "payment_cents": 514352570951
+    "payment_cents": 485289809347,
+    "accepted": 736,
+    "rejected": 264,
+    "released_cents": 344091123732
   }
 }

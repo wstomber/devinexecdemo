@@ -1,0 +1,13 @@
+{
+  "note": "Synthetic CWF reference data (not real people). B = beneficiary entitlement period and optional MSP period (another insurer pays first); H = a claim already posted to CWF history. Dates YYYYMMDD; 99999999 = open-ended.",
+  "beneficiaries": [
+    {"mbi": "1EG4TE5MK73", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": null, "msp_to": null, "story": "Default test beneficiary: entitled, Medicare is primary"},
+    {"mbi": "2MSP0000001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": "20250101", "msp_to": "20251231", "story": "Employer group health plan pays first during 2025 (MSP period)"},
+    {"mbi": "3ENDED00001", "entitled_from": "20150101", "entitled_to": "20241231", "msp_from": null, "msp_to": null, "story": "Entitlement ended before 2025"},
+    {"mbi": "4FUTURE0001", "entitled_from": "20260101", "entitled_to": "99999999", "msp_from": null, "msp_to": null, "story": "Entitlement starts in 2026"},
+    {"mbi": "5HIST000001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": "20250101", "msp_to": "20251231", "story": "MSP beneficiary with a claim already paid on 2025-03-15"}
+  ],
+  "history": [
+    {"mbi": "5HIST000001", "dos": "20250315", "charges": 1500000, "story": "Claim for $15,000 on 2025-03-15 already posted to CWF history"}
+  ]
+}

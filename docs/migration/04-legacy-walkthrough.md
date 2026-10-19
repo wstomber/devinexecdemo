@@ -11,7 +11,7 @@ Python that replaced it.
               │ count + total ← result row → OUTPUT csv                              │
               │ totals row → TOTALS csv; any fatal → stop run, exit 2                │
               └──────────────────────────────────────────────────────────────────────┘
-          all three programs share one memory block, claim-interface (claim.cpy)
+          all four programs share one memory block, claim-interface (claim.cpy)
 ```
 
 ## The shared record: `cobol/copybooks/claim.cpy`
@@ -19,8 +19,8 @@ Python that replaced it.
 | Lines | Field | Meaning |
 |---|---|---|
 | 1 | `claim-interface` | The single block passed by reference to both subprograms |
-| 2–10 | `claim-raw` | The 73 input bytes overlaid as eight fields: ID 12, five amounts × 10, contract 10, flag 1 |
-| 11 | `claim-length` | Length of the framed line, so validation can reject lengths ≠ 73 |
+| 2–10 | `claim-raw` | The 92 input bytes overlaid as ten fields: ID 12, five amounts × 10, contract 10, flag 1, MBI 11, service date 8 |
+| 11 | `claim-length` | Length of the framed line, so validation can reject lengths ≠ 92 |
 | 12–14 | `claim-id`, `claim-status`, `claim-reason` | The outputs. Validation and calculation write them; batch reads them |
 | 15–20 | `claim-charges` … `claim-contract` | Parsed amounts as packed decimal (exact cents) |
 | 21 | `claim-has-contract` | 1 if the contract was supplied, 0 if `----------`. This is how COBOL represents "optional": a separate flag, because a numeric field cannot be empty |
@@ -42,7 +42,7 @@ than the limit so overflow can be detected), four 10-digit counters, a 15-digit
 payment total, and a fixed table of 10,000 seen IDs (40–43). The table size
 *is* the 10,000-record limit.
 
-**Lines 46–61: arguments.** Exactly three arguments, all distinct; otherwise
+**Lines 59–61: arguments.** Exactly four arguments (`INPUT CWF OUTPUT TOTALS`), all distinct; otherwise
 print usage and exit 2. Distinct paths stop a run from overwriting its own
 input.
 
@@ -111,7 +111,7 @@ This is how the rejection precedence is encoded:
 
 | Lines | Check | Reason if it fails |
 |---|---|---|
-| 33–35 | Framed length is exactly 73 | `BAD_LENGTH` |
+| 13 | Framed length is exactly 92 | `BAD_LENGTH` |
 | 36–37 | ID is not all spaces | `BAD_ID` |
 | 38–54 | Scan the 12 ID bytes: once a space is seen (`id-ended`), any later non-space fails. Each byte must be A–Z, 0–9, `-` or `_` | `BAD_ID` |
 | 55 | ID accepted: copy it to `claim-id`. From here on, rejections are reported under the real ID | — |
@@ -191,3 +191,21 @@ payment in full.
 
 Python: `charge_basis`, `payment_cap` and `calculate` in `python/msp.py`, in
 the same order.
+
+## `cwf.cob`: the CWF pre-payment check
+
+Called by `batch.cob` (line 163) only for claims that passed validation, after the
+payment has been calculated, with the CWF tables loaded by `load-cwf` (line 189).
+
+| Lines | What it does | Outcome |
+| --- | --- | --- |
+| 17–19 | Start pessimistic: released 0, decision `REJECTED` | |
+| 20–32 | `perform varying` over the beneficiary table to find the MBI; then the inclusive entitlement period | `NOT_ENTITLED` |
+| 33–41 | Search posted-claim history for the same MBI, service date and charges | `DUPLICATE` |
+| 42–48 | MSP period covers the service date and the primary payment is 0 | `MSP_PRIMARY_NOT_BILLED` |
+| 49–51 | Nothing failed: accepted, released = calculated payment | `ACCEPTED` / `DISPOSITION_01` |
+
+Like `validate.cob`, each check sets the reason first and `goback`s on failure, so
+the order of the paragraphs is the precedence. CMS-EX3 (`2MSP0000001`, 15 March
+2025, primary $12,500) passes all three and releases $500. `EX3-NOT-ENT`,
+`EX3-DUP` and `EX3-MSP-NOBL` calculate a payment but release $0.

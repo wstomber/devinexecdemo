@@ -2,7 +2,7 @@
 
 Author: Devin (rehearsal session
 [227ede59…](https://app.devin.ai/sessions/227ede5941704863b4c28458ebdba9ff)).
-Starter commit: `37ceca17f110536d55261d5d19aa187781dd8851`. This is a synthetic
+Starter commit: `be0b00ec5a2369d50a34d351694b187ae2300fe4` (`demo/starter-be0b00e`). This is a synthetic
 educational MSP module derived from public CMS rules. It is not CMS production code.
 
 ## The customer problem in one paragraph
@@ -69,36 +69,42 @@ produce a plausible but wrong number. That is why the tests below exist.
 
 | File / paragraph | Responsibility |
 | --- | --- |
-| `cobol/batch.cob` `main` | Argument count (exactly 3), distinct paths, open files, header rows, byte-by-byte read loop, totals row |
+| `cobol/batch.cob` `main` | Argument count (exactly 4: INPUT CWF OUTPUT TOTALS), distinct paths, load the CWF reference file (`load-cwf`/`parse-cwf`), open files, header rows, byte-by-byte read loop, totals row |
 | `batch.cob` `finish-line` | Strip one trailing CR, abort if the line exceeds 4,096 bytes, process the record |
-| `batch.cob` `process-record` | Enforce the 10,000-record limit, **`initialize claim-interface`** (state reset), assign the provisional ID `@` + 10-digit record number, validate, check for duplicate IDs, calculate, count, write |
-| `cobol/validate.cob` `validate-record` | Length → ID → numeric class tests → contract range → flag |
+| `batch.cob` `process-record` | Enforce the 10,000-record limit, **`initialize claim-interface`** (state reset), assign the provisional ID `@` + 10-digit record number, validate, check for duplicate IDs, calculate, then call `cwf-check` for valid claims only, count, write |
+| `cobol/validate.cob` `validate-record` | Length → ID → numeric class tests → contract range → flag → MBI → service date |
 | `cobol/payment.cob` `calculate-prospective-payment` | Payment in full, charge basis, cap, primary/deduction zero reasons, payment |
-| `cobol/copybooks/claim.cpy` | 73-byte raw layout and parsed packed-decimal (`comp-3`) fields |
+| `cobol/cwf.cob` `check-claim` | CWF pre-payment check after pricing: entitlement on the service date, duplicate of a posted claim, MSP primary not billed; else accepted and the payment released |
+| `cobol/copybooks/claim.cpy` | 92-byte raw layout, parsed packed-decimal (`comp-3`) fields and CWF result fields |
+| `cobol/copybooks/cwf.cpy` | CWF reference tables: up to 1,000 beneficiaries and 1,000 posted claims |
 
 ## Inputs and record framing
 
-- Each record is exactly **73 ASCII bytes**, followed by LF or CRLF, with no header.
+- Each record is exactly **92 ASCII bytes**, followed by LF or CRLF, with no header.
   - The fields are: ID (12), charges, gross, primary, deductible, coinsurance,
-    and contract (10 digits of cents each), then the `full` flag (1).
+    and contract (10 digits of cents each), the `full` flag (1), the synthetic
+    beneficiary identifier MBI (11) and the date of service `YYYYMMDD` (8).
   - The contract field is exactly `----------` when absent.
 - The program reads one byte at a time:
   - LF ends a record, and one CR before the LF is removed.
   - A final record without a newline is still processed.
   - A blank physical line is an *invalid record*, not end of file.
-  - Lines up to 4,096 bytes are judged as records (anything other than 73 bytes
+  - Lines up to 4,096 bytes are judged as records (anything other than 92 bytes
     gives `BAD_LENGTH`). A line over 4,096 bytes is **fatal**.
 - An empty file is a valid zero-record batch.
 
 ## Outputs and exact cents
 
-- `RESULTS.csv` has the header `record_no,claim_id,status,payment_cents,reason`
-  and one row per record.
+- `RESULTS.csv` has the header
+  `record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents`
+  and one row per record. `payment_cents` is what was calculated;
+  `released_cents` is what CWF lets through (zero unless `ACCEPTED`).
   - `record_no` and `payment_cents` are zero-padded to 10 digits, because COBOL
     `pic 9(10)` is written via `STRING`.
   - The verifier treats them as unsigned integers.
-- `TOTALS.csv` has the header `records,paid,zero,invalid,payment_cents` and one
-  row: four 10-digit counters plus a 15-digit total.
+- `TOTALS.csv` has the header
+  `records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents` and
+  one row: 10-digit counters and 15-digit totals.
 - All money is unsigned integer cents in packed decimal, so there is no rounding
   anywhere.
   - The deductible + coinsurance sum is 11 digits wide, so two maximum values
@@ -111,11 +117,13 @@ Validation stops at the first failure, in this order:
 
 | Order | Check | Reason |
 | --- | --- | --- |
-| 1 | Length ≠ 73 | `BAD_LENGTH` |
+| 1 | Length ≠ 92 | `BAD_LENGTH` |
 | 2 | ID is all spaces, contains a character outside `A–Z 0–9 - _`, or has an embedded space | `BAD_ID` |
 | 3 | Any of the five required amounts fails the COBOL `NUMERIC` class test, or the contract is neither `----------` nor numeric | `BAD_AMOUNT` |
 | 4 | Contract > charges | `BAD_CONTRACT` |
 | 5 | Flag not `Y`/`N` | `BAD_FLAG` |
+| 6 | MBI not 11 of `A–Z 0–9` | `BAD_MBI` |
+| 7 | Service date not 8 digits, month 01–12, day 01–31 | `BAD_DATE` |
 
 - The claim ID is copied out *only after* the ID check passes.
   - `BAD_LENGTH` and `BAD_ID` rows therefore keep the reserved identity
@@ -187,3 +195,26 @@ The baseline commands were `make doctor`, then
   to `docs/evidence/cobol-baseline/manifest.json`. The capture reproduces exactly.
 
 This is observed COBOL behavior. It is not a payment oracle.
+
+## The CWF pre-payment check (`cobol/cwf.cob`)
+
+CMS Pub. 100-04 Ch. 27 §20 describes the order: the contractor prices the claim,
+then sends it to the Common Working File for pre-payment validation and
+authorization, then pays or denies. After `calculate-payment`, `batch.cob` calls
+`cwf-check` for every valid (`PAID` or `ZERO`) claim. Invalid claims are written
+as `NOT_SENT` / `CLAIM_INVALID`. The checks run in order and the first failure
+wins (each ends in `goback`):
+
+1. `NOT_ENTITLED`: the MBI is not in the beneficiary table, or the service date
+   is outside the inclusive entitlement period (`99999999` = open-ended).
+2. `DUPLICATE`: a posted claim (`H` record) has the same MBI, service date and
+   charges.
+3. `MSP_PRIMARY_NOT_BILLED`: the MSP period from Medicare's MSP file covers the
+   service date, but the claim shows a primary payment of 0.
+
+Otherwise the claim is `ACCEPTED` with `DISPOSITION_01` (CWF's "accepted as is")
+and `claim-released` = `claim-payment`. A rejected claim keeps its calculated
+payment for review, but releases 0. CMS-EX3 is accepted and releases $500; the
+look-alikes `EX3-NOT-ENT`, `EX3-DUP` and `EX3-MSP-NOBL` calculate a payment but
+release $0. The reject codes are demo-defined; this is three illustrative checks,
+not all of CWF.

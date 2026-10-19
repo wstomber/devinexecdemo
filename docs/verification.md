@@ -1,5 +1,10 @@
 # Executed verification
 
+Latest re-verification: Ubuntu Linux 6.8 with GnuCOBOL 3.1.2.0 and Python 3.10.12
+(`make build baseline generate test capture-baseline`), including the CWF
+pre-payment step and its malformed-reference, MBI and date-of-service tests. The
+table below shows that run. The original preparation notes follow.
+
 Verified 2026-10-17 on macOS using GnuCOBOL 3.2.0 and Python 3.12.14.
 No GnuCOBOL or Docker was initially available. GnuCOBOL was built from the GNU
 3.2 source archive into an isolated workspace prefix, using the installed GMP
@@ -13,7 +18,7 @@ Executed the equivalents of these commands with explicit local `COBC` and
 
 ```sh
 make build baseline generate test
-build/msp-batch build/synthetic.dat build/synthetic-results.csv build/synthetic-totals.csv
+build/msp-batch build/synthetic.dat build/cwf.dat build/synthetic-results.csv build/synthetic-totals.csv
 python3 tools/verify.py compare --report build/comparison-report.json
 git diff --check
 ```
@@ -23,13 +28,13 @@ Results:
 | Check | Observed result |
 | --- | --- |
 | Compile with `-free -Wall -debug` | Success, no warnings |
-| Independent curated baseline | PASS: all 30 records match IDs/status/reason/exact cents |
-| Curated counts | 12 PAID, 9 ZERO, 9 INVALID |
-| Curated total | 10,000,450,202 cents |
-| Batch/harness tests | 17 tests passed |
+| Independent curated baseline | PASS: all 33 records match IDs/status/reason/exact cents/CWF decision/released cents |
+| Curated counts | 15 PAID, 9 ZERO, 9 INVALID; CWF 21 ACCEPTED, 3 REJECTED |
+| Curated totals | 10,001,694,602 cents calculated; 10,000,450,202 cents released |
+| Batch/harness tests | 20 tests passed |
 | Seeded input generation | 1,000 valid records, seed 20261017, deterministic |
-| Synthetic execution and structural reconciliation | 271 PAID, 729 ZERO, 0 INVALID |
-| Synthetic observed total (not an independent oracle) | 514,352,570,951 cents |
+| Synthetic execution and structural reconciliation | 271 PAID, 729 ZERO, 0 INVALID; CWF 736 ACCEPTED, 264 REJECTED |
+| Synthetic observed totals (not an independent oracle) | 485,289,809,347 cents calculated; 344,091,123,732 released |
 | No candidate supplied | Direct harness exit 2, result NOT_RUN, migration comparison NOT_RUN |
 | Working diff whitespace check | Pass |
 
@@ -53,7 +58,7 @@ The first Ubuntu CI run with GnuCOBOL 3.1.2 exposed silent truncation of oversiz
 LINE SEQUENTIAL input that the local 3.2 runtime rejected. The reader now uses
 fixed one-byte sequential reads and explicit line-length enforcement, preserving
 the same interface across both versions. The regression tests cover 4,096-byte
-and 4,097-byte lines with LF, CRLF, and no final newline. All 17 tests pass
+and 4,097-byte lines with LF, CRLF, and no final newline. All 20 tests pass
 locally after this correction; consult the PR checks for the Linux/container
 result on the final commit.
 

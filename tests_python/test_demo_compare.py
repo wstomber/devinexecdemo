@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "tools" / "demo_compare.py"
-RECORD = b"T1".ljust(12) + b"0000100000" * 2 + b"0000010000" + b"0" * 20 + b"----------N\n"
+RECORD = b"T1".ljust(12) + b"0000100000" * 2 + b"0000010000" + b"0" * 20 + b"----------N1EG4TE5MK7320250315\n"
 
 
 def compare(cwd, *args):

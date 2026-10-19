@@ -10,7 +10,7 @@ procedure division using claim-interface.
 validate-record.
     move "INVALID" to claim-status
     move "BAD_LENGTH" to claim-reason
-    if claim-length not = 73 goback end-if
+    if claim-length not = 92 goback end-if
     move "BAD_ID" to claim-reason
     if raw-id = spaces goback end-if
     move 0 to id-ended
@@ -55,6 +55,19 @@ validate-record.
     end-if
     move "BAD_FLAG" to claim-reason
     if raw-full not = "Y" and not = "N" goback end-if
+    move "BAD_MBI" to claim-reason
+    perform varying char-index from 1 by 1 until char-index > 11
+        if not (raw-mbi(char-index:1) >= "A" and <= "Z")
+           and not (raw-mbi(char-index:1) >= "0" and <= "9")
+            goback
+        end-if
+    end-perform
+    move "BAD_DATE" to claim-reason
+    if raw-dos is not numeric goback end-if
+    if raw-dos-month < "01" or raw-dos-month > "12" goback end-if
+    if raw-dos-day < "01" or raw-dos-day > "31" goback end-if
+    move raw-mbi to claim-mbi
+    move raw-dos to claim-dos
     move "VALID" to claim-status
     move spaces to claim-reason
     goback.

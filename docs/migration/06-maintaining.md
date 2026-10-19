@@ -41,7 +41,7 @@ with no access to the people who wrote either version.
 ## Worked example: `--summary-json`
 
 This is an **interface change**, not a CMS policy change: the Python CLI adds
-an optional JSON summary while keeping the three positional paths and CSV
+an optional JSON summary while keeping the four positional paths and CSV
 format unchanged. It is Python-only; COBOL has no equivalent output, so parity
 is checked on the result and totals CSVs. The acceptance tests are added and
 run before the implementation:

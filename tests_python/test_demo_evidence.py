@@ -8,8 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "demo"))
 import evidence  # noqa: E402
 
-HEADER = "record_no,claim_id,status,payment_cents,reason\n"
-TOTALS = "records,paid,zero,invalid,payment_cents\n"
+HEADER = "record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents\n"
+TOTALS = "records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents\n"
 
 
 def write_batch(folder, cobol_rows, python_rows, cobol_total, python_total):
@@ -20,8 +20,8 @@ def write_batch(folder, cobol_rows, python_rows, cobol_total, python_total):
     (folder / "python-totals.csv").write_text(TOTALS + python_total + "\n")
 
 
-ROW = "0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE"
-TOTAL = "0000000001,0000000001,0000000000,0000000000,000000000050000"
+ROW = "0000000001,CMS-EX3,PAID,0000050000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000050000"
+TOTAL = "0000000001,0000000001,0000000000,0000000000,000000000050000,0000000001,0000000000,000000000050000"
 
 
 class ComparisonStatus(unittest.TestCase):
@@ -45,12 +45,20 @@ class ComparisonStatus(unittest.TestCase):
         self.assertEqual(result["rows"][0][8], "MISMATCH")
 
     def test_missing_record_and_total_difference_fail(self):
-        other = "0000000002,X2,ZERO,0000000000,PRIMARY_AT_CAP"
+        other = "0000000002,X2,ZERO,0000000000,PRIMARY_AT_CAP,ACCEPTED,DISPOSITION_01,0000000000"
         write_batch(self.tmp / "b", [ROW, other], [ROW], TOTAL, TOTAL.replace("050000", "050001"))
         result = self.status(self.tmp / "b", self.report)
         self.assertEqual(result["status"], "FAILED")
         self.assertIn("MISSING_IN_PYTHON", [r[8] for r in result["rows"]])
         self.assertFalse(result["totals_match"])
+
+    def test_cwf_decision_or_released_difference_fails(self):
+        for changed in (ROW.replace("ACCEPTED,DISPOSITION_01,0000050000", "REJECTED,NOT_ENTITLED,0000000000"),
+                        ROW.replace("DISPOSITION_01", "DUPLICATE")):
+            with self.subTest(changed=changed):
+                write_batch(self.tmp / "c", [ROW], [changed], TOTAL, TOTAL)
+                result = self.status(self.tmp / "c", self.report)
+                self.assertEqual((result["status"], result["rows"][0][8]), ("FAILED", "MISMATCH"))
 
     def test_missing_outputs_are_not_run(self):
         self.assertEqual(self.status(self.tmp / "absent", self.report)["status"], "NOT_RUN")
@@ -107,6 +115,7 @@ class SavedRehearsal(unittest.TestCase):
         self.assertEqual(curated["status"], "PASSED")
         row = next(r for r in curated["rows"] if r[1] == "CMS-EX3")
         self.assertEqual((row[4], row[5], row[8]), (50000, 50000, "MATCH"))
+        self.assertEqual((row[10], row[11], row[14], row[15]), ("ACCEPTED", "ACCEPTED", 50000, 50000))
 
 
 if __name__ == "__main__":

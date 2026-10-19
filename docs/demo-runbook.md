@@ -23,17 +23,17 @@ checkout contaminated by rehearsal Python files.
 
 | Step | Click / command | What the audience should see |
 | --- | --- | --- |
-| 1. Baseline | `make doctor build baseline generate test capture-baseline`; open `build/baseline/curated-results.csv` and `manifest.json` | Real COBOL execution, 30 stable records, expected counts and totals; no Python candidate yet |
-| 2. Explanation | Devin's source explanation; open `cobol/payment.cob`, `calculate-prospective-payment` | Contract branch replaces charge basis before the minimum cap; eligibility and pricing are upstream |
+| 1. Baseline | `make doctor build baseline generate test capture-baseline`; open `build/baseline/curated-results.csv` and `manifest.json` | Real COBOL execution, 33 stable records, each with a calculated payment, a CWF decision and a released amount; expected counts and totals; no Python candidate yet |
+| 2. Explanation | Devin's source explanation; open `cobol/payment.cob`, `calculate-prospective-payment` | Contract branch replaces charge basis before the minimum cap; then `cobol/cwf.cob` checks entitlement, duplicates and MSP billing; pricing is upstream |
 | 3. Existing tests | Open Devin's separate pre-migration test commit and its executed test log | Independently derived expectations existed and passed against COBOL BEFORE Python was implemented |
 | 4. Python and tests | Open Devin's Python diff, focused unit tests, and actual execution log | Exact arithmetic, function boundaries, invalid/zero distinction, and test results; corrections explained |
-| 5. Comparison | Run the existing verifier plus Devin's new presentation wrapper; open both retained CSVs and its side-by-side table | Claim IDs, both payments, both statuses/reasons, MATCH/MISMATCH, counts and totals on curated and 1,000 seeded records |
-| 6. $500 case | Filter/open `CMS-EX3` in source explanation, pre-migration tests, rule map, and comparison | $13,000 acceptance minus $12,500 primary leaves $500; ignoring acceptance would produce $1,500; $1,556 is historical input |
+| 5. Comparison | Run the existing verifier plus Devin's new presentation wrapper; open both retained CSVs and its side-by-side table | Claim IDs, both payments, both statuses/reasons, both CWF decisions and released amounts, MATCH/MISMATCH, counts and totals on curated and 1,000 seeded records |
+| 6. $500 case | Filter/open `CMS-EX3` in source explanation, pre-migration tests, rule map, and comparison | $13,000 acceptance minus $12,500 primary leaves $500; CWF accepts it and $500 is released; ignoring acceptance would produce $1,500; $1,556 is historical input |
 | 7. Reviewable change | Open Devin's PR or branch/description, evidence index, rule map, and native Playbook | Python, tests, completed mapping, new comparison presentation tooling, reports, reproducible inputs, real timing, limitations |
 
 The explanation, substantive tests, Python, complete rule map, side-by-side table,
 completed example, and native Playbook are **Devin deliverables**, not starter
-artifacts. The existing 17 tests exercise starter/batch/harness infrastructure and
+artifacts. The existing 20 tests exercise starter/batch/harness infrastructure and
 do not satisfy Devin's obligation to create policy-derived tests.
 
 ## Commands and baseline facts
@@ -48,8 +48,8 @@ python3 tools/verify.py baseline --command 'python3 python/msp.py' \
 make compare CANDIDATE='python3 python/msp.py'
 python3 tools/verify.py compare --candidate 'python3 python/msp.py' \
   --input build/curated.dat --report build/curated-comparison-report.json
-build/msp-batch build/curated.dat build/cobol-results.csv build/cobol-totals.csv
-python3 python/msp.py build/curated.dat build/python-results.csv build/python-totals.csv
+build/msp-batch build/curated.dat build/cwf.dat build/cobol-results.csv build/cobol-totals.csv
+python3 python/msp.py build/curated.dat build/cwf.dat build/python-results.csv build/python-totals.csv
 ```
 
 Run Devin's independent tests and Python unit-test command too. Devin must add
@@ -57,7 +57,8 @@ commands to retain synthetic outputs and generate the presentation table. The
 core harness deletes its temporary outputs; its JSON report alone does not give
 the side-by-side view required for step 5.
 
-Curated baseline: 12 PAID, 9 ZERO, 9 INVALID; total 10,000,450,202 cents.
+Curated baseline: 15 PAID, 9 ZERO, 9 INVALID; 10,001,694,602 cents calculated. CWF
+accepts 21 and rejects 3 (the CMS-EX3 look-alikes); 10,000,450,202 cents released.
 The seeded synthetic batch expands coverage and has no independent payment oracle.
 Its observed counts and total are in the retained manifest, not policy truth.
 The complete published case is in docs/cms-example-3.md; its fixture ID is CMS-EX3.

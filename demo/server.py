@@ -29,7 +29,7 @@ RAW_PREFIXES = ("cobol/", "python/", "tests_policy/", "tests_python/", "tests/",
                 "docs/", "evidence/", "build/demo-runs/", "README.md", "DEVIN_TASK.md", "Makefile")
 LIVE_STEPS = [
     ("doctor", "Check the toolchain (GnuCOBOL, Python)", "make doctor"),
-    ("build", "Compile the original COBOL and generate the test batches",
+    ("build", "Compile the original COBOL and generate the test batches and CWF reference file",
      "make build generate"),
     ("baseline", "Run the original COBOL against the retained expected results",
      "python3 tools/verify.py baseline --command build/msp-batch --report {run}/baseline-report.json"),
@@ -43,9 +43,9 @@ LIVE_STEPS = [
      "python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat --report {run}/curated-verifier.json"),
     ("synthetic-verify", "Strict verifier: COBOL vs Python, 1,000-record batch",
      "python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/synthetic.dat --report {run}/synthetic-verifier.json"),
-    ("curated-compare", "Side-by-side table, curated batch",
+    ("curated-compare", "Side-by-side table (payment, CWF decision, released), curated batch",
      "python3 tools/demo_compare.py --input build/curated.dat --out {run}/curated"),
-    ("synthetic-compare", "Side-by-side table, 1,000-record batch",
+    ("synthetic-compare", "Side-by-side table (payment, CWF decision, released), 1,000-record batch",
      "python3 tools/demo_compare.py --input build/synthetic.dat --out {run}/synthetic"),
 ]
 PLANTED = "{run}/planted-bug/msp.py"
@@ -62,6 +62,10 @@ BUGS = {
               "what": "Rounds every payment down to whole dollars.",
               "old": '    return Result(claim.claim_id, "PAID", cap - max(deductions, claim.primary), "SECONDARY_PAYABLE")',
               "new": '    return Result(claim.claim_id, "PAID", (cap - max(deductions, claim.primary)) // 100 * 100, "SECONDARY_PAYABLE")'},
+    "cwf": {"title": "Pay a claim CWF rejected",
+            "what": "Releases the payment even when the person was not entitled to Medicare on the service date.",
+            "old": '        return replace(result, cwf="REJECTED", cwf_reason="NOT_ENTITLED", released_cents=0)',
+            "new": '        return replace(result, cwf="REJECTED", cwf_reason="NOT_ENTITLED", released_cents=result.payment_cents)'},
 }
 LOCK = threading.Lock()
 
