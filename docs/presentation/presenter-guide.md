@@ -6,6 +6,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 1. Open the app (see "Starting the app" below). The first screen is "The problem".
 2. Optional: press **▶ Start Devin live** (on "The problem" screen, or screen 6) so Devin is already working when you show it. Then press **Open Devin's session ↗** to show it working.
+   Show its pull request when it finishes, but **don't merge it**: it targets the COBOL-only starter branch, and merging it there means the next live run starts from finished code. If one is merged by mistake, reset `demo/starter-be0b00e` to `be0b00e`.
 3. Keep this guide on a second screen or printed. The app itself shows nothing presenter-only, so everything on screen is fine for the audience to see.
 
 ## Colours and labels
