@@ -1,0 +1,32 @@
+$ git rev-parse HEAD  # source commit tested (COBOL unchanged from starter)
+47cd2def8c6f19a6f52b212c0ef0a005a94563f7
+$ MSP_COMMAND unset (default build/msp-batch) python3 -m unittest discover -s tests_policy -v
+test_empty_reference_means_nobody_is_entitled (test_batch.CwfReferenceTests) ... ok
+test_malformed_reference_is_fatal (test_batch.CwfReferenceTests) ... ok
+test_table_limits (test_batch.CwfReferenceTests) ... ok
+test_well_formed_reference_variants (test_batch.CwfReferenceTests) ... ok
+test_duplicate_of_identifiable_invalid_record_is_fatal (test_batch.DuplicateIdTests) ... ok
+test_duplicate_valid_ids_are_fatal (test_batch.DuplicateIdTests) ... ok
+test_padding_does_not_make_ids_distinct (test_batch.DuplicateIdTests) ... ok
+test_blank_lines_are_bad_length_records (test_batch.FramingTests) ... ok
+test_crlf_and_missing_final_newline (test_batch.FramingTests) ... ok
+test_crlf_without_final_lf (test_batch.FramingTests) ... ok
+test_empty_input_is_zero_record_success (test_batch.FramingTests) ... ok
+test_non_ascii_bytes_are_invalid_not_fatal (test_batch.FramingTests) ... ok
+test_only_one_trailing_cr_is_removed (test_batch.FramingTests) ... ok
+test_provisional_ids_do_not_collide (test_batch.FramingTests) ... ok
+test_record_limit (test_batch.FramingTests) ... ok
+test_transport_bound (test_batch.FramingTests) ... ok
+test_identical_paths (test_batch.UsageAndFileTests) ... ok
+test_missing_files (test_batch.UsageAndFileTests) ... ok
+test_wrong_argument_counts (test_batch.UsageAndFileTests) ... ok
+test_batch_succeeds_silently (test_ledger.LedgerTests) ... ok
+test_cms_ex3_headline (test_ledger.LedgerTests) ... ok
+test_every_case (test_ledger.LedgerTests) ... ok
+test_totals_reconcile_with_ledger (test_ledger.LedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.338s
+
+OK
+[exit 0]

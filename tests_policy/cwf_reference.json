@@ -1,0 +1,17 @@
+{
+  "note": "Synthetic CWF reference data written for the Stage 2 ledger (not fixtures/cwf.json; no real people). B layout: MBI, entitled from/to (99999999 open), optional MSP from/to. H layout: MBI, date of service, charges in cents.",
+  "beneficiaries": [
+    {"mbi": "7ACTIVE0001", "entitled_from": "20210601", "entitled_to": "99999999", "msp_from": null, "msp_to": null, "purpose": "default: entitled, Medicare primary"},
+    {"mbi": "7WINDOW0001", "entitled_from": "20230101", "entitled_to": "20241231", "msp_from": null, "msp_to": null, "purpose": "entitlement start/end boundaries"},
+    {"mbi": "7MSPWIN0001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": "20240301", "msp_to": "20240831", "purpose": "MSP period start/end boundaries"},
+    {"mbi": "7POSTED0001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": null, "msp_to": null, "purpose": "duplicate vs one-cent/one-day different"},
+    {"mbi": "7DUPMSP0001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": "20240101", "msp_to": "20241231", "purpose": "duplicate beats MSP-not-billed"},
+    {"mbi": "7BOTH000001", "entitled_from": "20220101", "entitled_to": "20221231", "msp_from": "20230101", "msp_to": "20231231", "purpose": "not-entitled beats duplicate and MSP"},
+    {"mbi": "7EX3BENE001", "entitled_from": "20200101", "entitled_to": "99999999", "msp_from": "20250101", "msp_to": "20251231", "purpose": "CMS-EX3 beneficiary: MSP period, primary billed"}
+  ],
+  "history": [
+    {"mbi": "7POSTED0001", "dos": "20240610", "charges": 1500000},
+    {"mbi": "7DUPMSP0001", "dos": "20240505", "charges": 300000},
+    {"mbi": "7BOTH000001", "dos": "20230615", "charges": 200000}
+  ]
+}
