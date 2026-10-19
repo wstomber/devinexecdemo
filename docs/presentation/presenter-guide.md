@@ -32,12 +32,12 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 14–16 | ★ CMS-EX3 $500 | Walk the four limits, then the CWF check and the three look-alikes. | $13,000 − $12,500 = $500, CWF approves it, $500 is released. The look-alikes calculate a payment but CWF rejects them, so $0 goes out. Missing the contract rule would pay $1,000 too much. |
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
 | +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
-| 18–20 | 7 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition publishes (ZDR with the model labs, Outposts), and what we will confirm with Cognition. |
+| 18–20 | 7 · Security FAQ | Scroll to the section the question belongs to (compliance, architecture, data, network, identity, audit) and answer from it; each answer links its Cognition source. | No real data was used; every answer is from Cognition's published docs (ZDR with the model labs, Outposts, Devin Connect), and anything unpublished says "Confirm with Cognition". |
 | +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on one real CWF MSP claim path: the payment calculation and the CWF edits." Walk the four weeks; point at the "Security's role" column and the in-scope table. | The pilot is one named CWF claim path, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
 
 ## 15-minute route
 
-The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Review & repeat (2) → 7 · Security & data (2).
+The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Review & repeat (2) → 7 · Security FAQ (2).
 
 ## Try to break it (screen 5)
 

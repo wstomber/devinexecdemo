@@ -60,3 +60,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 .bugbanner{border:2px solid #c62828;background:#fff4f3;border-radius:8px;padding:12px 16px;margin:12px 0}.bugbanner h3{margin:0 0 6px;color:#b71c1c}
 .bugbanner .code{max-height:none;margin:8px 0}.bugbanner .del{color:#ff9b9b}.bugbanner .add{color:#9be89b}
 .card.ask{border-left:6px solid var(--blue);margin-top:16px}.card.ask h2{margin-top:0}
+.md h3 { font-size: 18px; margin: 1.6rem 0 .4rem; padding-top: .9rem; border-top: 1px solid #e3e6ea; }
+.md h3:first-of-type { border-top: 0; padding-top: 0; }
+.md h4 { font-size: 15px; margin: 14px 0 2px; color: #0b3a6e; }
+.md h4 + p { margin-top: .2rem; }

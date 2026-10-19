@@ -64,7 +64,7 @@ const findRow = (cmp, id) => cmp?.rows?.find(r => r[1] === id);
 const cwfBadge = (d, why) => d ? `${badge(d === "ACCEPTED" ? "PASSED" : d === "REJECTED" ? "FAILED" : "NOT_RUN", d === "NOT_SENT" ? "NOT SENT" : d)}${why && d !== "NOT_SENT" ? ` <code class="small">${esc(why)}</code>` : ""}` : "—";
 
 const VIEWS = [["overview", "The problem"], ["baseline", "1 · COBOL baseline"], ["explain", "2 · Devin explains COBOL"], ["tests", "3 · Tests came first"],
-  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["review", "6 · Review & repeat"], ["security", "7 · Security & data"], ["pilot", "8 · Pilot plan"]];
+  ["python", "4 · Python + unit tests"], ["compare", "5 · Old vs new"], ["ex3", "★ CMS-EX3 $500"], ["review", "6 · Review & repeat"], ["security", "7 · Security FAQ"], ["pilot", "8 · Pilot plan"]];
 
 const R = {};
 R.overview = async () => {
@@ -366,8 +366,8 @@ R.pilot = async () => `<h1>8 · Pilot: one CWF MSP claim path in four weeks</h1>
   <p class="lede">The same steps you just saw, on the real code: the MSP payment calculation and the CWF edits that approve or reject the claim before payment. Security sets the rules first, then tries to break them.</p>
   <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>
   <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the CWF MSP claim path and give read access to the MSP payment and CWF edit repositories and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
-R.security = async () => `<h1>7 · Security &amp; data</h1>
-  <p class="lede">What this demo touched, what Cognition publishes about how data is protected, and straight answers to the questions a CIO, VP of Engineering or security engineer is likely to ask. Anything not in public documentation is marked <b>Confirm with Cognition</b>.</p>
+R.security = async () => `<h1>7 · Security FAQ</h1>
+  <p class="lede">Questions security engineers, architects and CIOs ask about running Devin in a CMS environment, with answers from Cognition's published documentation.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
 R.review = async () => {
   const st = E.status || {}, ev = E.session_events || [];
