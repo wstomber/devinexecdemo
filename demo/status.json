@@ -47,7 +47,7 @@
       "id": "playbook-f242f29f76f8440ea96928dfeec1d441",
       "url": "https://app.devin.ai/settings/playbooks/f242f29f76f8440ea96928dfeec1d441",
       "source": "docs/playbooks/msp-cobol-to-python.md",
-      "start_ref": "demo/starter-37ceca1",
+      "start_ref": "demo/starter-be0b00e",
       "fresh_run": {
         "session": "https://app.devin.ai/sessions/237943a1ebdc487a92de2320fc5d281f",
         "status": "PASSED",
