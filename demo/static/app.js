@@ -83,13 +83,7 @@ R.overview = async () => {
     <div class="card"><h3>3. Test first</h3>${badge(E.git.tests_before_python.status)}<div class="small">Hand-derived answers, run on COBOL before any Python existed</div></div><div class="arrow">→</div>
     <div class="card"><h3>4. Migrate &amp; compare</h3>${badge(allPassed ? "PASSED" : "FAILED")}<div class="small">${total.toLocaleString()} claims compared, ${Object.values(c).reduce((n, x) => n + (x.mismatches || 0), 0)} mismatches</div></div>
   </div>
-  <h2>Devin, working live</h2><div id="devinslot">${devinCard()}</div>
-  <h2>The case that matters</h2>
-  <div class="card"><b>CMS-EX3:</b> the provider agreed to accept $13,000 in total. The primary insurer paid $12,500. Medicare owes <b>$500</b> — not $1,500 — and CWF approves the claim, so the $500 is released. Three look-alike claims with the same amounts are rejected by CWF and release $0. <a href="#ex3">See the full walkthrough →</a></div>
-  <h2>Scope — be honest about it</h2>
-  <ul><li>This is a <b>synthetic, educational</b> example based on public CMS manual rules. It is not CMS production code and not a complete Medicare claims system: the CWF step is three illustrative checks (entitled on the service date, not already paid, other insurer billed first), not all of CWF.</li>
-  <li>“Match” means old and new behave identically on the batches tested here — not that the rules are complete Medicare policy.</li>
-  <li>No speed or cost savings are claimed.</li></ul>`;
+  <h2>Devin, working live</h2><div id="devinslot">${devinCard()}</div>`;
 };
 const CLAIM_FIELDS = [["claim ID", 12], ["charges", 10], ["approved", 10], ["primary", 10], ["deduct", 10], ["coins", 10], ["contract", 10], ["F", 1], ["MBI", 11], ["svc date", 8]];
 const ymd = t => /^\d{8}$/.test(t) ? `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6)}` : esc(t);
@@ -405,7 +399,7 @@ function devinCard() {
   const err = D.error ? `<div class="err">${esc(D.error)}</div>` : "";
   if (!D.configured) return `<div class="card">${intro}${err}<p class="small muted">This copy of the app has no Devin API key, so start it by hand:</p>${manualSteps()}</div>`;
   const s = D.session, startBtn = label => `<button class="btn primary" data-devin-start="1">${label}</button>`;
-  if (!s) return `<div class="card">${intro}${err}<p>${startBtn("▶ Start Devin live")}</p><p class="small muted">A full migration takes longer than a meeting. Start it early, then come back to it at the end.</p></div>`;
+  if (!s) return `<div class="card">${intro}${err}<p>${startBtn("▶ Start Devin live")}</p><p class="small muted">A full run takes about 15–25 minutes and ends with a pull request into the starter branch.</p></div>`;
   const [label, cls] = devinLabel(s), started = s.started_at ? new Date(s.started_at).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) : "";
   const prs = (s.pull_requests || []).map(p => `<a href="${esc(p.url)}" target="_blank">Pull request ${esc(p.url.split("/").pop())}</a> ${badge((p.state || "open").toUpperCase())}`).join(" · ");
   return `<div class="card">${intro}${err}
