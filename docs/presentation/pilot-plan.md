@@ -6,7 +6,7 @@ Run exactly what you just saw on the real thing: **MSPPAY**, the standard CMS so
 
 | In scope | Not in this pilot |
 |---|---|
-| The MSPPAY module CMS names (e.g. the Part A inpatient calculation), its copybooks, and the batch job (JCL) that runs it | CWF itself (eligibility, utilization, the MSP records), and the rest of the claims system |
+| The MSPPAY module CMS names (e.g. the Part A inpatient calculation), its record layouts, and the jobs or programs that call it | CWF itself (eligibility, utilization, the MSP records), and the rest of the claims system |
 | A test region or copy that can run the module on test claims | Production systems, production deployment, real beneficiary data |
 | CMS Pub. 100-05, Ch. 5 MSP payment rules as the answer key | Rewriting the surrounding claims-processing platform |
 | 3–5 real MSP change requests from the backlog | Contract or staffing changes for the current integrator |
@@ -30,7 +30,7 @@ Run exactly what you just saw on the real thing: **MSPPAY**, the standard CMS so
 
 ## What CMS provides
 
-- **An owner** for the MSP module, and read access to its repository: COBOL, copybooks, JCL.
+- **An owner** for the MSP module, and read access to its repository and the code that calls it.
 - **A test region** (or a copy) that can run the module, and a set of synthetic or de-identified test claims.
 - **Two or three reviewers** from the team that maintains it today, including the integrator's engineers.
 - **A security engineer** for weeks 1 and 3.
