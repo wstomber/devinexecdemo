@@ -23,17 +23,17 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 | Time | Screen | Do | Say (one line) |
 |---|---|---|---|
-| 0–2 | The problem | Point at the 4 steps. | Old COBOL nobody can read; a wrong rule pays real money. Devin explained it, tested it, migrated it, and proved it. |
+| 0–2 | The problem | Point at the 4 steps. | Old COBOL nobody can read; a wrong rule pays real money. Each claim is priced first, then CWF approves or rejects it, and only approved claims are paid. Devin explained it, tested it, migrated it, and proved it. |
 | 2–4 | 1 · COBOL baseline | Press **▶ Run COBOL vs Python now** (top right, ~7 s). When it finishes the app jumps to 5 · Old vs new showing the fresh LIVE results. | Devin first ran the original as the yardstick. |
-| 4–6 | 2 · Devin explains COBOL | Point at the highlighted lines; mention DeepWiki. | Devin found the exact line that applies the provider's contract. |
+| 4–6 | 2 · Devin explains COBOL | Point at the highlighted lines, then scroll to the CWF check; mention DeepWiki. | Devin found the exact line that applies the provider's contract, and explained the three CWF checks that decide whether it gets paid. |
 | 6–9 | 3 · Tests came first | Point at "Tests came first: VERIFIED FROM GIT"; click the CMS-EX3 row. | The right answers were worked out from the CMS manual and checked against COBOL before any Python existed. |
-| 9–12 | 4 · Python + unit tests | Read the 6 step rows top to bottom; point at the CMS-EX3 column ending at $500. | Same rule in readable Python, exact cents, passed the same tests first time. |
-| 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Find CMS-EX3**. | Every claim matches, and a separate strict checker confirms it. |
-| 14–16 | ★ CMS-EX3 $500 | Walk the four limits top to bottom. | $13,000 − $12,500 = $500. Missing the contract rule would pay $1,000 too much. |
+| 9–12 | 4 · Python + unit tests | Read the 10 step rows top to bottom (1–6 payment, 7–10 CWF); point at the CMS-EX3 column ending at $500 released. | Same rules in readable Python, exact cents, held to the same tests. |
+| 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Rejected by CWF**; click **Find CMS-EX3**. | Every claim matches on the payment, the CWF decision and the amount released, and a separate strict checker confirms it. |
+| 14–16 | ★ CMS-EX3 $500 | Walk the four limits, then the CWF check and the three look-alikes. | $13,000 − $12,500 = $500, CWF approves it, $500 is released. The look-alikes calculate a payment but CWF rejects them, so $0 goes out. Missing the contract rule would pay $1,000 too much. |
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
 | +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
 | 18–20 | 7 · Security & data | Scroll to "Questions we expect"; answer from the table. | No real data was used; here is what Cognition publishes (ZDR with the model labs, Outposts), and what we will confirm with Cognition. |
-| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on the real CWF MSP payment module." Walk the four weeks; point at the "Security's role" column and the in-scope table. | The pilot is one named CWF module, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
+| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on one real CWF MSP claim path: the payment calculation and the CWF edits." Walk the four weeks; point at the "Security's role" column and the in-scope table. | The pilot is one named CWF claim path, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
 
 ## 15-minute route
 
@@ -41,7 +41,7 @@ The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 �
 
 ## Try to break it (screen 5)
 
-Invite the interviewer to pick one of the three mistakes. About 7 seconds later the red box shows what caught it. Press **Undo** to go back to green. Line: "Pick any mistake a rewrite could make; watch the checks catch it."
+Invite the interviewer to pick one of the four mistakes ("Pay a claim CWF rejected" shows the CWF step being checked too). About 7 seconds later the red box shows what caught it. Press **Undo** to go back to green. Line: "Pick any mistake a rewrite could make; watch the checks catch it."
 
 ## Ask the DeepWiki live (screen 2)
 
@@ -72,6 +72,7 @@ Avoid: "What happens if the contract field is all dashes or has bad characters?"
 ## What not to claim
 
 - Not CMS production code; a synthetic, educational example based on public CMS rules.
+- The CWF step is three illustrative checks on synthetic data, not all of CWF; the reject codes are this demo's own (only "accepted as is", 01, is a CWF code).
 - "Match" means identical on the tested batches, not complete Medicare correctness.
 - No speed, cost, or time-saved claims (human review time was not measured).
 
