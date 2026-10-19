@@ -113,14 +113,15 @@ Linux commands and the Docker image; it does not pretend a missing migration ran
 Each implementation must accept this command-line contract:
 
 ```sh
-build/msp-batch INPUT.dat RESULTS.csv TOTALS.csv
+build/msp-batch INPUT.dat CWF.dat RESULTS.csv TOTALS.csv
 ```
 
-Input is ASCII, exactly 73 bytes per claim excluding LF (CRLF is also accepted).
+Input is ASCII, exactly 92 bytes per claim excluding LF (CRLF is also accepted).
 There is no header. The fixture utility consumes readable integer-cent JSON:
 
 ```sh
 python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+python3 tools/fixtures.py --cwf-source fixtures/cwf.json --output build/cwf.dat
 ```
 
 | Positions (1-based) | Width | Field | Encoding |
@@ -133,6 +134,30 @@ python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.
 | 53–62 | 10 | Applicable coinsurance | Same |
 | 63–72 | 10 | Lower contractual acceptance amount | Same, or exactly `----------` for absent |
 | 73 | 1 | Primary payment accepted/obligated as payment in full | Exactly `Y` or `N` |
+| 74–84 | 11 | Beneficiary identifier (synthetic MBI) | 11 uppercase ASCII letters or digits |
+| 85–92 | 8 | Date of service | `YYYYMMDD`, month 01–12, day 01–31 |
+
+### CWF pre-payment check
+
+After the payment is calculated, every valid claim goes through a small,
+synthetic slice of the Common Working File (CWF) pre-payment validation that
+CMS describes in Pub. 100-04 Ch. 27 §20: the contractor prices the claim, CWF
+checks it, and payment is released only if CWF accepts it. It is not a
+replica of CWF. The CWF file is ASCII line-sequential reference data:
+
+| Record | Layout (1-based) |
+| --- | --- |
+| `B` beneficiary, 44 bytes | 1 `B`; 2–12 MBI; 13–20 entitled from; 21–28 entitled to (`99999999` open); 29–36 MSP period from; 37–44 MSP period to (both `--------` if none) |
+| `H` posted claim, 30 bytes | 1 `H`; 2–12 MBI; 13–20 date of service; 21–30 charges in cents |
+
+Checks, first failure wins: `NOT_ENTITLED` (MBI not on file or the service date
+is outside entitlement), `DUPLICATE` (same MBI, service date and charges already
+posted in history), `MSP_PRIMARY_NOT_BILLED` (the MSP period covers the service
+date but the claim shows no primary payment). Otherwise `ACCEPTED` with
+`DISPOSITION_01` (CWF's "accepted as is" disposition). Invalid claims are
+`NOT_SENT` / `CLAIM_INVALID`. Released amount is the payment if accepted,
+otherwise zero. A malformed CWF file, or more than 1,000 `B` or `H` records,
+aborts with exit 2. Reject codes are demo-defined.
 
 Each amount is 0–9,999,999,999 cents ($99,999,999.99). Explicit zero contract is
 present and yields a zero cap; absent contract uses charges. Contract equal to
@@ -152,21 +177,24 @@ Lines beyond 4,096 bytes, duplicate identifiable IDs, record-limit violations,
 usage errors, and file failures abort with exit 2; discard partial outputs.
 An empty file is a successful zero-record batch. Numeric validation precedes
 arithmetic. Rejection precedence is length, ID, required/optional numeric fields,
-contract range, then flag. Validation always precedes payment-in-full evaluation.
+contract range, flag, MBI, then date of service. Validation always precedes payment-in-full evaluation.
 
-Use distinct input/output/totals paths, including resolved symlinks and aliases;
+Use distinct input/CWF/output/totals paths, including resolved symlinks and aliases;
 outputs are replaced. The executable rejects identical path strings; callers
 must avoid aliases referring to the same file. Diagnostics go to stderr;
 CSV goes only to files. Exit 0 means batch execution succeeded, even when
 individual records are invalid. There are no other application exit codes.
 
-Results CSV has exact header `record_no,claim_id,status,payment_cents,reason`.
-Totals CSV has header `records,paid,zero,invalid,payment_cents` and one data row.
+Results CSV has exact header
+`record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents`.
+Totals CSV has header
+`records,paid,zero,invalid,payment_cents,accepted,rejected,released_cents` and one data row.
+`payment_cents` is the calculated amount; `released_cents` is what CWF lets through.
 Unsigned digit strings may include leading zeros; amounts are interpreted exactly
 as integer cents. Status is `PAID`, `ZERO`, or `INVALID`. Payment reasons, in order,
 are `PAYMENT_IN_FULL`, `PRIMARY_AT_CAP`, `DEDUCTIONS_AT_CAP`, then
 `SECONDARY_PAYABLE`. Invalid reasons are `BAD_LENGTH`, `BAD_ID`, `BAD_AMOUNT`,
-`BAD_CONTRACT`, and `BAD_FLAG`. These are **demo interface codes**.
+`BAD_CONTRACT`, `BAD_FLAG`, `BAD_MBI`, and `BAD_DATE`. These are **demo interface codes**.
 
 The harness rejects missing, duplicate, unexpected, malformed, or inconsistent
 rows; compares IDs, statuses, reasons and integer payments; and reconciles counts

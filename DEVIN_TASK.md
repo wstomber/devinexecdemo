@@ -16,8 +16,12 @@ Start from this prepared repository on `main`, or the pinned starter commit supp
 by the presenter. Create a new working branch. Read README.md, docs/rules.md,
 docs/cms-example-3.md, docs/demo-readiness.md, and docs/demo-runbook.md.
 This is a synthetic educational CMS MSP application, not CMS production source.
-Eligibility, covered-service determination, primary pricing, gross Medicare
-pricing, and applicable deductible/coinsurance are upstream inputs.
+Covered-service determination, primary pricing, gross Medicare pricing, and
+applicable deductible/coinsurance are upstream inputs. After the payment is
+calculated, each valid claim goes through a small synthetic CWF pre-payment check
+(entitlement on the service date, duplicate of a posted claim, MSP primary not
+billed); only accepted claims release their payment. The migration covers both
+the payment calculation and this CWF step.
 
 Implement and execute the remaining work. Codex prepared and verified the COBOL
 starting system. You own the Python migration, substantive new policy-derived
@@ -65,8 +69,8 @@ and repeatable **native Devin Playbooks**. Do not describe planned work as execu
 
 ## Stage 3: migrate and unit-test
 
-7. Implement a small Python CLI at python/msp.py, preserving the three positional
-   paths `INPUT OUTPUT TOTALS` and the documented fixed-width/CSV contract.
+7. Implement a small Python CLI at python/msp.py, preserving the four positional
+   paths `INPUT CWF OUTPUT TOTALS` and the documented fixed-width/CSV contract.
    Use integer cents or exact decimal arithmetic, never binary floating point.
    Preserve malformed versus valid-zero behavior, reason precedence, identifiers,
    record counts, totals, transport bounds, and fatal exits.

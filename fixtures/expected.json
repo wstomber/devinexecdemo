@@ -7,7 +7,10 @@
       "payment_cents": 150000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "CMS 40.8.3 Example 1, PDF page 82",
-      "rationale": "CMS Example 1: min(2200000-2050000,2200000-155600,2500000-2050000,2500000-155600)=150000 cents."
+      "rationale": "CMS Example 1: min(2200000-2050000,2200000-155600,2500000-2050000,2500000-155600)=150000 cents.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 150000
     },
     {
       "record_no": 2,
@@ -16,7 +19,10 @@
       "payment_cents": 50000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "CMS 40.8.3 Example 3, PDF pages 83-84",
-      "rationale": "CMS Example 3: contractual basis 1300000; limits 1244400, 150000, 50000, 1144400 cents; lowest is 50000."
+      "rationale": "CMS Example 3: contractual basis 1300000; limits 1244400, 150000, 50000, 1144400 cents; lowest is 50000.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 50000
     },
     {
       "record_no": 3,
@@ -25,7 +31,10 @@
       "payment_cents": 60000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "80000 gross less 20000 primary; primary exceeds 15000 deductions."
+      "rationale": "80000 gross less 20000 primary; primary exceeds 15000 deductions.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 60000
     },
     {
       "record_no": 4,
@@ -34,7 +43,10 @@
       "payment_cents": 50000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "60000 charge cap less 10000 primary."
+      "rationale": "60000 charge cap less 10000 primary.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 50000
     },
     {
       "record_no": 5,
@@ -43,7 +55,10 @@
       "payment_cents": 60000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "80000 gross less 20000 combined deductions."
+      "rationale": "80000 gross less 20000 combined deductions.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 60000
     },
     {
       "record_no": 6,
@@ -52,7 +67,10 @@
       "payment_cents": 0,
       "reason": "DEDUCTIONS_AT_CAP",
       "origin": "synthetic",
-      "rationale": "30000 deductions exceed 25000 contractual cap."
+      "rationale": "30000 deductions exceed 25000 contractual cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 7,
@@ -61,7 +79,10 @@
       "payment_cents": 0,
       "reason": "PRIMARY_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Primary equals gross cap."
+      "rationale": "Primary equals gross cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 8,
@@ -70,7 +91,10 @@
       "payment_cents": 0,
       "reason": "PRIMARY_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Primary exceeds covered charges by one cent."
+      "rationale": "Primary exceeds covered charges by one cent.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 9,
@@ -79,7 +103,10 @@
       "payment_cents": 0,
       "reason": "PAYMENT_IN_FULL",
       "origin": "synthetic",
-      "rationale": "Payment-in-full precedes both cap reasons."
+      "rationale": "Payment-in-full precedes both cap reasons.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 10,
@@ -88,7 +115,10 @@
       "payment_cents": 0,
       "reason": "PRIMARY_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Valid zeros: primary equals zero cap; primary reason precedes deductions."
+      "rationale": "Valid zeros: primary equals zero cap; primary reason precedes deductions.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 11,
@@ -97,7 +127,10 @@
       "payment_cents": 80000,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "No primary payment or deductions; gross cap payable."
+      "rationale": "No primary payment or deductions; gross cap payable.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 80000
     },
     {
       "record_no": 12,
@@ -106,7 +139,10 @@
       "payment_cents": 1,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "One cent gross cap."
+      "rationale": "One cent gross cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 1
     },
     {
       "record_no": 13,
@@ -115,7 +151,10 @@
       "payment_cents": 1,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "Primary one cent below gross cap."
+      "rationale": "Primary one cent below gross cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 1
     },
     {
       "record_no": 14,
@@ -124,7 +163,10 @@
       "payment_cents": 0,
       "reason": "PRIMARY_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Explicit zero contract differs from absent contract; zero cap."
+      "rationale": "Explicit zero contract differs from absent contract; zero cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 15,
@@ -133,7 +175,10 @@
       "payment_cents": 0,
       "reason": "DEDUCTIONS_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Combined deductions equal 500 gross cap."
+      "rationale": "Combined deductions equal 500 gross cap.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 16,
@@ -142,7 +187,10 @@
       "payment_cents": 0,
       "reason": "DEDUCTIONS_AT_CAP",
       "origin": "synthetic",
-      "rationale": "Deductible exceeds cap by one cent; clamp at zero."
+      "rationale": "Deductible exceeds cap by one cent; clamp at zero.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 17,
@@ -151,7 +199,10 @@
       "payment_cents": 1,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "100 less 99 coinsurance leaves one cent."
+      "rationale": "100 less 99 coinsurance leaves one cent.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 1
     },
     {
       "record_no": 18,
@@ -160,7 +211,10 @@
       "payment_cents": 100,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "Primary equals combined deductions; 200 less 100."
+      "rationale": "Primary equals combined deductions; 200 less 100.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 100
     },
     {
       "record_no": 19,
@@ -169,7 +223,10 @@
       "payment_cents": 0,
       "reason": "DEDUCTIONS_AT_CAP",
       "origin": "synthetic",
-      "rationale": "19999999998 combined deductions require an eleven-digit intermediate."
+      "rationale": "19999999998 combined deductions require an eleven-digit intermediate.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 0
     },
     {
       "record_no": 20,
@@ -178,7 +235,10 @@
       "payment_cents": 9999999999,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "Largest representable payment; batch total exceeds one record width."
+      "rationale": "Largest representable payment; batch total exceeds one record width.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 9999999999
     },
     {
       "record_no": 21,
@@ -187,7 +247,10 @@
       "payment_cents": 0,
       "reason": "BAD_LENGTH",
       "origin": "synthetic",
-      "rationale": "Truncated record rejected before ID and numeric checks."
+      "rationale": "Truncated record rejected before ID and numeric checks.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 22,
@@ -196,7 +259,10 @@
       "payment_cents": 0,
       "reason": "BAD_LENGTH",
       "origin": "synthetic",
-      "rationale": "Unsupported appended field makes 74 bytes."
+      "rationale": "Unsupported appended field makes 74 bytes.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 23,
@@ -205,7 +271,10 @@
       "payment_cents": 0,
       "reason": "BAD_ID",
       "origin": "synthetic",
-      "rationale": "Missing ID rejected; use synthetic row identity."
+      "rationale": "Missing ID rejected; use synthetic row identity.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 24,
@@ -214,7 +283,10 @@
       "payment_cents": 0,
       "reason": "BAD_AMOUNT",
       "origin": "synthetic",
-      "rationale": "Required gross field absent; spaces are not zero."
+      "rationale": "Required gross field absent; spaces are not zero.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 25,
@@ -223,7 +295,10 @@
       "payment_cents": 0,
       "reason": "BAD_AMOUNT",
       "origin": "synthetic",
-      "rationale": "Signed amounts unsupported; reject before arithmetic."
+      "rationale": "Signed amounts unsupported; reject before arithmetic.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 26,
@@ -232,7 +307,10 @@
       "payment_cents": 0,
       "reason": "BAD_AMOUNT",
       "origin": "synthetic",
-      "rationale": "Decimal point unsupported in integer-cent field."
+      "rationale": "Decimal point unsupported in integer-cent field.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 27,
@@ -241,7 +319,10 @@
       "payment_cents": 0,
       "reason": "BAD_AMOUNT",
       "origin": "synthetic",
-      "rationale": "Partial optional sentinel is malformed."
+      "rationale": "Partial optional sentinel is malformed.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 28,
@@ -250,7 +331,10 @@
       "payment_cents": 0,
       "reason": "BAD_CONTRACT",
       "origin": "synthetic",
-      "rationale": "Contract above charges is outside the lower-amount interface."
+      "rationale": "Contract above charges is outside the lower-amount interface.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 29,
@@ -259,7 +343,10 @@
       "payment_cents": 0,
       "reason": "BAD_FLAG",
       "origin": "synthetic",
-      "rationale": "Unsupported full indicator; no truthy coercion."
+      "rationale": "Unsupported full indicator; no truthy coercion.",
+      "cwf": "NOT_SENT",
+      "cwf_reason": "CLAIM_INVALID",
+      "released_cents": 0
     },
     {
       "record_no": 30,
@@ -268,14 +355,56 @@
       "payment_cents": 100,
       "reason": "SECONDARY_PAYABLE",
       "origin": "synthetic",
-      "rationale": "Positive record follows invalid records and an earlier contract; proves per-record reset."
+      "rationale": "Positive record follows invalid records and an earlier contract; proves per-record reset.",
+      "cwf": "ACCEPTED",
+      "cwf_reason": "DISPOSITION_01",
+      "released_cents": 100
+    },
+    {
+      "status": "PAID",
+      "reason": "SECONDARY_PAYABLE",
+      "cwf": "REJECTED",
+      "released_cents": 0,
+      "record_no": 31,
+      "claim_id": "EX3-NOT-ENT",
+      "payment_cents": 50000,
+      "cwf_reason": "NOT_ENTITLED",
+      "origin": "Synthetic CWF check; CMS Pub. 100-04 Ch. 27 s20",
+      "rationale": "Same amounts as CMS-EX3 so the calculation is $500, but beneficiary 3ENDED00001 entitlement ended 20241231, before the 20250315 service date: CWF rejects, $0 released."
+    },
+    {
+      "status": "PAID",
+      "reason": "SECONDARY_PAYABLE",
+      "cwf": "REJECTED",
+      "released_cents": 0,
+      "record_no": 32,
+      "claim_id": "EX3-DUP",
+      "payment_cents": 50000,
+      "cwf_reason": "DUPLICATE",
+      "origin": "Synthetic CWF check; CMS Pub. 100-04 Ch. 27 s20",
+      "rationale": "Calculation $500 as CMS-EX3, but CWF history already holds a $15,000 claim for 5HIST000001 on 20250315: duplicate, $0 released."
+    },
+    {
+      "status": "PAID",
+      "reason": "SECONDARY_PAYABLE",
+      "cwf": "REJECTED",
+      "released_cents": 0,
+      "record_no": 33,
+      "claim_id": "EX3-MSP-NOBL",
+      "payment_cents": 1144400,
+      "cwf_reason": "MSP_PRIMARY_NOT_BILLED",
+      "origin": "Synthetic CWF check; CMS Pub. 100-05 Ch. 5 s10.1 (MSP file on CWF)",
+      "rationale": "No primary payment: cap min(1400000,1300000)=1300000 less max(155600,0)=1144400 calculated. The MSP file shows another insurer pays first on 20250315 but nothing was paid by it: CWF rejects, $0 released."
     }
   ],
   "totals": {
-    "records": 30,
-    "paid": 12,
+    "records": 33,
+    "paid": 15,
     "zero": 9,
     "invalid": 9,
-    "payment_cents": 10000450202
+    "payment_cents": 10001694602,
+    "accepted": 21,
+    "rejected": 3,
+    "released_cents": 10000450202
   }
 }
