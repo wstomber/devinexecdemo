@@ -92,8 +92,9 @@ handling is explicit and not compiler-dependent:
   newline is fine; a file ending in a lone `\r` produces one extra blank record).
 - One trailing CR is removed (CRLF accepted).
 - A line longer than 4,096 bytes (after removing that CR) is fatal: `input line exceeds
-  4096 bytes` (or the 4,097th stored byte, line 104, fatal immediately). 4,096 bytes is
-  accepted and becomes one `BAD_LENGTH` record, never split.
+  4096 bytes` (line 130). The buffer holds 4,097 bytes (room for 4,096 + CR); a 4,098th
+  byte is fatal immediately at line 104 *without* that message, before the line ends.
+  4,096 bytes is accepted and becomes one `BAD_LENGTH` record, never split.
 - A blank line is a record (`BAD_LENGTH`), not end of file. An empty file is a valid
   zero-record batch.
 - More than 10,000 records is fatal (`batch exceeds 10000 records`, line 137).
