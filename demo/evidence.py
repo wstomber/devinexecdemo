@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REHEARSAL = ROOT / "evidence" / "rehearsal"
 RUNS = ROOT / "build" / "demo-runs"
 STARTER = "be0b00ec5a2369d50a34d351694b187ae2300fe4"
+REHEARSAL_HEAD = "18e3c1b5dce28b31138f9037b15904f0dd40df14"  # PR #23, fresh Playbook run from the starter
 STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("stage2", "Stage 2: independent tests against COBOL"),
                  ("stage3", "Stage 3: Python + unit tests"),
@@ -23,7 +24,7 @@ STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("docs", "Maintainer docs")]
 DATASETS = {"curated": "Curated 33-record policy batch",
             "synthetic": "Deterministic 1,000-record synthetic batch (seed 20261017)",
-            "edge": "Adversarial 33-record byte-level edge batch"}
+            "edge": "Adversarial byte-level edge batch (CWF and record edge cases)"}
 FIELDS = ("claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents")
 
 
@@ -152,7 +153,10 @@ def comparison(folder, verifier_report, label, kind):
                        and sha256(folder / "cobol-totals.csv") == sha256(folder / "python-totals.csv"))
     totals_match = ct is not None and ct == pt
     input_name = (summary or {}).get("input")
-    input_records = count_records(ROOT / input_name) if input_name else None
+    input_path = ROOT / input_name if input_name else None
+    if input_path is not None and not input_path.exists() and (folder / input_path.name).exists():
+        input_path = folder / input_path.name  # saved with the comparison
+    input_records = count_records(input_path) if input_path else None
     complete = input_records is not None and len(cobol) == len(python) == input_records
     if mismatches or duplicates or not totals_match or verifier == "FAILED" or (input_records is not None and not complete):
         status = "FAILED"
@@ -243,7 +247,8 @@ def latest_live():
 
 
 def history():
-    log = git("log", "--format=%H%x09%h%x09%cI%x09%s", "-n", "60") or ""
+    ref = REHEARSAL_HEAD if git("cat-file", "-e", REHEARSAL_HEAD + "^{commit}") is not None else "HEAD"
+    log = git("log", "--format=%H%x09%h%x09%cI%x09%s", "-n", "60", ref) or ""
     commits = [dict(zip(("sha", "short", "date", "subject"), line.split("\t"))) for line in log.splitlines()]
     stages = {}
     for c in commits:
@@ -260,7 +265,7 @@ def history():
                  "stage2": stages["stage2"]["short"], "stage3": stages["stage3"]["short"]}
     return {"head": git("rev-parse", "HEAD"), "head_short": git("rev-parse", "--short", "HEAD"),
             "branch": git("rev-parse", "--abbrev-ref", "HEAD"), "dirty": bool(git("status", "--porcelain")),
-            "starter": STARTER, "stages": stages, "tests_before_python": proof, "commits": commits[:15]}
+            "starter": STARTER, "stages": stages, "stages_ref": ref, "tests_before_python": proof, "commits": commits[:15]}
 
 
 def build():

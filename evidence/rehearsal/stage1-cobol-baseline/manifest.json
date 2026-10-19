@@ -1,6 +1,6 @@
 {
   "result": "PASS",
-  "captured_at_utc": "2026-10-17T21:27:35.163088+00:00",
+  "captured_at_utc": "2026-10-19T02:08:03.541591+00:00",
   "kind": "COBOL baseline only",
   "migration_comparison": "NOT_RUN",
   "python_version": "3.10.12",
@@ -20,6 +20,17 @@
       "argv": [
         "cobc",
         "-V"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "tools/fixtures.py",
+        "--cwf-source",
+        "fixtures/cwf.json",
+        "--output",
+        "build/baseline/cwf.dat"
       ],
       "exit_code": 0
     },
@@ -63,6 +74,7 @@
       "argv": [
         "build/msp-batch",
         "build/baseline/curated.dat",
+        "build/baseline/cwf.dat",
         "build/baseline/curated-results.csv",
         "build/baseline/curated-totals.csv"
       ],
@@ -72,6 +84,7 @@
       "argv": [
         "build/msp-batch",
         "build/baseline/synthetic.dat",
+        "build/baseline/cwf.dat",
         "build/baseline/synthetic-results.csv",
         "build/baseline/synthetic-totals.csv"
       ],
@@ -80,40 +93,50 @@
   ],
   "batches": {
     "curated": {
-      "records": 30,
-      "paid": 12,
+      "records": 33,
+      "paid": 15,
       "zero": 9,
       "invalid": 9,
-      "payment_cents": 10000450202
+      "payment_cents": 10001694602,
+      "accepted": 21,
+      "rejected": 3,
+      "released_cents": 10000450202
     },
     "synthetic": {
       "records": 1000,
       "paid": 271,
       "zero": 729,
       "invalid": 0,
-      "payment_cents": 514352570951
+      "payment_cents": 485289809347,
+      "accepted": 736,
+      "rejected": 264,
+      "released_cents": 344091123732
     }
   },
   "files_sha256": {
-    "curated-results.csv": "05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474",
-    "curated-totals.csv": "7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660",
-    "curated-verification.json": "922503051b587f4d6a2234d912269c81ac14dd9e35da535a27446da41ff85012",
-    "curated.dat": "143f9cf2e83b811b972d73b870c8d03658ce01fab0b190863ba027b5373e2322",
-    "synthetic-results.csv": "9ca5acc5af4a4001ad28265989e12f995f0c1d0bd8860900e01a1f501fac5de9",
-    "synthetic-totals.csv": "7d699156ed756e7bd40b48beb853906e584520423b7a6e296bf4076fc9ff502e",
-    "synthetic.dat": "56584f8a9c0ce83ea7f8cb002203a57c478ee7ee931e625b4d3b0f4d0f609e69"
+    "curated-results.csv": "6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80",
+    "curated-totals.csv": "117bab98bc1dc805fc71458c07e40aeca319329514bc2507797ad5b263bece87",
+    "curated-verification.json": "e436495c9f13f5a2e73c4cf3313bff1a579cae04a6a32488eac3591043990191",
+    "curated.dat": "834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60",
+    "cwf.dat": "abb08cc783bb21e421af374cc4f0d17c7ff191d1cd23cf304945a2b337e57cf8",
+    "synthetic-results.csv": "e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9",
+    "synthetic-totals.csv": "7dabe8bffda6a7c1c9655499733a3d5ac51c6ec4859adcc0b0536d775b8dcc19",
+    "synthetic.dat": "dbe4fcf1b76346cc39c0a2e1f7d3250582fabef35180070767dd169dfa60acd9"
   },
-  "source_commit": "37ceca17f110536d55261d5d19aa187781dd8851",
+  "source_commit": "be0b00ec5a2369d50a34d351694b187ae2300fe4",
   "compiler_version": "cobc (GnuCOBOL) 3.1.2.0",
   "source_files_sha256": {
-    "cobol/batch.cob": "810ba482944cda0c07a086b77055ecbd3bed0cdcd86239662b355c53e4b5b2fb",
+    "cobol/batch.cob": "d0209209d0018a11e7b1b28a0ad377b7043c27576eb23fbb465cfad89aaaa4ec",
+    "cobol/cwf.cob": "048b59102bdbbca061c22f37b3efea71b1ec076c7f3538380e5d39ac9eae417f",
     "cobol/payment.cob": "99314ed68357d9eecb9ffa27f3ef4134a7fb9c2c65195ca9a0494c736fc7a96a",
-    "cobol/validate.cob": "7576ef5f63145e36c4c7a022c9b055a630c7c4f241d0c2b8bb96dab332238c41",
-    "cobol/copybooks/claim.cpy": "d37d17df71697a3879c0664f68f79ba669ddc6b79a4afc44161d0afd6e09e46a",
-    "fixtures/curated.json": "1b1e38b1fd83f133ced1a2c1c610e8bc84c4d1da201e2cfaaa21c75b819f8495",
-    "fixtures/expected.json": "d1d9d2a6790bfdf08ea541db0747bf2fbf2356c61329f1eee123fdfbf6d5c163",
-    "tools/fixtures.py": "cfae489f083b91bba2852820c567cf856dddcbad2d77ff8c194242ae3e1632c5",
-    "tools/verify.py": "708c78357fe99ec089027ae92817e0f889478b6903fc8008cbff1e4ed17358d4",
-    "tools/capture_baseline.py": "d3c91e4357946e94ddc4cb09fdee69080e890918d32ac123477fc9c0f0e8813e"
+    "cobol/validate.cob": "e0a6c8f8bdd0d3c44f9f52c2b4a1abe71accb4ccb64bd13f7cf6d4d503f58573",
+    "cobol/copybooks/claim.cpy": "7501ac16112d7667bfa134b9b2b56d1b41e5f6eb036bb4eeac94dcd1393628ca",
+    "cobol/copybooks/cwf.cpy": "f0a0a22a8c3fc58bdebb0f39489f429485e173621afbe8eacc9f228b1b721733",
+    "fixtures/curated.json": "29469d35d626b056ab7c46802ccd3a2aa8624dd64d2f4d77d0db589fce8eddd9",
+    "fixtures/expected.json": "19aa4da22629c41971917f83f0ef2f1f47a37ef71b4374fa91dc7cdd219b1920",
+    "fixtures/cwf.json": "4cb2d1c73c754db8485ee5185da783ad116d9d1d68ba73be4e1633bb8b57d22b",
+    "tools/fixtures.py": "a94322d861d355701070f893f69238007a42f84845dc44496ce15521d3946476",
+    "tools/verify.py": "c802fb3af09a26df4e2f47813b0c29eaea39dc432e57b085574611cfe18132a5",
+    "tools/capture_baseline.py": "31a3293c075fce87a799cd08aa2dc6e323ff2fdff9ea9bd7a310e3e730876270"
   }
 }

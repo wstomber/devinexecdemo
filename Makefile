@@ -37,9 +37,11 @@ clean:
 
 .PHONY: demo demo-live demo-refresh
 demo: build generate
+	-git fetch -q origin pull/23/head 2>/dev/null
 	$(PYTHON) demo/server.py
 
 demo-live: build generate
+	-git fetch -q origin pull/23/head 2>/dev/null
 	$(PYTHON) demo/server.py --require-devin-key
 
 demo-refresh: build generate

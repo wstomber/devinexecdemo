@@ -1,42 +1,68 @@
 {
-  "title": "COBOL vs Python: curated 30-record batch",
+  "batch": "curated",
   "input": "build/curated.dat",
-  "input_sha256": "143f9cf2e83b811b972d73b870c8d03658ce01fab0b190863ba027b5373e2322",
-  "verdict": "MATCH",
-  "records_compared": 30,
-  "record_mismatches": 0,
+  "input_sha256": "834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60",
+  "cwf": "build/cwf.dat",
+  "cwf_sha256": "abb08cc783bb21e421af374cc4f0d17c7ff191d1cd23cf304945a2b337e57cf8",
+  "records_cobol": 33,
+  "records_python": 33,
+  "matches": 33,
+  "mismatches": 0,
   "totals_match": true,
-  "exit_codes": [
-    0,
-    0
-  ],
-  "byte_identical_outputs": true,
-  "cobol": {
-    "command": "build/msp-batch",
-    "results_sha256": "05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474",
-    "totals_sha256": "7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660",
-    "totals": [
-      {
-        "records": "0000000030",
-        "paid": "0000000012",
-        "zero": "0000000009",
-        "invalid": "0000000009",
-        "payment_cents": "000010000450202"
-      }
+  "byte_identical": {
+    "results.csv": true,
+    "totals.csv": true
+  },
+  "status_counts": {
+    "PAID": [
+      15,
+      15
+    ],
+    "ZERO": [
+      9,
+      9
+    ],
+    "INVALID": [
+      9,
+      9
     ]
   },
-  "python": {
-    "command": "python3 python/msp.py",
-    "results_sha256": "05733fdfafd4d85e442ed93772e199a024fa772ede91fd1bc39ad3c4dcd46474",
-    "totals_sha256": "7d31edef9b7c4a1bd1bc5f84a3431a9ffac5ef5d8732e46c6e4a204bf5501660",
-    "totals": [
-      {
-        "records": "0000000030",
-        "paid": "0000000012",
-        "zero": "0000000009",
-        "invalid": "0000000009",
-        "payment_cents": "000010000450202"
-      }
+  "cwf_counts": {
+    "ACCEPTED": [
+      21,
+      21
+    ],
+    "REJECTED": [
+      3,
+      3
+    ],
+    "NOT_SENT": [
+      9,
+      9
     ]
-  }
+  },
+  "totals_cobol": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "totals_python": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "stdout_empty": [
+    true,
+    true
+  ]
 }

@@ -9,10 +9,13 @@
   "timeout_seconds": 10,
   "differences": [],
   "totals": {
-    "records": 30,
-    "paid": 12,
+    "records": 33,
+    "paid": 15,
     "zero": 9,
     "invalid": 9,
-    "payment_cents": 10000450202
+    "payment_cents": 10001694602,
+    "accepted": 21,
+    "rejected": 3,
+    "released_cents": 10000450202
   }
 }
