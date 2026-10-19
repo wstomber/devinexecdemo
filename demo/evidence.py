@@ -24,7 +24,7 @@ STAGE_COMMITS = [("stage1", "Stage 1: baseline + COBOL explanation"),
                  ("docs", "Maintainer docs")]
 DATASETS = {"curated": "Curated 33-record policy batch",
             "synthetic": "Deterministic 1,000-record synthetic batch (seed 20261017)",
-            "edge": "Adversarial byte-level edge batch (CWF and record edge cases)"}
+            "edge": "Broken-input test: answer-key claims plus 2,000 damaged records"}
 FIELDS = ("claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents")
 
 
