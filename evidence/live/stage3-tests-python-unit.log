@@ -1,0 +1,20 @@
+# 2026-10-19T02:22:26.110515+00:00 python3 -m unittest discover -s tests_python -v
+test_ascii_digits_rejects_non_ascii_and_non_digits (test_msp.AsciiAndIdTests) ... ok
+test_claim_id_rules (test_msp.AsciiAndIdTests) ... ok
+test_cwf_order_and_entitlement_boundaries (test_msp.CwfTests) ... ok
+test_cwf_parser_records_and_boundaries (test_msp.CwfTests) ... ok
+test_cwf_reader_drops_cr_truncates_and_pads (test_msp.CwfTests) ... ok
+test_cwf_record_limits (test_msp.CwfTests) ... ok
+test_first_beneficiary_record_wins (test_msp.CwfTests) ... ok
+test_lf_crlf_lone_cr_and_empty_stream (test_msp.FramingTests) ... ok
+test_transport_limit_and_claim_raw_padding (test_msp.FramingTests) ... ok
+test_contract_basis_and_cms_example_3 (test_msp.PaymentTests) ... ok
+test_payment_branches (test_msp.PaymentTests) ... ok
+test_contract_flag_mbi_and_date_rules (test_msp.ValidationTests) ... ok
+test_each_amount_field_requires_ascii_digits (test_msp.ValidationTests) ... ok
+test_validation_precedence (test_msp.ValidationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.009s
+
+OK

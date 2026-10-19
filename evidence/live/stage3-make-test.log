@@ -1,0 +1,30 @@
+# 2026-10-19T02:21:10.684228+00:00 make test
+python3 tools/verify.py baseline --command 'build/msp-batch' --report build/baseline-report.json
+PASS: records and totals match; report=build/baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
+python3 -m unittest discover -s tests -v
+test_bad_mbi_and_date_are_invalid_after_flag (test_verification.VerificationTests) ... ok
+test_blank_record_is_invalid_not_eof (test_verification.VerificationTests) ... ok
+test_candidate_can_be_verified_against_curated_expectations (test_verification.VerificationTests) ... ok
+test_comparison_detects_one_cent_and_reason_mismatch (test_verification.VerificationTests) ... ok
+test_control_bytes_and_validation_precedence (test_verification.VerificationTests) ... ok
+test_crash_missing_executable_timeout_and_missing_output (test_verification.VerificationTests) ... ok
+test_crlf_and_last_record_without_newline (test_verification.VerificationTests) ... ok
+test_cwf_decisions_follow_the_curated_ledger (test_verification.VerificationTests) ... ok
+test_duplicate_claim_id_is_fatal (test_verification.VerificationTests) ... ok
+test_empty_batch (test_verification.VerificationTests) ... ok
+test_identifiable_invalid_duplicate_is_fatal (test_verification.VerificationTests) ... ok
+test_malformed_cwf_reference_is_fatal (test_verification.VerificationTests) ... ok
+test_maximum_transport_length_is_one_invalid_record (test_verification.VerificationTests) ... ok
+test_missing_candidate_is_not_a_pass (test_verification.VerificationTests) ... ok
+test_oversized_physical_line_aborts_without_splitting (test_verification.VerificationTests) ... ok
+test_rejects_output_faults (test_verification.VerificationTests) ... ok
+test_seeded_batch_and_serialization (test_verification.VerificationTests) ... ok
+test_serializer_rejects_float_negative_overflow_missing_and_bad_flag (test_verification.VerificationTests) ... ok
+test_unchanged_replay_passes_plumbing_only (test_verification.VerificationTests) ... ok
+test_usage_missing_input_unwritable_output_and_record_limit (test_verification.VerificationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.858s
+
+OK
