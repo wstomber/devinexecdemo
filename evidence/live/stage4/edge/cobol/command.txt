@@ -1,0 +1,1 @@
+build/msp-batch evidence/live/stage4/edge/edge.dat evidence/live/stage4/edge/edge-cwf.dat evidence/live/stage4/edge/cobol/results.csv evidence/live/stage4/edge/cobol/totals.csv

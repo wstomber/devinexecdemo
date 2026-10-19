@@ -1,0 +1,2 @@
+record_no,claim_id,status,payment_cents,reason,cwf,cwf_reason,released_cents
+0000000001,F00001,PAID,0000060000,SECONDARY_PAYABLE,ACCEPTED,DISPOSITION_01,0000060000

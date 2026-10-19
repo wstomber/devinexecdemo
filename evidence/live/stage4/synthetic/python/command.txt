@@ -1,0 +1,1 @@
+python3 python/msp.py build/synthetic.dat build/cwf.dat evidence/live/stage4/synthetic/python/results.csv evidence/live/stage4/synthetic/python/totals.csv
