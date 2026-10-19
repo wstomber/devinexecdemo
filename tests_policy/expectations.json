@@ -1379,7 +1379,7 @@
     ]
    ],
    "source": "README: flag exactly Y or N",
-   "arithmetic": "Space flag (record still 73 bytes).",
+   "arithmetic": "Space flag (record still 92 bytes).",
    "assumptions": "I4.",
    "expected": {
     "status": "INVALID",
