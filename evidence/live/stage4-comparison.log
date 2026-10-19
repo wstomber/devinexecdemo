@@ -1,0 +1,37 @@
+$ python3 tools/verify.py baseline --command 'python3 python/msp.py' --report build/python-baseline-report.json
+PASS: records and totals match; report=build/python-baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
+[exit 0]
+
+$ make compare CANDIDATE='python3 python/msp.py'
+python3 tools/fixtures.py --cwf-source fixtures/cwf.json --output build/cwf.dat
+Serialized 6 CWF reference records to build/cwf.dat
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 33 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
+[exit 0]
+
+$ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat --report build/curated-comparison-report.json
+PASS: records and totals match; report=build/curated-comparison-report.json
+[exit 0]
+
+$ python3 tools/compare_report.py
+curated: 33 records, 0 mismatches, results identical=True, totals identical=True
+synthetic: 1000 records, 0 mismatches, results identical=True, totals identical=True
+edge: 120 records, 0 mismatches, results identical=True, totals identical=True
+edge-ascii: 114 records, 0 mismatches, results identical=True, totals identical=True
+fatal paths: 17 cases, 0 mismatches
+PASS
+[exit 0]
+
+$ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input evidence/live/comparison/edge/edge-ascii.dat --cwf evidence/live/comparison/edge/edge-cwf.dat --report build/edge-comparison-report.json
+PASS: records and totals match; report=build/edge-comparison-report.json
+[exit 0]
+
+$ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input evidence/live/comparison/edge/edge.dat --cwf evidence/live/comparison/edge/edge-cwf.dat --report build/edge-full-verify-report.json  # expected FAIL: verifier decodes input as ASCII
+FAIL: 'ascii' codec can't decode byte 0xd9 in position 17195: ordinal not in range(128); report=build/edge-full-verify-report.json
+[exit 1]
+

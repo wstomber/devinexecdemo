@@ -1,0 +1,33 @@
+{
+  "batch": "synthetic",
+  "input": "build/synthetic.dat",
+  "input_sha256": "dbe4fcf1b76346cc39c0a2e1f7d3250582fabef35180070767dd169dfa60acd9",
+  "cwf": "build/cwf.dat",
+  "records": 1000,
+  "mismatches": 0,
+  "results_bytes_identical": true,
+  "totals_bytes_identical": true,
+  "cobol_results_sha256": "e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9",
+  "python_results_sha256": "e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9",
+  "cobol_totals": {
+    "records": "0000001000",
+    "paid": "0000000271",
+    "zero": "0000000729",
+    "invalid": "0000000000",
+    "payment_cents": "000485289809347",
+    "accepted": "0000000736",
+    "rejected": "0000000264",
+    "released_cents": "000344091123732"
+  },
+  "python_totals": {
+    "records": "0000001000",
+    "paid": "0000000271",
+    "zero": "0000000729",
+    "invalid": "0000000000",
+    "payment_cents": "000485289809347",
+    "accepted": "0000000736",
+    "rejected": "0000000264",
+    "released_cents": "000344091123732"
+  },
+  "totals_match": true
+}

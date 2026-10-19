@@ -1,0 +1,21 @@
+{
+  "mode": "baseline",
+  "command": "python3 python/msp.py",
+  "candidate": null,
+  "result": "PASS",
+  "migration_comparison": "NOT_RUN",
+  "input": "fixtures/curated.json",
+  "expected": "fixtures/expected.json",
+  "timeout_seconds": 10,
+  "differences": [],
+  "totals": {
+    "records": 33,
+    "paid": 15,
+    "zero": 9,
+    "invalid": 9,
+    "payment_cents": 10001694602,
+    "accepted": 21,
+    "rejected": 3,
+    "released_cents": 10000450202
+  }
+}

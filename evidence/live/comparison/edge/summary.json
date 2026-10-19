@@ -1,0 +1,33 @@
+{
+  "batch": "edge",
+  "input": "evidence/live/comparison/edge/edge.dat",
+  "input_sha256": "92dafc1fe4492b79cccdd4d61d6307c3e3bbbc7d61b594dbf454c9452d715707",
+  "cwf": "evidence/live/comparison/edge/edge-cwf.dat",
+  "records": 120,
+  "mismatches": 0,
+  "results_bytes_identical": true,
+  "totals_bytes_identical": true,
+  "cobol_results_sha256": "fdb53c02347fdf00fce5690d3087039ca986600c05b12cf04b104e95526d7b56",
+  "python_results_sha256": "fdb53c02347fdf00fce5690d3087039ca986600c05b12cf04b104e95526d7b56",
+  "cobol_totals": {
+    "records": "0000000120",
+    "paid": "0000000048",
+    "zero": "0000000014",
+    "invalid": "0000000058",
+    "payment_cents": "000020002341197",
+    "accepted": "0000000050",
+    "rejected": "0000000012",
+    "released_cents": "000020001351797"
+  },
+  "python_totals": {
+    "records": "0000000120",
+    "paid": "0000000048",
+    "zero": "0000000014",
+    "invalid": "0000000058",
+    "payment_cents": "000020002341197",
+    "accepted": "0000000050",
+    "rejected": "0000000012",
+    "released_cents": "000020001351797"
+  },
+  "totals_match": true
+}

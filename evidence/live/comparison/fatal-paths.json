@@ -1,0 +1,172 @@
+[
+  {
+    "case": "usage-3-args",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "usage-5-args",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "same-output-totals",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "trailing-space-alias",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "missing-input",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "missing-cwf",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "malformed-cwf",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "cwf-1001-B",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "empty-input-path",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "input-is-directory",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "unopenable-results",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 1,
+    "python_results_lines": 1,
+    "stdout_empty": true
+  },
+  {
+    "case": "unopenable-totals",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 0,
+    "python_results_lines": 0,
+    "stdout_empty": true
+  },
+  {
+    "case": "duplicate-id",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 3,
+    "python_results_lines": 3,
+    "stdout_empty": true
+  },
+  {
+    "case": "duplicate-invalid-id",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 2,
+    "python_results_lines": 2,
+    "stdout_empty": true
+  },
+  {
+    "case": "line-4097",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 2,
+    "python_results_lines": 2,
+    "stdout_empty": true
+  },
+  {
+    "case": "records-10001",
+    "cobol_exit": 2,
+    "python_exit": 2,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 10001,
+    "python_results_lines": 10001,
+    "stdout_empty": true
+  },
+  {
+    "case": "cwf-is-directory (not fatal)",
+    "cobol_exit": 0,
+    "python_exit": 0,
+    "exit_match": true,
+    "file_effects_match": true,
+    "cobol_results_lines": 2,
+    "python_results_lines": 2,
+    "stdout_empty": true
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "batch": "curated",
+  "input": "build/curated.dat",
+  "input_sha256": "834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60",
+  "cwf": "build/cwf.dat",
+  "records": 33,
+  "mismatches": 0,
+  "results_bytes_identical": true,
+  "totals_bytes_identical": true,
+  "cobol_results_sha256": "6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80",
+  "python_results_sha256": "6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80",
+  "cobol_totals": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "python_totals": {
+    "records": "0000000033",
+    "paid": "0000000015",
+    "zero": "0000000009",
+    "invalid": "0000000009",
+    "payment_cents": "000010001694602",
+    "accepted": "0000000021",
+    "rejected": "0000000003",
+    "released_cents": "000010000450202"
+  },
+  "totals_match": true
+}

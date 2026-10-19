@@ -1,0 +1,31 @@
+{
+  "mode": "compare",
+  "command": "build/msp-batch",
+  "candidate": "python3 python/msp.py",
+  "result": "PASS",
+  "migration_comparison": "RUN",
+  "input": "evidence/live/comparison/edge/edge-ascii.dat",
+  "expected": null,
+  "timeout_seconds": 10,
+  "differences": [],
+  "baseline_totals": {
+    "records": 114,
+    "paid": 48,
+    "zero": 14,
+    "invalid": 52,
+    "payment_cents": 20002341197,
+    "accepted": 50,
+    "rejected": 12,
+    "released_cents": 20001351797
+  },
+  "candidate_totals": {
+    "records": 114,
+    "paid": 48,
+    "zero": 14,
+    "invalid": 52,
+    "payment_cents": 20002341197,
+    "accepted": 50,
+    "rejected": 12,
+    "released_cents": 20001351797
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "batches": [
+    {
+      "batch": "curated",
+      "input": "build/curated.dat",
+      "input_sha256": "834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60",
+      "cwf": "build/cwf.dat",
+      "records": 33,
+      "mismatches": 0,
+      "results_bytes_identical": true,
+      "totals_bytes_identical": true,
+      "cobol_results_sha256": "6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80",
+      "python_results_sha256": "6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80",
+      "cobol_totals": {
+        "records": "0000000033",
+        "paid": "0000000015",
+        "zero": "0000000009",
+        "invalid": "0000000009",
+        "payment_cents": "000010001694602",
+        "accepted": "0000000021",
+        "rejected": "0000000003",
+        "released_cents": "000010000450202"
+      },
+      "python_totals": {
+        "records": "0000000033",
+        "paid": "0000000015",
+        "zero": "0000000009",
+        "invalid": "0000000009",
+        "payment_cents": "000010001694602",
+        "accepted": "0000000021",
+        "rejected": "0000000003",
+        "released_cents": "000010000450202"
+      },
+      "totals_match": true
+    },
+    {
+      "batch": "synthetic",
+      "input": "build/synthetic.dat",
+      "input_sha256": "dbe4fcf1b76346cc39c0a2e1f7d3250582fabef35180070767dd169dfa60acd9",
+      "cwf": "build/cwf.dat",
+      "records": 1000,
+      "mismatches": 0,
+      "results_bytes_identical": true,
+      "totals_bytes_identical": true,
+      "cobol_results_sha256": "e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9",
+      "python_results_sha256": "e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9",
+      "cobol_totals": {
+        "records": "0000001000",
+        "paid": "0000000271",
+        "zero": "0000000729",
+        "invalid": "0000000000",
+        "payment_cents": "000485289809347",
+        "accepted": "0000000736",
+        "rejected": "0000000264",
+        "released_cents": "000344091123732"
+      },
+      "python_totals": {
+        "records": "0000001000",
+        "paid": "0000000271",
+        "zero": "0000000729",
+        "invalid": "0000000000",
+        "payment_cents": "000485289809347",
+        "accepted": "0000000736",
+        "rejected": "0000000264",
+        "released_cents": "000344091123732"
+      },
+      "totals_match": true
+    },
+    {
+      "batch": "edge",
+      "input": "evidence/live/comparison/edge/edge.dat",
+      "input_sha256": "92dafc1fe4492b79cccdd4d61d6307c3e3bbbc7d61b594dbf454c9452d715707",
+      "cwf": "evidence/live/comparison/edge/edge-cwf.dat",
+      "records": 120,
+      "mismatches": 0,
+      "results_bytes_identical": true,
+      "totals_bytes_identical": true,
+      "cobol_results_sha256": "fdb53c02347fdf00fce5690d3087039ca986600c05b12cf04b104e95526d7b56",
+      "python_results_sha256": "fdb53c02347fdf00fce5690d3087039ca986600c05b12cf04b104e95526d7b56",
+      "cobol_totals": {
+        "records": "0000000120",
+        "paid": "0000000048",
+        "zero": "0000000014",
+        "invalid": "0000000058",
+        "payment_cents": "000020002341197",
+        "accepted": "0000000050",
+        "rejected": "0000000012",
+        "released_cents": "000020001351797"
+      },
+      "python_totals": {
+        "records": "0000000120",
+        "paid": "0000000048",
+        "zero": "0000000014",
+        "invalid": "0000000058",
+        "payment_cents": "000020002341197",
+        "accepted": "0000000050",
+        "rejected": "0000000012",
+        "released_cents": "000020001351797"
+      },
+      "totals_match": true
+    },
+    {
+      "batch": "edge-ascii",
+      "input": "evidence/live/comparison/edge/edge-ascii.dat",
+      "input_sha256": "4f12562e4795964794c208f6241aa6d11b7b783e6a8c87a0e8ec6a543e659c40",
+      "cwf": "evidence/live/comparison/edge/edge-cwf.dat",
+      "records": 114,
+      "mismatches": 0,
+      "results_bytes_identical": true,
+      "totals_bytes_identical": true,
+      "cobol_results_sha256": "412fe559496e2f5f082356931cc31bdd1027a12be9fa6b5f342ca41d8ad8ee18",
+      "python_results_sha256": "412fe559496e2f5f082356931cc31bdd1027a12be9fa6b5f342ca41d8ad8ee18",
+      "cobol_totals": {
+        "records": "0000000114",
+        "paid": "0000000048",
+        "zero": "0000000014",
+        "invalid": "0000000052",
+        "payment_cents": "000020002341197",
+        "accepted": "0000000050",
+        "rejected": "0000000012",
+        "released_cents": "000020001351797"
+      },
+      "python_totals": {
+        "records": "0000000114",
+        "paid": "0000000048",
+        "zero": "0000000014",
+        "invalid": "0000000052",
+        "payment_cents": "000020002341197",
+        "accepted": "0000000050",
+        "rejected": "0000000012",
+        "released_cents": "000020001351797"
+      },
+      "totals_match": true
+    }
+  ],
+  "fatal_path_mismatches": 0,
+  "result": "PASS"
+}
