@@ -63,6 +63,8 @@ def main():
             manifest["provenance_note"] = "No Git metadata in this export/image; use source hashes and the checkout's pinned commit."
         manifest["compiler_version"] = execute(shlex.split(args.compiler) + ["-V"]).splitlines()[0]
         python = sys.executable
+        cwf = args.output / "cwf.dat"
+        execute([python, "tools/fixtures.py", "--cwf-source", "fixtures/cwf.json", "--output", str(cwf)])
         execute([python, "tools/fixtures.py", "--source", "fixtures/curated.json",
                  "--output", str(args.output / "curated.dat")])
         execute([python, "tools/fixtures.py", "--count", "1000", "--seed", "20261017",
@@ -73,17 +75,18 @@ def main():
             input_path = args.output / f"{name}.dat"
             results = args.output / f"{name}-results.csv"
             totals = args.output / f"{name}-totals.csv"
-            execute(shlex.split(args.command) + [str(input_path), str(results), str(totals)])
+            execute(shlex.split(args.command) + [str(input_path), str(cwf), str(results), str(totals)])
             actual, reconciled = read_results(results, totals, batch_identities(input_path))
             if name == "curated":
                 ledger = json.loads(Path("fixtures/expected.json").read_text())
-                expected = {r["record_no"]: {k: r[k] for k in ("claim_id", "status", "payment_cents", "reason")}
+                expected = {r["record_no"]: {k: r[k] for k in ("claim_id", "status", "payment_cents", "reason",
+                                                  "cwf", "cwf_reason", "released_cents")}
                             for r in ledger["records"]}
                 if differences(actual, expected) or reconciled != ledger["totals"]:
                     raise RuntimeError("retained curated output differs from independent expectations")
             manifest["batches"][name] = reconciled
         sources = sorted(Path("cobol").rglob("*.cob")) + sorted(Path("cobol").rglob("*.cpy"))
-        sources += [Path("fixtures/curated.json"), Path("fixtures/expected.json"),
+        sources += [Path("fixtures/curated.json"), Path("fixtures/expected.json"), Path("fixtures/cwf.json"),
                     Path("tools/fixtures.py"), Path("tools/verify.py"), Path("tools/capture_baseline.py")]
         manifest["source_files_sha256"] = {str(p): digest(p) for p in sources}
         manifest["files_sha256"] = {p.name: digest(p) for p in sorted(args.output.iterdir())

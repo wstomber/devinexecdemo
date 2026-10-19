@@ -60,8 +60,9 @@ Examples 1 and 3. No application behavior silently incorporates $3,822.
 
 ## Simplifications and demo decisions
 
-- Proper primary filing, eligibility, coverage, allocation of primary payment,
-  gross pricing, and applicable deductions are supplied correctly upstream.
+- Coverage, allocation of primary payment, gross pricing, and applicable
+  deductions are supplied correctly upstream. Entitlement, duplicates and
+  whether the other insurer was billed are checked by the CWF step below.
 - `full=Y` asserts the received primary payment is accepted or required as full
   payment. A lower contract supplied with `full=N` is an obligatory total charge
   basis, not evidence that a smaller primary payment was accepted in full.
@@ -120,3 +121,29 @@ Thirty records: 12 paid, 9 valid zero, 9 invalid. Expected total is
 values to exercise the interface; they are not realistic rate examples.
 The 1,000-record seeded batch has no policy oracle. Agreement on it is
 characterization evidence only.
+
+## CWF pre-payment check (after the payment is calculated)
+
+CMS Pub. 100-04 (Claims Processing) Ch. 27 §20 and §20.2.2: the contractor
+processes and prices the claim, then sends it to the CWF Host for "pre-payment
+validation and authorization". CWF checks that the beneficiary is entitled,
+that benefits are available and that the services were not already paid on
+another claim, and returns a disposition; the contractor then pays or denies.
+CMS Pub. 100-05 (MSP) Ch. 5 §10.1: CWF holds the MSP auxiliary file that says
+when another insurer pays first.
+
+This demo implements three of those checks on synthetic reference data
+(`fixtures/cwf.json`), first failure wins:
+
+| Code (demo-defined) | Rule |
+| --- | --- |
+| `NOT_ENTITLED` | MBI not on file, or service date outside the entitlement period |
+| `DUPLICATE` | Same MBI, service date and charges already posted to CWF history |
+| `MSP_PRIMARY_NOT_BILLED` | MSP period covers the service date but the claim shows $0 primary payment |
+| `DISPOSITION_01` | Accepted as is (CWF disposition 01); calculated payment is released |
+
+Out of scope on purpose: benefit-day and utilization accounting, every other
+CWF edit, trailers and informational unsolicited responses, and the reverse MSP
+case (claim shows a primary payment but CWF has no MSP record). Invalid claims
+are never sent to CWF (`NOT_SENT` / `CLAIM_INVALID`). A rejected claim keeps
+its calculated `payment_cents` for review, but `released_cents` is zero.
