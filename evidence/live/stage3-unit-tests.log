@@ -1,0 +1,42 @@
+$ python3 -m unittest discover -s tests_python -v
+test_cli_exit_codes_and_silence (test_msp_units.BatchTests) ... ok
+test_exact_csv_format (test_msp_units.BatchTests) ... ok
+test_fatal_paths (test_msp_units.BatchTests) ... duplicate claim ID: A
+fatal batch failure; discard outputs
+batch exceeds 10000 records
+fatal batch failure; discard outputs
+usage: msp-batch INPUT CWF OUTPUT TOTALS
+paths must be distinct
+ok
+test_maximum_totals_width (test_msp_units.BatchTests) ... ok
+test_no_float_in_source (test_msp_units.BatchTests) ... ok
+test_path_name_matches_cobol_field (test_msp_units.BatchTests) ... ok
+test_first_beneficiary_wins (test_msp_units.CwfTests) ... ok
+test_line_reader_matches_gnucobol (test_msp_units.CwfTests) ... ok
+test_malformed_records_and_limits (test_msp_units.CwfTests) ... ok
+test_order_and_boundaries (test_msp_units.CwfTests) ... ok
+test_rejection_keeps_calculated_payment (test_msp_units.CwfTests) ... ok
+test_only_ascii_digits_are_numeric (test_msp_units.DigitTests) ... ok
+test_to_int_is_exact (test_msp_units.DigitTests) ... ok
+test_lines (test_msp_units.FramingTests) ... ok
+test_transport_bound (test_msp_units.FramingTests) ... ok
+test_cms_ex1 (test_msp_units.PaymentTests) ... ok
+test_cms_ex3_and_counterfactual (test_msp_units.PaymentTests) ... ok
+test_each_limit_controls (test_msp_units.PaymentTests) ... ok
+test_maxima (test_msp_units.PaymentTests) ... ok
+test_one_cent_boundaries (test_msp_units.PaymentTests) ... ok
+test_zero_reason_precedence (test_msp_units.PaymentTests) ... ok
+test_contract_range (test_msp_units.ValidationTests) ... ok
+test_dates (test_msp_units.ValidationTests) ... ok
+test_fresh_claim_has_no_leftover_contract (test_msp_units.ValidationTests) ... ok
+test_ids (test_msp_units.ValidationTests) ... ok
+test_length (test_msp_units.ValidationTests) ... ok
+test_malformed_contract_is_bad_amount (test_msp_units.ValidationTests) ... ok
+test_precedence_chain (test_msp_units.ValidationTests) ... ok
+test_valid_record_parses_exact_fields (test_msp_units.ValidationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.179s
+
+OK
+[exit 0]
