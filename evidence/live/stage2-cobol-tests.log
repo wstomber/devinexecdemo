@@ -1,0 +1,34 @@
+# Stage 2 independent tests against COBOL
+# date: 2026-10-20T20:23:09Z
+# commit base: e4d420977c9f479ed0b96441c3ff4948893a9639
+# command: make build && MSP_COMMAND=build/msp-batch python3 -m unittest discover -s tests_policy -v
+test_empty_cwf_file_means_nobody_entitled (test_batch_interface.CwfFileTests) ... ok
+test_malformed_cwf_records_are_fatal (test_batch_interface.CwfFileTests) ... ok
+test_missing_cwf_file_is_fatal (test_batch_interface.CwfFileTests) ... ok
+test_reference_record_limits (test_batch_interface.CwfFileTests) ... ok
+test_duplicate_valid_ids_are_fatal (test_batch_interface.DuplicateIdTests) ... ok
+test_duplicate_with_rejected_identifiable_record_is_fatal (test_batch_interface.DuplicateIdTests) ... ok
+test_provisional_ids_never_collide (test_batch_interface.DuplicateIdTests) ... ok
+test_10000_records_with_maximum_total (test_batch_interface.FramingTests) ... ok
+test_10001_records_is_fatal_even_if_last_is_invalid (test_batch_interface.FramingTests) ... ok
+test_4096_byte_last_line_without_newline (test_batch_interface.FramingTests) ... ok
+test_4096_byte_line_is_one_invalid_record (test_batch_interface.FramingTests) ... ok
+test_4097_byte_line_is_fatal (test_batch_interface.FramingTests) ... ok
+test_blank_lines_are_records_not_eof (test_batch_interface.FramingTests) ... ok
+test_empty_input_is_zero_record_batch (test_batch_interface.FramingTests) ... ok
+test_lf_crlf_and_missing_final_newline_agree (test_batch_interface.FramingTests) ... ok
+test_only_one_cr_is_removed (test_batch_interface.FramingTests) ... ok
+test_identical_paths (test_batch_interface.UsageTests) ... ok
+test_missing_input_and_unwritable_output (test_batch_interface.UsageTests) ... ok
+test_wrong_argument_counts (test_batch_interface.UsageTests) ... ok
+test_batch_succeeds (test_policy_ledger.PolicyLedgerTests) ... ok
+test_cms_example_3_is_500_dollars_released (test_policy_ledger.PolicyLedgerTests) ... ok
+test_every_case (test_policy_ledger.PolicyLedgerTests) ... ok
+test_ledger_is_self_consistent (test_policy_ledger.PolicyLedgerTests) ... ok
+test_totals_reconcile_with_ledger (test_policy_ledger.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 4.044s
+
+OK
+# exit: 0
