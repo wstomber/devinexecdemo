@@ -13,3 +13,11 @@ was changed to match program output.
 
 After these, all 24 tests (119 ledger cases) pass against COBOL:
 `evidence/live/stage2-cobol-tests.log`.
+
+## Stage 3 - Python
+
+| # | What failed | Cause | Correction |
+|---|---|---|---|
+| 4 | None. The first run of `python/msp.py` passed all 24 unchanged Stage 2 tests. | - | - |
+| 5 | Before writing the CWF reader, probes of `build/msp-batch` (not committed; reproduced in Stage 4 edge batch) showed GnuCOBOL 3.1.2 LINE SEQUENTIAL behavior the README does not state: every CR byte in a CWF line is dropped (not only a trailing one), bytes after column 64 are ignored, short records are space-padded, tabs/NUL/form feed are data, and the first `B` record for an MBI wins. | Runtime behavior of `organization line sequential` reading into `PIC X(64)`. | `cwf_records()` in `python/msp.py` reproduces it; unit test `CwfFileTests`. Recorded as interface behavior to preserve, not policy. |
+| 6 | Code clean-up before commit: a one-line `counts.get(...) and counts.__setitem__(...)` expression. | Readability only. | Replaced with an `if`. Tests re-run, pass. |
