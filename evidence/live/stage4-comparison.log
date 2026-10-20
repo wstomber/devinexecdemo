@@ -1,0 +1,49 @@
++ git rev-parse HEAD
++ local devin_git_subcmd= devin_git_subcmd_idx=0 devin_git_parsed devin_git_rc=0
+++ /mnt/host_share/devin-remote parse-git-command -- rev-parse HEAD
++ devin_git_parsed='rev-parse	1'
++ '[' 0 = 0 ']'
++ IFS='	'
++ read -r devin_git_subcmd devin_git_subcmd_idx
++ case "$devin_git_subcmd_idx" in
++ [[ rev-parse == \c\o\m\m\i\t ]]
++ :
++ original_git rev-parse HEAD
++ command git rev-parse HEAD
+04e532c0c765c1b84b668436961b6a2da50f5c9a
++ return 0
++ python3 tools/verify.py baseline --command 'python3 python/msp.py' --report evidence/live/compare/python-baseline-report.json
+PASS: records and totals match; report=evidence/live/compare/python-baseline-report.json
+Migration comparison: NOT_RUN (baseline verification only)
++ make compare 'CANDIDATE=python3 python/msp.py'
+python3 tools/fixtures.py --cwf-source fixtures/cwf.json --output build/cwf.dat
+Serialized 6 CWF reference records to build/cwf.dat
+python3 tools/fixtures.py --source fixtures/curated.json --output build/curated.dat
+Serialized 33 records to build/curated.dat
+python3 tools/fixtures.py --count 1000 --seed 20261017 --output build/synthetic.dat --readable-output build/synthetic.json
+Serialized 1000 records to build/synthetic.dat
+python3 tools/verify.py compare --command 'build/msp-batch' --candidate "$CANDIDATE" --report build/comparison-report.json
+PASS: records and totals match; report=build/comparison-report.json
++ cp build/comparison-report.json evidence/live/compare/synthetic-comparison-report.json
++ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input build/curated.dat --report evidence/live/compare/curated-comparison-report.json
+PASS: records and totals match; report=evidence/live/compare/curated-comparison-report.json
++ python3 tools/edge_batch.py --ascii --output evidence/live/compare/edge.dat --cwf-output evidence/live/compare/edge-cwf.dat
+wrote 3029 edge records to evidence/live/compare/edge.dat
++ python3 tools/edge_batch.py --output evidence/live/compare/edge-bytes.dat --cwf-output evidence/live/compare/edge-bytes-cwf.dat
+wrote 3031 edge records to evidence/live/compare/edge-bytes.dat
++ python3 tools/verify.py compare --candidate 'python3 python/msp.py' --input evidence/live/compare/edge.dat --cwf evidence/live/compare/edge-cwf.dat --report evidence/live/compare/edge-comparison-report.json
+PASS: records and totals match; report=evidence/live/compare/edge-comparison-report.json
++ for n in curated synthetic
++ python3 tools/side_by_side.py curated evidence/live/compare/curated.dat evidence/live/compare/cwf.dat evidence/live/compare
+curated: 33 records, 0 mismatches, byte-identical=True
++ for n in curated synthetic
++ python3 tools/side_by_side.py synthetic evidence/live/compare/synthetic.dat evidence/live/compare/cwf.dat evidence/live/compare
+synthetic: 1000 records, 0 mismatches, byte-identical=True
++ for n in edge edge-bytes
++ python3 tools/side_by_side.py edge evidence/live/compare/edge.dat evidence/live/compare/edge-cwf.dat evidence/live/compare
+edge: 3029 records, 0 mismatches, byte-identical=True
++ for n in edge edge-bytes
++ python3 tools/side_by_side.py edge-bytes evidence/live/compare/edge-bytes.dat evidence/live/compare/edge-bytes-cwf.dat evidence/live/compare
+edge-bytes: 3031 records, 0 mismatches, byte-identical=True
++ python3 tools/compare_fatal.py --outdir evidence/live/compare
+18 fatal scenarios, 0 exit-code mismatches, 0 leftover-output differences

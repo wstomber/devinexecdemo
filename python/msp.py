@@ -5,6 +5,7 @@ Python port of cobol/batch.cob, validate.cob, payment.cob and cwf.cob.
 Usage: msp.py INPUT CWF OUTPUT TOTALS. Standard library only; integer cents.
 Exit 0 = batch succeeded (records may be INVALID); exit 2 = fatal, discard outputs.
 """
+import os
 import sys
 from dataclasses import dataclass
 from typing import Optional
@@ -273,6 +274,15 @@ class Batch:
                 f"{self.released_total:015d}\n")
 
 
+def read_all(fd: int) -> bytes:
+    chunks = []
+    while True:
+        chunk = os.read(fd, 1 << 20)
+        if not chunk:
+            return b"".join(chunks)
+        chunks.append(chunk)
+
+
 def run(argv) -> int:
     if len(argv) != 4:
         print("usage: msp-batch INPUT CWF OUTPUT TOTALS", file=sys.stderr)
@@ -286,12 +296,16 @@ def run(argv) -> int:
         try:
             with open(cwf_path, "rb") as stream:
                 reference = parse_cwf(stream.read())
-            with open(input_path, "rb") as stream:
-                data = stream.read()
-            # Outputs are opened (and truncated) only after CWF and input open, like the COBOL.
-            results = open(output_path, "w", encoding="ascii", newline="\n")
-            totals = open(totals_path, "w", encoding="ascii", newline="\n")
-            results.write(RESULT_HEADER + "\n")
+            input_fd = os.open(input_path, os.O_RDONLY)
+            try:
+                # Same order as the COBOL: open input, open (truncate) outputs, write header, then read.
+                # os.open succeeds on a directory and the read fails, as the COBOL OPEN/READ do.
+                results = open(output_path, "w", encoding="ascii", newline="\n")
+                totals = open(totals_path, "w", encoding="ascii", newline="\n")
+                results.write(RESULT_HEADER + "\n")
+                data = read_all(input_fd)
+            finally:
+                os.close(input_fd)
             batch = Batch(reference)
             for line in input_lines(data):
                 results.write(result_row(batch.process(line)))
