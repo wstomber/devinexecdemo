@@ -236,6 +236,7 @@ R.python = async () => {
   const u = E.saved.python_unit_tests, pt = E.saved.policy_tests_python;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same payment rule and CWF check, now in readable Python, held to the same independent tests.</p>
+  <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier and every test, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
   <h2>How the Python was tested, in plain English</h2>
   <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
    <div class="card"><h3>1. What was tested</h3><p><b>Two layers.</b> First, the <b>same answer key from screen 3</b> (${E.expectations?.cases?.length ?? "?"} hand-worked claims) was run, unchanged, against the Python. Then Devin wrote <b>${u.tests ?? "?"} unit tests</b> that check each piece of the Python on its own: how a line is read, the order of the validation checks, each payment branch, the CWF checks and their date boundaries, and how the CWF file is read.</p></div>
