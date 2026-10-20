@@ -1,0 +1,70 @@
+$ git rev-parse HEAD
+dbff9d79f0b29f5cca8e812cfa489dcd2666a72d
+$ MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v
+test_1000_beneficiaries_allowed_1001_fatal (test_batch.CwfFileTests) ... ok
+test_1000_history_allowed_1001_fatal (test_batch.CwfFileTests) ... ok
+test_malformed_cwf_records_are_fatal (test_batch.CwfFileTests) ... ok
+test_missing_cwf_file_is_fatal (test_batch.CwfFileTests) ... ok
+test_10000_records_at_maximum_payment (test_batch.FramingTests) ... ok
+test_10000_short_records_succeed (test_batch.FramingTests) ... ok
+test_10001_records_is_fatal (test_batch.FramingTests) ... ok
+test_4096_byte_line_is_one_invalid_record (test_batch.FramingTests) ... ok
+test_4097_byte_line_is_fatal (test_batch.FramingTests) ... ok
+test_blank_lines_are_records_not_eof (test_batch.FramingTests) ... ok
+test_crlf_and_missing_final_newline (test_batch.FramingTests) ... ok
+test_crlf_on_last_record_without_newline_is_still_92_bytes (test_batch.FramingTests) ... ok
+test_empty_input_is_zero_record_batch (test_batch.FramingTests) ... ok
+test_duplicate_of_identifiable_rejected_record_is_fatal (test_batch.IdentityTests) ... ok
+test_duplicate_valid_ids_are_fatal (test_batch.IdentityTests) ... ok
+test_unidentifiable_records_never_collide (test_batch.IdentityTests) ... ok
+test_existing_outputs_are_replaced (test_batch.UsageTests) ... ok
+test_usage_errors (test_batch.UsageTests) ... ok
+test_cms_ex3_headline (test_policy.PolicyLedgerTests) ... ok
+test_every_record_matches_ledger (test_policy.PolicyLedgerTests) ... ok
+test_exit_code_zero_and_no_stdout (test_policy.PolicyLedgerTests) ... ok
+test_ledger_is_well_formed (test_policy.PolicyLedgerTests) ... ok
+test_totals_reconcile_with_ledger (test_policy.PolicyLedgerTests) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 1.546s
+
+OK
+[exit 0]
+$ python3 -m unittest discover -s tests_python -v
+test_csv_formatting (test_msp.BatchTests) ... ok
+test_duplicate_identifiable_id_is_fatal (test_msp.BatchTests) ... ok
+test_record_limit (test_msp.BatchTests) ... ok
+test_state_reset_after_rejected_record (test_msp.BatchTests) ... ok
+test_cli_end_to_end (test_msp.CliTests) ... ok
+test_usage_and_distinct_paths_exit_2 (test_msp.CliTests) ... usage: msp-batch INPUT CWF OUTPUT TOTALS
+paths must be distinct
+ok
+test_first_beneficiary_wins (test_msp.CwfParseTests) ... ok
+test_malformed_is_fatal (test_msp.CwfParseTests) ... ok
+test_runtime_line_sequential_behaviour (test_msp.CwfParseTests) ... ok
+test_accepted_releases_payment (test_msp.CwfTests) ... ok
+test_duplicate_matches_history_exactly (test_msp.CwfTests) ... ok
+test_msp_primary_not_billed (test_msp.CwfTests) ... ok
+test_not_entitled_keeps_calculated_payment (test_msp.CwfTests) ... ok
+test_zero_claim_is_checked (test_msp.CwfTests) ... ok
+test_lf_crlf_and_final_line (test_msp.FramingTests) ... ok
+test_transport_bound (test_msp.FramingTests) ... ok
+test_digits_value_is_exact_integer (test_msp.NumericTests) ... ok
+test_is_numeric_uses_explicit_ascii_digits (test_msp.NumericTests) ... ok
+test_cms_ex3_and_counterfactual (test_msp.PaymentTests) ... ok
+test_each_limit_controls (test_msp.PaymentTests) ... ok
+test_maximums_have_no_overflow_or_float (test_msp.PaymentTests) ... ok
+test_one_cent_boundaries_and_zero_reasons (test_msp.PaymentTests) ... ok
+test_contract_equal_and_zero_allowed (test_msp.ValidationTests) ... ok
+test_date_bounds (test_msp.ValidationTests) ... ok
+test_id_rules (test_msp.ValidationTests) ... ok
+test_length_and_reserved_identity (test_msp.ValidationTests) ... ok
+test_malformed_contract_is_bad_amount (test_msp.ValidationTests) ... ok
+test_precedence_chain (test_msp.ValidationTests) ... ok
+test_valid_record_parses_all_fields (test_msp.ValidationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.042s
+
+OK
+[exit 0]
