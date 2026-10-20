@@ -347,7 +347,7 @@ R.review = async () => {
   const st = E.status || {}, ev = E.session_events || [];
   return `<h1>6 · Reviewable, and repeatable</h1>
   <p class="lede">Everything a human reviewer needs is in one pull request, and the process is saved as Playbooks so Devin can do it again — or keep maintaining the code.</p>
-  ${D?.session ? `<h2>Your live Devin run</h2><p>The run started with “Start Devin live” on the first page. Open the session to watch Devin work, or follow its pull request once it opens one.</p><div id="devinslot">${devinCard()}</div>` : ""}
+  ${D?.session ? `<h2 id="devintop">Your live Devin run</h2><p>The run started with “Start Devin live” on the first page. Open the session to watch Devin work, or follow its pull request once it opens one.</p><div id="devinslot">${devinCard()}</div>` : ""}
   ${E.status_problem ? `<div class="err">demo/status.json ${esc(E.status_problem)}</div>` : `<p class="small muted">PR / Playbook status recorded ${esc(st.recorded_at)} — click through for the current state.</p>`}
   <h2>Pull requests</h2><div class="grid g2">${(st.pull_requests || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">#${p.number}</a> ${badge(p.state)}</h3>${esc(p.title)}<div class="small muted">${esc(p.role)}</div>${p.commits_url ? `<a class="small" href="${esc(p.commits_url)}" target="_blank">See the commit-by-commit order</a>` : ""}</div>`).join("")}</div>
   <h2>Commit history (this checkout)</h2><table><tbody>${E.git.commits.slice(0, 10).map(c => `<tr><td>${commit(c.sha)}</td><td class="small">${esc(c.date)}</td><td>${esc(c.subject)}</td></tr>`).join("")}</tbody></table>
@@ -384,15 +384,17 @@ function devinCard() {
    ${s.status === "suspended" ? `<p class="small muted">Devin paused this session. Open it and send a message to resume it.</p>` : devinActive(s) ? `<p class="small muted">Status updates every 10 seconds.</p>` : `<p>${startBtn("▶ Start another live run")}</p>`}</div>`;
 }
 let devinGen = 0;
+function paintDevin() {
+  if (route === "review" && !!$("#devintop") !== !!D?.session) return render();
+  const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard();
+}
 async function refreshDevin() {
   if (!$("#devinslot")) { clearInterval(dpoll); dpoll = null; return; }
   const gen = devinGen; let d;
   try { const r = await fetch("/api/devin-run"); d = await r.json(); } catch (e) { d = {configured: true, error: "Could not reach this app's server."}; }
   if (gen !== devinGen) return;
-  const moved = route === "review" && !!D?.session !== !!d.session;
   D = d;
-  if (moved) return render();
-  const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard();
+  paintDevin();
   if (!devinActive(D?.session)) { clearInterval(dpoll); dpoll = null; } else if (!dpoll) dpoll = setInterval(refreshDevin, 10000);
 }
 
@@ -467,8 +469,8 @@ document.addEventListener("click", async ev => {
   const t = ev.target.closest("[data-copy],[data-cmp],[data-f],[data-pg],[data-row],[data-case],[data-close],[data-steps],[data-jump],[data-goto-ex3],[data-devin-start],[data-devin-reset],[data-bug],[data-undo],#runlive,#resetlive");
   if (!t) return;
   if (t.dataset.copy) { navigator.clipboard?.writeText(t.dataset.copy); t.textContent = "Copied"; return; }
-  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); return; }
-  if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
+  if (t.dataset.devinReset) { if (devinActive(D?.session) && !confirm("Stop this Devin session and clear the card?")) return; devinGen++; t.disabled = true; try { const r = await fetch("/api/devin-reset", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } paintDevin(); return; }
+  if (t.dataset.devinStart) { devinGen++; t.disabled = true; t.textContent = "Starting Devin…"; try { const r = await fetch("/api/devin-run", {method: "POST"}); const d = await r.json(); devinGen++; D = d; } catch (e) { D = {...(D || {}), error: "Could not reach this app's server."}; } paintDevin(); if (devinActive(D?.session) && !dpoll) dpoll = setInterval(refreshDevin, 10000); return; }
   if (t.id === "runlive" || t.dataset.undo) return startRun(t);
   if (t.dataset.bug) return startRun(t, t.dataset.bug);
   if (t.id === "resetlive") { t.disabled = true; await fetch("/api/live-reset", {method: "POST"}); await load(); cmpKey = null; cmpQuery = ""; cmpFilter = "all"; cmpPage = 0; $("#drawer").hidden = true; return render(); }
