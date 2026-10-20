@@ -69,3 +69,4 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 .pilotweeks ol{list-style:none;padding:0;margin:8px 0 0}.pilotweeks li{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}.pilotweeks .stepno{flex:none}
 .rulematch.steps .eg{margin-top:8px;padding:6px 8px;background:#f4f7fb;border-radius:4px;font-size:13px}
 .reshead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;scroll-margin-top:140px}.reshead h2{margin-right:auto}
+.cmpstats{grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px}.cmpstats .card{padding:10px 12px}.cmpstats .stat .n{font-size:17px}.cmpstats .stat .l,.cmpstats .small{font-size:12px}.cmpstats .badge{font-size:11px}
