@@ -57,10 +57,11 @@ function findLines(text, startRe, endRe) {
 }
 async function codeSnippet(path, startRe, endRe) { const t = await file(path); const [a, b] = findLines(t, startRe, endRe); return codeView(t, a, b, path); }
 
-function testStatus(saved, live, label) {
+function testStatus(saved, live, label, cases) {
+  const n = t => t != null ? `${t} tests${cases ? ` · all ${cases} answer-key cases` : ""}` : "";
   return `<div class="card"><h3>${esc(label)}</h3>
    <div>${SAVED} ${badge(saved?.status || "UNKNOWN")} ${saved?.tests != null ? saved.tests + " tests" : ""} · ${raw(saved?.log, "log")}</div>
-   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + live.tests + " tests" : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run COBOL vs Python now”</span>'}</div></div>`;
+   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + n(live.tests) : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run COBOL vs Python now”</span>'}</div></div>`;
 }
 const liveStep = key => E.live?.steps?.find(s => s.key === key);
 function stepLine(key) { const s = liveStep(key); return s ? `${LIVE} ${badge(s.status)} exit ${s.exit_code ?? "—"} · ${raw(s.log, "output")}` : `${LIVE} ${badge("NOT_RUN")}`; }
@@ -166,7 +167,7 @@ R.tests = async () => {
   <div class="grid g2"><div class="card"><h3>Tests came first ${badge(p.status, p.status === "PASSED" ? "VERIFIED FROM GIT" : p.status)}</h3>
     <p>Tests committed in ${commit(s2?.sha)} (${esc(s2?.date || "")})<br>Python first appears in ${commit(s3?.sha)} (${esc(s3?.date || "")})</p>
     <p class="small">Checked now from git history: <code>python/msp.py</code> ${p.python_absent_at_stage2 ? "did <b>not</b> exist" : "<b>existed</b>"} at the test commit; test commit ${p.stage2_before_stage3 ? "precedes" : "does <b>not</b> precede"} the Python commit.</p></div>
-   ${testStatus(E.saved.policy_tests_cobol, E.live?.policy_tests_cobol, "Independent policy tests against COBOL")}</div>
+   ${testStatus(E.saved.policy_tests_cobol, E.live?.policy_tests_cobol, "Answer key, run on COBOL", E.expectations?.cases?.length)}</div>
   <h2>The hand-derived ledger: ${cases.length} cases</h2>
   <p class="small muted">${esc(x?.derivation || "")}</p>
   <div class="tablewrap"><table><thead><tr><th>#</th><th>Claim</th><th>Category</th><th>Expected</th><th class="num">Expected payment</th><th>Reason</th><th>CWF</th><th class="num">Released</th><th>Source</th></tr></thead><tbody>
@@ -236,7 +237,7 @@ R.python = async () => {
   const u = E.saved.python_unit_tests, pt = E.saved.policy_tests_python;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same payment rule and CWF check, now in readable Python, held to the same independent tests.</p>
-  <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier and every test, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
+  <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier, runs all ${E.expectations?.cases?.length ?? "?"} answer-key cases on both versions plus the unit tests, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
   <h2>How the Python was tested, in plain English</h2>
   <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
    <div class="card"><h3>1. What was tested</h3><p><b>Two layers.</b> First, the <b>same answer key from screen 3</b> (${E.expectations?.cases?.length ?? "?"} hand-worked claims) was run, unchanged, against the Python. Then Devin wrote <b>${u.tests ?? "?"} unit tests</b> that check each piece of the Python on its own: how a line is read, the order of the validation checks, each payment branch, the CWF checks and their date boundaries, and how the CWF file is read.</p></div>
@@ -248,7 +249,7 @@ R.python = async () => {
     <li><b>Exact cents, standard library only.</b> Whole-number cents like COBOL's packed decimal, and no new third-party packages to vet.</li>
     <li><b>Then compare everything.</b> Unit tests can miss what nobody thought of, so screen 5 also compares every claim's output with the COBOL's.</li></ul></div>
   </div>
-  <div class="grid g2" style="margin-top:14px">${testStatus(pt, E.live?.policy_tests_python, "Answer key, run on Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests (live count includes the app's own tests)")}</div>
+  <div class="grid g2" style="margin-top:14px">${testStatus(pt, E.live?.policy_tests_python, "Answer key, run on Python", E.expectations?.cases?.length)}${testStatus(u, E.live?.python_unit_tests, "Python unit tests (live count includes the app's own tests)")}</div>
   <p>The rules that decide what Medicare pays, one step per row: steps 1–6 calculate the payment, steps 7–10 are the CWF check that decides whether it is released. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows one example claim through each step.</p>
   ${await ruleMatch()}
   <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
