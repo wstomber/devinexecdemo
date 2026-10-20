@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 17 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 20 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
@@ -36,7 +36,7 @@ Yes. With Outposts, your code, builds, tests and the commands Devin runs stay on
 Source: [Outposts](https://docs.devin.ai/cloud/outposts/overview)
 
 ### Where does model inference run?
-With Cognition's model providers, under zero-data-retention agreements.
+With Cognition's model providers. On paid plans, opting out of training turns on zero data retention with those providers. **Confirm the providers and settings for a CMS deployment with Cognition.**
 
 Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
@@ -56,7 +56,7 @@ Yes. Cognition has ZDR agreements with its model providers, and ZDR is on for ev
 Sources: [Security FAQ](https://docs.devin.ai/admin/security), [Federal compliance](https://docs.devin.ai/federal/compliance)
 
 ### How is data encrypted? Can we hold the keys?
-Data is encrypted in transit and at rest with AWS KMS. Customer-managed keys are available.
+Data is encrypted in transit and at rest, by default with Cognition-managed keys. Customer-managed keys (your own AWS KMS key) are available in the Enterprise Assured deployment.
 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Customer managed keys](https://docs.devin.ai/enterprise/security-access/security/customer-managed-keys)
 
@@ -100,7 +100,7 @@ Sources: [SAML SSO](https://docs.devin.ai/enterprise/security-access/sso/saml), 
 ### How does Devin get credentials, and how are they scoped?
 Cloud access uses short-lived OIDC workload identity, so no static cloud keys are stored in Devin. Other secrets live in a secrets manager scoped per organization or repository, and repository access is limited to the repositories you select.
 
-Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
+Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Secrets](https://docs.devin.ai/product-guides/secrets), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
 
 ## Oversight, audit and incident response
 
@@ -118,9 +118,9 @@ Source: [Audit logs](https://docs.devin.ai/api-reference/v3/audit-logs/enterpris
 Administrators can stop any session, and revoking the API key or service user stops automated starts.
 
 ### How are vulnerabilities and incidents handled?
-Report vulnerabilities to security@cognition.ai. Enterprise customers are notified of incidents under the terms of their agreement.
+Report vulnerabilities and security incidents to security@cognition.ai. How and when Cognition notifies customers of an incident is not in the public documentation. **Confirm with Cognition.**
 
-Source: [Trust Center](https://trust.cognition.ai)
+Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
 ## About this demonstration
 
