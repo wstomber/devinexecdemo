@@ -75,7 +75,7 @@ const R = {};
 R.overview = async () => {
   const s = E.saved, c = s.comparisons, total = Object.values(c).reduce((n, x) => n + (x.records?.python || 0), 0);
   const allPassed = Object.values(c).every(x => x.status === "PASSED");
-  return `<h1>Can Devin safely modernize code nobody understands anymore?</h1>
+  return `<h1>Can Devin safely modernize code that few engineers still understand?</h1>
   <p class="lede">A synthetic COBOL module that follows a Medicare Secondary Payer claim — when Medicare pays after another insurer — the way CMS documents it: first it <b>calculates</b> what Medicare owes, then a <b>CWF check</b> approves or rejects the claim, and only an approved claim's payment is released. Devin had to understand it, recover the policy behind it, test it, migrate it to Python, and prove the result.</p>
   <div class="flow">
     <div class="card"><h3>1. Run the original</h3>${badge(s.baseline.status)}<div class="small">COBOL baseline kept as the yardstick</div></div><div class="arrow">→</div>

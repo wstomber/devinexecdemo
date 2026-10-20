@@ -24,7 +24,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 | Time | Screen | Do | Say (one line) |
 |---|---|---|---|
-| 0–2 | The problem | Point at the 4 steps. | Old COBOL nobody can read; a wrong rule pays real money. Each claim is priced first, then CWF approves or rejects it, and only approved claims are paid. Devin explained it, tested it, migrated it, and proved it. |
+| 0–2 | The problem | Point at the 4 steps. | Old COBOL that few engineers still read; a wrong rule pays real money. Each claim is priced first, then CWF approves or rejects it, and only approved claims are paid. Devin explained it, tested it, migrated it, and proved it. |
 | 2–4 | 1 · COBOL baseline | Press **▶ Run COBOL vs Python now** (top right, ~7 s). When it finishes the app jumps to 5 · Old vs new showing the fresh LIVE results. | Devin first ran the original as the yardstick. |
 | 4–6 | 2 · Devin explains COBOL | Point at the highlighted lines, then scroll to the CWF check; mention DeepWiki. | Devin found the exact line that applies the provider's contract, and explained the three CWF checks that decide whether it gets paid. |
 | 6–9 | 3 · Tests came first | Point at "Tests came first: VERIFIED FROM GIT"; click any row to see its hand-worked answer. | The right answers were worked out from the CMS manual and checked against COBOL before any Python existed. |
