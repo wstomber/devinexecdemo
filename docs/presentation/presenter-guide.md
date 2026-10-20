@@ -34,7 +34,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
 | +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
 | 18–20 | 7 · Security FAQ | Scroll to the section the question belongs to (compliance, architecture, data, network, identity, audit) and answer from it; each answer links its Cognition source. | No real data was used; every answer is from Cognition's published docs (ZDR with the model labs, Outposts, Devin Connect), and anything unpublished says "Confirm with Cognition". |
-| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on one real CWF MSP claim path: the payment calculation and the CWF edits." Walk the 8 steps across the four weeks. If asked for detail, open "The full plan" for the in-scope table and the "Platform owner's role" column. | The pilot is one named CWF claim path, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
+| +2 (if asked about next steps) | 8 · Pilot plan | Say: "Same steps, on one real CWF MSP claim path: the payment calculation and the CWF edits." Walk the 9 steps across the four weeks. If asked for detail, open "The full plan" for the in-scope table and the "Platform owner's role" column. | The pilot is one named CWF claim path, not a platform rewrite; security sets the rules in week 1 and tries to break them in week 3; nothing touches real data. |
 
 ## 15-minute route
 

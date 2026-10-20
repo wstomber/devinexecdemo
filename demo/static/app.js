@@ -346,7 +346,7 @@ R.compare = async () => {
    <p class="small muted">A green table is not the proof on its own — the strict verifier (tools/verify.py) checks every field and the totals independently.</p></details>`;
 };
 const PILOT_WEEKS = [
-  [1, "Set up", ["Meet the system owner and agree what Devin can access.", "Security sets the guardrails and signs off before Devin sees any code.", "Devin maps the code into a DeepWiki and records today's results."]],
+  [1, "Set up", ["Meet the system owner and agree what Devin can access.", "Security sets the guardrails and signs off before Devin sees any code.", "Devin maps the code into a DeepWiki and records today's results.", "Devin pulls every business rule out of the COBOL into one list, each linked to the code it came from."]],
   [2, "Prove it", ["Write the answer key from the CMS manuals and check today's COBOL against it.", "Devin migrates the claim path to Python and compares old and new on every test claim."]],
   [3, "Real work", ["Devin takes 3–5 real change requests from the backlog, each reviewed by your engineers.", "Security tries to break it."]],
   [4, "Decide", ["Review the results together and make the go / no-go call."]],
