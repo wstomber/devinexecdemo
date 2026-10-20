@@ -58,10 +58,10 @@ function findLines(text, startRe, endRe) {
 async function codeSnippet(path, startRe, endRe) { const t = await file(path); const [a, b] = findLines(t, startRe, endRe); return codeView(t, a, b, path); }
 
 function testStatus(saved, live, label, cases) {
-  const n = t => t != null ? `${t} tests${cases ? ` · all ${cases} answer-key cases` : ""}` : "";
+  const n = (t, st) => t != null ? `${t} tests${cases && st === "PASSED" ? ` · all ${cases} answer-key cases` : ""}` : "";
   return `<div class="card"><h3>${esc(label)}</h3>
    <div>${SAVED} ${badge(saved?.status || "UNKNOWN")} ${saved?.tests != null ? saved.tests + " tests" : ""} · ${raw(saved?.log, "log")}</div>
-   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + n(live.tests) : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run COBOL vs Python now”</span>'}</div></div>`;
+   <div style="margin-top:6px">${LIVE} ${live ? badge(live.status) + (live.tests != null ? " " + n(live.tests, live.status) : "") + " · " + raw(live.log, "log") : badge("NOT_RUN") + ' <span class="muted small">press “Run COBOL vs Python now”</span>'}</div></div>`;
 }
 const liveStep = key => E.live?.steps?.find(s => s.key === key);
 function stepLine(key) { const s = liveStep(key); return s ? `${LIVE} ${badge(s.status)} exit ${s.exit_code ?? "—"} · ${raw(s.log, "output")}` : `${LIVE} ${badge("NOT_RUN")}`; }
@@ -232,12 +232,9 @@ async function ruleMatch() {
   </tbody></table>`;
 }
 R.python = async () => {
-  const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
-  const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
   const u = E.saved.python_unit_tests, pt = E.saved.policy_tests_python;
   return `<h1>4 · The new Python, and its own tests</h1>
-  <p class="lede">The same payment rule and CWF check, now in readable Python, held to the same independent tests.</p>
-  <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier, runs all ${E.expectations?.cases?.length ?? "?"} answer-key cases on both versions, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
+  <p class="lede">How the new Python was tested: the same answer key the COBOL passed on screen 3, plus unit tests aimed at every detail. Screen 5 then shows how the code was translated and compares it with the COBOL claim by claim.</p>
   <h2>How the Python was tested, in plain English</h2>
   <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
    <div class="card"><h3>1. What was tested</h3><p><b>Two layers.</b> First, the <b>same answer key from screen 3</b> (${E.expectations?.cases?.length ?? "?"} hand-worked claims) was run, unchanged, against the Python. Then Devin wrote <b>${u.tests ?? "?"} unit tests</b> that check each piece of the Python on its own: how a line is read, the order of the validation checks, each payment branch, the CWF checks and their date boundaries, and how the CWF file is read.</p></div>
@@ -250,10 +247,6 @@ R.python = async () => {
     <li><b>Then compare everything.</b> Unit tests can miss what nobody thought of, so screen 5 also compares every claim's output with the COBOL's.</li></ul></div>
   </div>
   <div class="grid g2" style="margin-top:14px">${testStatus(pt, E.live?.policy_tests_python, "Answer key, run on Python", E.expectations?.cases?.length)}${testStatus(u, E.live?.python_unit_tests, "Python unit tests (live count includes the app's own tests)")}</div>
-  <p>The rules that decide what Medicare pays, one step per row: steps 1–6 calculate the payment, steps 7–10 are the CWF check that decides whether it is released. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows one example claim through each step.</p>
-  ${await ruleMatch()}
-  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
-  <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   <h2>What the tests hold the Python to</h2><div class="grid g4">
    <div class="card"><h3>Exact cents</h3>Whole-number cents everywhere — never floating point — like COBOL's packed decimal.</div>
    <div class="card"><h3>Optional contract</h3>“----------” means no contract; a number replaces the charges.</div>
@@ -264,7 +257,6 @@ R.python = async () => {
    <div class="card"><h3>Same reference data</h3>Both read the same CWF file the same way, and both stop on a malformed CWF record.</div></div>
   <details><summary>Unit tests run (${u.tests ?? "?"})</summary><ul>${(u.cases || []).map(c => `<li>${badge(c.result === "ok" ? "PASSED" : "FAILED", c.result)} <code>${esc(c.name)}</code></li>`).join("")}</ul></details>
   <details data-md="${esc(E.saved.corrections)}"><summary>Corrections Devin made along the way</summary><div class="muted small">Loading…</div></details>
-  ${await mdBlock("docs/migration/05-cobol-to-python.md", "COBOL → Python translation guide")}
   <p class="small">Commit ${commit(E.git.stages.stage3?.sha)} · <a href="https://github.com/wstomber/devinexecdemo/commit/${esc(E.git.stages.stage3?.sha || "")}" target="_blank">view the diff</a></p>
   ${cmd("MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v")}${cmd("python3 -m unittest discover -s tests_python -v")}`;
 };
@@ -302,9 +294,22 @@ R.compare = async () => {
   const shown = rows.slice(cmpPage * per, cmpPage * per + per);
   const stat = (n, l, s) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div>${s || ""}</div>`;
   const t = c.totals || {};
-  return `<h1>5 · Old vs new, claim by claim</h1>
-  <p class="lede">The original COBOL and the new Python were run on the same claims and the same CWF reference file. For every claim they must agree on the calculated payment, the CWF decision and the amount released. This table is rebuilt from both programs' raw output files.</p>
-  ${bugBanner() || breakCard()}
+  let py = "", pay = "", rules;
+  try { [py, pay, rules] = await Promise.all([codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/), codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/), ruleMatch()]); }
+  catch (e) { rules = `<div class="err">Could not load the code from this checkout (${esc(e.message)}). The claim-by-claim results below are unaffected.</div>`; }
+  return `<h1>5 · Old vs new: same rules, same results</h1>
+  <p class="lede">How the COBOL was turned into Python, and the proof that both behave the same: first the rules side by side in the code, then both programs run on the same claims.</p>
+  ${bugBanner()}
+  <h2>1. The same rules, in the old code and the new</h2>
+  <p>Devin translated the COBOL one rule at a time, keeping the same order, so each step below can be read across. Steps 1–6 calculate the payment, and steps 7–10 are the CWF check that decides whether it is released. The last column follows one example claim through each step.</p>
+  ${rules}
+  <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
+  <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
+  ${await mdBlock("docs/migration/05-cobol-to-python.md", "COBOL → Python translation guide")}
+  <h2 id="results" style="scroll-margin-top:140px">2. The same results, claim by claim</h2>
+  <p>Reading the code is not proof, so both programs were run on the same claims and the same CWF reference file. For every claim they must agree on the calculated payment, the CWF decision and the amount released. The table below is rebuilt from both programs' raw output files.</p>
+  <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier, runs all ${E.expectations?.cases?.length ?? "?"} answer-key cases on both versions, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
+  ${bugBanner() ? "" : breakCard()}
   <div class="toolbar">${src.map(([k, v]) => `<button class="btn${k === cmpKey ? " on" : ""}" data-cmp="${k}">${k.startsWith("live") ? "LIVE" : "SAVED"} · ${esc(BATCH[k.split(":")[1]]?.[0] || k.split(":")[1])} (${v.records?.python?.toLocaleString() ?? "?"})${k.startsWith("live") && E.live?.started_at ? ` · ${new Date(E.live.started_at).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}` : ""}</button>`).join("")}</div>
   <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <b class="small">${c.kind === "live" ? `Run ${esc(when(E.live?.started_at))} (Run COBOL vs Python now)` : `Saved rehearsal, recorded ${esc(when(E.git.stages.stage4?.date))}`}</b> <span class="muted small">· ${esc(c.title)}</span></div>
   ${BATCH[cmpKey.split(":")[1]] ? `<p class="small">${esc(BATCH[cmpKey.split(":")[1]][1])}</p>` : ""}
@@ -428,13 +433,17 @@ async function render() {
   $("#nav").innerHTML = VIEWS.map(([k, l]) => `<a href="#${k}" class="${k === route ? "on" : ""}">${l}</a>`).join("");
   const html = await R[route]();
   if (gen !== renderGen) return;
+  const vid = $("#view video"), vidOpen = vid?.closest("details")?.open;
   $("#view").innerHTML = html;
+  const nv = $("#view video");
+  if (vid && nv && vid.getAttribute("src") === nv.getAttribute("src")) { nv.replaceWith(vid); if (vidOpen) vid.closest("details").open = true; }
   const idx = VIEWS.findIndex(v => v[0] === route);
   $("#foot").innerHTML = `<span>${idx > 0 ? `<a class="btn" href="#${VIEWS[idx - 1][0]}">← ${esc(VIEWS[idx - 1][1])}</a>` : ""}</span>
    <span class="muted">Checkout ${commit(E.git.head)} on <code>${esc(E.git.branch)}</code> · evidence read ${esc(E.generated_at)}</span>
    <span>${idx < VIEWS.length - 1 ? `<a class="btn primary" href="#${VIEWS[idx + 1][0]}">${esc(VIEWS[idx + 1][1])} →</a>` : ""}</span>`;
   renderLive();
   if ($("#devinslot")) refreshDevin();
+  if (jumpResults && route === "compare") { jumpResults = false; if (!E.live?.bug) $("#results")?.scrollIntoView(); }
 }
 async function load() {
   const r = await fetch("/api/evidence"); if (!r.ok) throw new Error("evidence " + r.status); E = await r.json();
@@ -446,7 +455,8 @@ async function startRun(t, bug) {
   const r = await fetch("/api/live-run", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(bug ? {bug} : {})});
   await load(); if (r.ok && !E.live_running) return openFresh(); renderLive(); showSteps();
 }
-function openFresh() { $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQuery = ""; cmpFilter = E.live?.bug ? "mismatch" : "all"; cmpPage = 0;
+let jumpResults = false;
+function openFresh() { jumpResults = true; $("#drawer").hidden = true; cmpKey = curatedKey(); cmpQuery = ""; cmpFilter = E.live?.bug ? "mismatch" : "all"; cmpPage = 0;
   if (location.hash === "#compare") render(); else location.hash = "#compare"; }
 
 document.addEventListener("click", async ev => {
