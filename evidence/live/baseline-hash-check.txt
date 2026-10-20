@@ -1,0 +1,23 @@
+source_files_sha256	cobol/batch.cob	MATCH
+source_files_sha256	cobol/copybooks/claim.cpy	MATCH
+source_files_sha256	cobol/copybooks/cwf.cpy	MATCH
+source_files_sha256	cobol/cwf.cob	MATCH
+source_files_sha256	cobol/payment.cob	MATCH
+source_files_sha256	cobol/validate.cob	MATCH
+source_files_sha256	fixtures/curated.json	MATCH
+source_files_sha256	fixtures/cwf.json	MATCH
+source_files_sha256	fixtures/expected.json	MATCH
+source_files_sha256	tools/capture_baseline.py	MATCH
+source_files_sha256	tools/fixtures.py	MATCH
+source_files_sha256	tools/verify.py	MATCH
+files_sha256	curated-results.csv	MATCH
+files_sha256	curated-totals.csv	MATCH
+files_sha256	curated-verification.json	MATCH
+files_sha256	curated.dat	MATCH
+files_sha256	cwf.dat	MATCH
+files_sha256	synthetic-results.csv	MATCH
+files_sha256	synthetic-totals.csv	MATCH
+files_sha256	synthetic.dat	MATCH
+batches committed={'curated': {'records': 33, 'paid': 15, 'zero': 9, 'invalid': 9, 'payment_cents': 10001694602, 'accepted': 21, 'rejected': 3, 'released_cents': 10000450202}, 'synthetic': {'records': 1000, 'paid': 271, 'zero': 729, 'invalid': 0, 'payment_cents': 485289809347, 'accepted': 736, 'rejected': 264, 'released_cents': 344091123732}}
+batches live={'curated': {'records': 33, 'paid': 15, 'zero': 9, 'invalid': 9, 'payment_cents': 10001694602, 'accepted': 21, 'rejected': 3, 'released_cents': 10000450202}, 'synthetic': {'records': 1000, 'paid': 271, 'zero': 729, 'invalid': 0, 'payment_cents': 485289809347, 'accepted': 736, 'rejected': 264, 'released_cents': 344091123732}}
+committed source_commit=24be3f4e629fa4f5b9d6f1708e1586146596e460 live source_commit=be0b00ec5a2369d50a34d351694b187ae2300fe4
