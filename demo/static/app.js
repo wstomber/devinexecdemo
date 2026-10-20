@@ -348,8 +348,8 @@ R.compare = async () => {
 };
 const PILOT_WEEKS = [
   [1, "Set up", ["Meet the system owner and agree what Devin can access.", "Security sets the guardrails and signs off before Devin sees any code.", "Devin maps the code into a DeepWiki and records today's results.", "Devin pulls every business rule out of the COBOL into one list, each linked to the code it came from."]],
-  [2, "Prove it", ["Write the answer key from the CMS manuals and check today's COBOL against it.", "Devin migrates the claim path to Python and compares old and new on every test claim."]],
-  [3, "Real work", ["Devin takes 3–5 real change requests from the backlog, each reviewed by your engineers.", "Security tries to break it."]],
+  [2, "Prove it", ["Agree the expected answers: reuse CMS's test cases and past claims, fill the gaps from the manuals, and check today's COBOL against them.", "Devin migrates the claim path to Python and compares old and new on every test claim."]],
+  [3, "Real work", ["Devin makes 3–5 real changes from the backlog to this same MSP/CWF claim path, each reviewed by your engineers.", "Security tries to break it."]],
   [4, "Decide", ["Review the results together and make the go / no-go call."]],
 ];
 R.pilot = async () => `<h1>8 · Pilot: one CWF MSP claim path in four weeks</h1>
