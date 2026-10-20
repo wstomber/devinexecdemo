@@ -231,30 +231,40 @@ async function ruleMatch() {
     <td><div class="code">${st.file === "cwf" ? '<div class="small muted">cwf.cob</div>' : ""}${ruleLines(st.file === "cwf" ? cwfSrc : cob, st.cob)}</div></td><td><div class="code">${ruleLines(py, st.py)}</div></td>${ex ? `<td>${st.ex(ex, bene, hist)}</td>` : ""}</tr>`).join("")}
   </tbody></table>`;
 }
+const TEST_STEPS = [
+  ["Reuse the answer key, unchanged", () => `Ran all ${E.expectations?.cases?.length ?? "?"} hand-worked cases from screen 3 against the Python. Only the program being tested changed; the cases and the test code stayed the same.`, "The Python never grades itself. Every expected answer came from the CMS manual and was checked on the COBOL before any Python existed.", "key"],
+  ["Payment math, to the cent", "Unit tests for each payment rule: the four payment limits, the optional contract amount, and when the answer is $0.", "Amounts are whole-number cents, like the COBOL, never decimals that can round. Wrong cents don't crash anything, so each rule gets its own test. Standard Python only, so there are no new packages to vet.", ["test_payment_branches", "test_contract_basis_and_cms_example_3"]],
+  ["Read the 92-character record like the COBOL", "Tests for each field of the claim record: which characters count as digits, valid claim IDs, the contract flag, the Medicare ID and the dates.", "If the two versions disagree on what a valid field is, they accept or reject different claims. So the Python matches the COBOL exactly, even on odd characters.", ["test_ascii_digits_rejects_non_ascii_and_non_digits", "test_claim_id_rules", "test_each_amount_field_requires_ascii_digits", "test_contract_flag_mbi_and_date_rules"]],
+  ["Same check order", "Tests claims with two problems at once, to see which reason is reported.", "The first problem found decides the reason code. Testing one problem at a time would miss a change in the order.", ["test_validation_precedence"]],
+  ["Same line handling", "Tests different line endings, an empty file, and lines that are too long.", "Rewrites often differ on line endings and over-long lines. The Python reproduces the COBOL's behavior.", ["test_lf_crlf_lone_cr_and_empty_stream", "test_transport_limit_and_claim_raw_padding"]],
+  ["CWF check: same order, same date cut-offs", "Tests the three CWF checks in order (is the patient covered, is it a repeat bill, should another insurer have paid first) and one day either side of each coverage date.", "Dates one day off are a classic migration bug. A rejected claim keeps its calculated amount but releases $0.", ["test_cwf_order_and_entitlement_boundaries"]],
+  ["Read the CWF file like the COBOL", "Tests how the reference file is read, which record wins when there are two, and that a broken file stops the run.", "The COBOL reads this file in its own particular way. Matching it means both versions see the same reference data.", ["test_cwf_reader_drops_cr_truncates_and_pads", "test_first_beneficiary_record_wins", "test_cwf_parser_records_and_boundaries", "test_cwf_record_limits"]],
+  ["Fix the Python when it differs", "The tests found one real difference: when the output folder was missing, the Python reported file error 35 where the COBOL reports 30.", "The COBOL is the yardstick, so the Python was fixed, never the expected answer.", "fix"],
+  ["Prove the tests can fail", "Plants four realistic bugs, one at a time, in a copy of the Python.", "Passing tests only mean something if they would fail on a mistake. Each planted bug turns the tests red.", "break"],
+  ["Then compare every claim", "Hands over to screen 5, which runs the COBOL and the Python on the same claims and compares every field.", () => `Tests only check what someone thought of. The comparison also covers ${(E.saved.comparisons.synthetic?.records?.python ?? 0).toLocaleString()} synthetic and ${(E.saved.comparisons.edge?.records?.python ?? 0).toLocaleString()} broken claims that nobody worked out by hand.`, "compare"],
+];
+function testSteps(u, pt) {
+  const v = x => typeof x === "function" ? x() : esc(x);
+  const proof = p => {
+    if (Array.isArray(p)) return p.map(nm => { const c = (u?.cases || []).find(x => x.name === nm); return `<div>${badge(c ? (c.result === "ok" ? "PASSED" : "FAILED") : "UNKNOWN")} <code>${esc(nm)}</code></div>`; }).join("");
+    if (p === "key") { const lv = E.live?.policy_tests_python, k = lv || pt; return `${badge(k?.status || "UNKNOWN")} ${lv ? "live run" : "saved run"}${k?.status === "PASSED" ? ` · all ${E.expectations?.cases?.length ?? "?"} cases match` : ""}`; }
+    if (p === "fix") return "Correction 3 in <i>Corrections Devin made along the way</i>, below";
+    if (p === "break") return `<a href="#compare">Try to break it</a> on screen 5`;
+    return `<a href="#compare">Screen 5 · Old vs new</a>`;
+  };
+  return `<table class="rulematch steps"><thead><tr><th>Step</th><th>What Devin did</th><th>Decision, and why</th><th>Proof</th></tr></thead><tbody>
+  ${TEST_STEPS.map(([say, did, why, p], k) => `<tr><td><span class="stepno">${k + 1}</span> <b>${esc(say)}</b></td><td>${v(did)}</td><td>${v(why)}</td><td>${proof(p)}</td></tr>`).join("")}
+  </tbody></table>`;
+}
 R.python = async () => {
   const u = E.saved.python_unit_tests, pt = E.saved.policy_tests_python;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">How the new Python was tested: the same answer key the COBOL passed on screen 3, plus unit tests aimed at every detail. Screen 5 then shows how the code was translated and compares it with the COBOL claim by claim.</p>
-  <h2>How the Python was tested, in plain English</h2>
-  <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
-   <div class="card"><h3>1. What was tested</h3><p><b>Two layers.</b> First, the <b>same answer key from screen 3</b> (${E.expectations?.cases?.length ?? "?"} hand-worked claims) was run, unchanged, against the Python. Then Devin wrote <b>${u.tests ?? "?"} unit tests</b> that check each piece of the Python on its own: how a line is read, the order of the validation checks, each payment branch, the CWF checks and their date boundaries, and how the CWF file is read.</p></div>
-   <div class="card"><h3>2. Why it matters</h3><p>A rewrite rarely fails on the main formula. It fails quietly on details: a check done in a different order, a rounding difference, a date one day off, a line with an extra character. Those mistakes pay the wrong amount without crashing. The unit tests aim straight at those details, so a future change that breaks one fails a named test instead of a claim.</p></div>
-   <div class="card"><h3>3. Does it work?</h3><p>${[pt, u, E.live?.policy_tests_python, E.live?.python_unit_tests].some(x => x?.status && x.status !== "PASSED") ? "<b>A test layer is not passing in the latest run. See the status boxes below.</b>" : "Both layers pass on the Python."} To show the tests can actually catch mistakes, <a href="#compare">screen 5</a>'s <b>Try to break it</b> plants four realistic bugs in a copy of the Python, and each one turns the answer-key tests red. While building, the tests also exposed a real difference from the COBOL (a file error code, 35 instead of 30), which was fixed before handover. It's listed under <i>Corrections</i> below.</p></div>
-   <div class="card"><h3>4. Why it was done this way</h3><ul>
-    <li><b>Keep the answer key unchanged.</b> The Python never got to grade itself. Its expected answers were written from the CMS manual and checked on the COBOL first.</li>
-    <li><b>Test the details, not just the totals.</b> Validation order, exact cents and boundary dates are where a migration can be wrong while every total still looks right.</li>
-    <li><b>Exact cents, standard library only.</b> Whole-number cents like COBOL's packed decimal, and no new third-party packages to vet.</li>
-    <li><b>Then compare everything.</b> Unit tests can miss what nobody thought of, so screen 5 also compares every claim's output with the COBOL's.</li></ul></div>
-  </div>
+  ${[pt, u, E.live?.policy_tests_python, E.live?.python_unit_tests].some(x => x?.status && x.status !== "PASSED") ? `<div class="err">A test layer is not passing in the latest run. See the status boxes below the table.</div>` : ""}
+  <h2>How the Python was tested, step by step</h2>
+  <p>Each row is one thing Devin did to test the Python, the decision behind it, and the results that prove it. The test names are the real tests from the saved run.</p>
+  ${testSteps(u, pt)}
   <div class="grid g2" style="margin-top:14px">${testStatus(pt, E.live?.policy_tests_python, "Answer key, run on Python", E.expectations?.cases?.length)}${testStatus(u, E.live?.python_unit_tests, "Python unit tests (live count includes the app's own tests)")}</div>
-  <h2>What the tests hold the Python to</h2><div class="grid g4">
-   <div class="card"><h3>Exact cents</h3>Whole-number cents everywhere — never floating point — like COBOL's packed decimal.</div>
-   <div class="card"><h3>Optional contract</h3>“----------” means no contract; a number replaces the charges.</div>
-   <div class="card"><h3>Same validation order</h3>The first problem found decides the reason code, so the order matters.</div>
-   <div class="card"><h3>Valid zero ≠ malformed</h3>A correct claim that owes $0 is ZERO; a broken line is INVALID.</div>
-   <div class="card"><h3>Batch rules</h3>Same line framing, duplicate-ID stop, counts, totals, and fatal exit code 2.</div>
-   <div class="card"><h3>CWF order</h3>Entitlement, then duplicate, then MSP billing; the first failure wins. A rejected claim keeps its calculation but releases $0.</div>
-   <div class="card"><h3>Same reference data</h3>Both read the same CWF file the same way, and both stop on a malformed CWF record.</div></div>
   <details><summary>Unit tests run (${u.tests ?? "?"})</summary><ul>${(u.cases || []).map(c => `<li>${badge(c.result === "ok" ? "PASSED" : "FAILED", c.result)} <code>${esc(c.name)}</code></li>`).join("")}</ul></details>
   <details data-md="${esc(E.saved.corrections)}"><summary>Corrections Devin made along the way</summary><div class="muted small">Loading…</div></details>
   <p class="small">Commit ${commit(E.git.stages.stage3?.sha)} · <a href="https://github.com/wstomber/devinexecdemo/commit/${esc(E.git.stages.stage3?.sha || "")}" target="_blank">view the diff</a></p>
@@ -335,9 +345,17 @@ R.compare = async () => {
    ${cmd("make compare CANDIDATE='python3 python/msp.py'")}${cmd("python3 tools/demo_compare.py --input build/synthetic.dat --cwf build/cwf.dat --out build/cmp/synthetic")}
    <p class="small muted">A green table is not the proof on its own — the strict verifier (tools/verify.py) checks every field and the totals independently.</p></details>`;
 };
+const PILOT_WEEKS = [
+  [1, "Set up", ["Meet the system owner and agree what Devin can access.", "Security sets the guardrails and signs off before Devin sees any code.", "Devin maps the code into a DeepWiki and records today's results.", "Devin pulls every business rule out of the COBOL into one list, each linked to the code it came from."]],
+  [2, "Prove it", ["Write the answer key from the CMS manuals and check today's COBOL against it.", "Devin migrates the claim path to Python and compares old and new on every test claim."]],
+  [3, "Real work", ["Devin takes 3–5 real change requests from the backlog, each reviewed by your engineers.", "Security tries to break it."]],
+  [4, "Decide", ["Review the results together and make the go / no-go call."]],
+];
 R.pilot = async () => `<h1>8 · Pilot: one CWF MSP claim path in four weeks</h1>
   <p class="lede">The same steps you just saw, on the real code: the MSP payment calculation and the CWF edits that approve or reject the claim before payment. Security sets the rules first, then tries to break them.</p>
-  <div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div>
+  <h2>The plan, step by step</h2>
+  <div class="grid g4 pilotweeks">${PILOT_WEEKS.map(([wk, title, steps], w) => `<div class="card"><div class="small muted">Week ${w + 1}</div><h3>${esc(title)}</h3><ol>${steps.map((st, i) => `<li><span class="stepno">${PILOT_WEEKS.slice(0, w).reduce((n, x) => n + x[2].length, 0) + i + 1}</span><span>${esc(st)}</span></li>`).join("")}</ol></div>`).join("")}</div>
+  <details><summary>The full plan: what's in scope, week-by-week detail, what we measure, what CMS provides</summary><div class="card">${md(await file("docs/presentation/pilot-plan.md"))}</div></details>
   <div class="card ask"><h2>Proposed next step</h2><p>Name an owner for the CWF MSP claim path and give read access to the MSP payment and CWF edit repositories and a test region. Then hold a 30-minute kickoff with your security lead to agree the week-1 guardrails and how success will be measured. Week 1 starts the day security signs off.</p></div>`;
 R.security = async () => `<h1>7 · Security FAQ</h1>
   <p class="lede">Questions security engineers, architects and CIOs ask about running Devin in a CMS environment, with answers from Cognition's published documentation.</p>

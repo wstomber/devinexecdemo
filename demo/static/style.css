@@ -64,3 +64,6 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 .md h3:first-of-type { border-top: 0; padding-top: 0; }
 .md h4 { font-size: 15px; margin: 14px 0 2px; color: #0b3a6e; }
 .md h4 + p { margin-top: .2rem; }
+
+.rulematch.steps th:first-child{width:18%}.rulematch.steps th:nth-child(2),.rulematch.steps th:nth-child(3){width:27%}.rulematch.steps td:nth-child(4) code{word-break:break-all;font-size:12px}.rulematch.steps td:nth-child(4) div{margin-bottom:4px}
+.pilotweeks ol{list-style:none;padding:0;margin:8px 0 0}.pilotweeks li{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}.pilotweeks .stepno{flex:none}
