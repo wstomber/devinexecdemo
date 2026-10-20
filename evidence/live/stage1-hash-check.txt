@@ -1,0 +1,23 @@
+result: PASS
+files_sha256 curated-results.csv MATCH 6668a8ed20d5615accf6c6c979af5ada7e5df29ff1c8c9f27029b6a0ad1b5f80
+files_sha256 curated-totals.csv MATCH 117bab98bc1dc805fc71458c07e40aeca319329514bc2507797ad5b263bece87
+files_sha256 curated-verification.json MATCH e436495c9f13f5a2e73c4cf3313bff1a579cae04a6a32488eac3591043990191
+files_sha256 curated.dat MATCH 834a852b4f0275c457f316311bebae5f1aad0f3b35a10f78b75c906478b3dd60
+files_sha256 cwf.dat MATCH abb08cc783bb21e421af374cc4f0d17c7ff191d1cd23cf304945a2b337e57cf8
+files_sha256 synthetic-results.csv MATCH e40d93a05829e0b78b966d1ab6ec28fda984c586f618ad71709db2b78a6404a9
+files_sha256 synthetic-totals.csv MATCH 7dabe8bffda6a7c1c9655499733a3d5ac51c6ec4859adcc0b0536d775b8dcc19
+files_sha256 synthetic.dat MATCH dbe4fcf1b76346cc39c0a2e1f7d3250582fabef35180070767dd169dfa60acd9
+keys: ['batches', 'captured_at_utc', 'commands', 'compiler_version', 'files_sha256', 'kind', 'migration_comparison', 'python_version', 'result', 'seed', 'source_commit', 'source_files_sha256']
+source_files_sha256 cobol/batch.cob MATCH
+source_files_sha256 cobol/copybooks/claim.cpy MATCH
+source_files_sha256 cobol/copybooks/cwf.cpy MATCH
+source_files_sha256 cobol/cwf.cob MATCH
+source_files_sha256 cobol/payment.cob MATCH
+source_files_sha256 cobol/validate.cob MATCH
+source_files_sha256 fixtures/curated.json MATCH
+source_files_sha256 fixtures/cwf.json MATCH
+source_files_sha256 fixtures/expected.json MATCH
+source_files_sha256 tools/capture_baseline.py MATCH
+source_files_sha256 tools/fixtures.py MATCH
+source_files_sha256 tools/verify.py MATCH
+batches MATCH

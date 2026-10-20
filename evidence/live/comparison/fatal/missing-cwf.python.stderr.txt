@@ -1,0 +1,1 @@
+fatal batch failure; discard outputs

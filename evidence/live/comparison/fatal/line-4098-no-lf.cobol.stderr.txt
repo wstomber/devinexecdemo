@@ -1,0 +1,4 @@
+fatal batch failure; discard outputs; file status 00/00/00
+libcob: cobol/batch.cob:267: warning: implicit CLOSE of totals-file ('<tmp>/t.csv')
+libcob: cobol/batch.cob:267: warning: implicit CLOSE of results-file ('<tmp>/r.csv')
+libcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('<tmp>/in.dat')

@@ -1,0 +1,2 @@
+duplicate claim ID: F00000      
+fatal batch failure; discard outputs

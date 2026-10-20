@@ -1,0 +1,11 @@
+session_start_utc: 2026-10-20T20:14:00Z (session prompt received); environment recorded 2026-10-20T20:16:09Z
+session: https://app.devin.ai/sessions/13ea9ad019f14a98a95daac201b6db47
+starter_commit: be0b00ec5a2369d50a34d351694b187ae2300fe4
+branch: devin/1792527310-msp-python-migration-live
+os: Linux 6.8.0-1061-aws x86_64
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+cobc: cobc (GnuCOBOL) 3.1.2.0
+gcc: gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+make: GNU Make 4.3
+python3: Python 3.10.12
+git: git version 2.34.1

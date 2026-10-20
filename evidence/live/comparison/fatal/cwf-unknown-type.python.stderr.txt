@@ -1,0 +1,2 @@
+invalid CWF reference record
+fatal batch failure; discard outputs
