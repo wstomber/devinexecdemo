@@ -325,7 +325,7 @@ R.compare = async () => {
   <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <b class="small">${c.kind === "live" ? `Run ${esc(when(E.live?.started_at))} (Run COBOL vs Python now)` : `Saved rehearsal, recorded ${esc(when(E.git.stages.stage4?.date))}`}</b> <span class="muted small">· ${esc(c.title)}</span></div>
   ${BATCH[cmpKey.split(":")[1]] ? `<p class="small">${esc(BATCH[cmpKey.split(":")[1]][1])}</p>` : ""}
   ${c.problem ? `<div class="err">${esc(c.problem)}</div>` : ""}
-  <div class="grid g4" style="margin-top:10px">
+  <div class="grid cmpstats" style="margin-top:10px">
    ${stat((c.rows || []).length.toLocaleString(), "claims compared", `<div class="small">COBOL ${c.records?.cobol ?? "?"} · Python ${c.records?.python ?? "?"}</div>`)}
    ${stat(c.mismatches ?? "?", "mismatches", badge(c.mismatches === 0 ? "MATCH" : "MISMATCH", c.mismatches === 0 ? "NONE" : "INSPECT"))}
    ${stat(money(t.cobol?.released_cents), "COBOL released after CWF", `<div class="small">${money(t.cobol?.payment_cents)} calculated · ${t.cobol?.rejected ?? "?"} rejected by CWF</div>`)}
