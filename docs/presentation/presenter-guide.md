@@ -27,10 +27,9 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 | 0–2 | The problem | Point at the 4 steps. | Old COBOL nobody can read; a wrong rule pays real money. Each claim is priced first, then CWF approves or rejects it, and only approved claims are paid. Devin explained it, tested it, migrated it, and proved it. |
 | 2–4 | 1 · COBOL baseline | Press **▶ Run COBOL vs Python now** (top right, ~7 s). When it finishes the app jumps to 5 · Old vs new showing the fresh LIVE results. | Devin first ran the original as the yardstick. |
 | 4–6 | 2 · Devin explains COBOL | Point at the highlighted lines, then scroll to the CWF check; mention DeepWiki. | Devin found the exact line that applies the provider's contract, and explained the three CWF checks that decide whether it gets paid. |
-| 6–9 | 3 · Tests came first | Point at "Tests came first: VERIFIED FROM GIT"; click the CMS-EX3 row. | The right answers were worked out from the CMS manual and checked against COBOL before any Python existed. |
+| 6–9 | 3 · Tests came first | Point at "Tests came first: VERIFIED FROM GIT"; click any row to see its hand-worked answer. | The right answers were worked out from the CMS manual and checked against COBOL before any Python existed. |
 | 9–12 | 4 · Python + unit tests | Read the 10 step rows top to bottom (1–6 payment, 7–10 CWF); point at the CMS-EX3 column ending at $500 released. | Same rules in readable Python, exact cents, held to the same tests. |
-| 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Rejected by CWF**; click **Find CMS-EX3**. | Every claim matches on the payment, the CWF decision and the amount released, and a separate strict checker confirms it. |
-| 14–16 | ★ CMS-EX3 $500 | Walk the four limits, then the CWF check and the three look-alikes. | $13,000 − $12,500 = $500, CWF approves it, $500 is released. The look-alikes calculate a payment but CWF rejects them, so $0 goes out. Missing the contract rule would pay $1,000 too much. |
+| 12–14 | 5 · Old vs new | Choose "LIVE · synthetic (1000)"; click **Mismatches only** (empty); click **Rejected by CWF**; type a claim ID such as CMS-EX3 into the search box if asked about a specific claim. | Every claim matches on the payment, the CWF decision and the amount released, and a separate strict checker confirms it. |
 | 16–18 | 6 · Review & repeat | Open PR #2 and PR #5; show the Playbook card. | Everything is reviewable, and a separate Devin session repeated the whole migration from scratch (PR #5). |
 | +2 (optional) | 6 · Review & repeat | Open PR #4. | Devin also maintained it afterwards: a new feature, tests first, outputs unchanged. |
 | 18–20 | 7 · Security FAQ | Scroll to the section the question belongs to (compliance, architecture, data, network, identity, audit) and answer from it; each answer links its Cognition source. | No real data was used; every answer is from Cognition's published docs (ZDR with the model labs, Outposts, Devin Connect), and anything unpublished says "Confirm with Cognition". |
@@ -38,7 +37,7 @@ Written for a non-technical presenter. You click; the app shows real evidence.
 
 ## 15-minute route
 
-The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → ★ CMS-EX3 (3) → 6 · Review & repeat (2) → 7 · Security FAQ (2).
+The problem (1 min) → 1 · Baseline, press Run COBOL vs Python now (2) → 3 · Tests came first (2) → 5 · Old vs new (3) → 6 · Review & repeat (2) → 7 · Security FAQ (2).
 
 ## Try to break it (screen 5)
 

@@ -35,14 +35,14 @@ data division.                  *> every variable, with its exact layout
 procedure division using claim-interface.   *> the code
 ```
 
-| COBOL | What it means | Python analogy |
-|---|---|---|
-| `IDENTIFICATION DIVISION` / `PROGRAM-ID` | The program's name, used by `CALL` | module or function name |
-| `ENVIRONMENT DIVISION`, `FILE-CONTROL`, `SELECT … ASSIGN TO` | Binds a logical file name to a path variable and an organization | `open(path, mode)` |
-| `DATA DIVISION` → `FILE SECTION` | The record layout of each file | the shape of the bytes you read and write |
-| `WORKING-STORAGE SECTION` | Variables owned by this program. They persist for the life of the run | module-level globals |
-| `LINKAGE SECTION` | Variables that belong to the **caller**, passed in | function parameters (by reference) |
-| `PROCEDURE DIVISION USING x` | The executable code; `USING` lists the parameters | `def f(x):` |
+| Division | Part you'll see | What it means | Python analogy |
+|---|---|---|---|
+| **1. `IDENTIFICATION DIVISION`** | `PROGRAM-ID` | The program's name, used by `CALL` | module or function name |
+| **2. `ENVIRONMENT DIVISION`** | `FILE-CONTROL`, `SELECT … ASSIGN TO` | Binds a logical file name to a path variable and an organization | `open(path, mode)` |
+| **3. `DATA DIVISION`** | `FILE SECTION` | The record layout of each file | the shape of the bytes you read and write |
+| 3. `DATA DIVISION` (cont.) | `WORKING-STORAGE SECTION` | Variables owned by this program. They persist for the life of the run | module-level globals |
+| 3. `DATA DIVISION` (cont.) | `LINKAGE SECTION` | Variables that belong to the **caller**, passed in | function parameters (by reference) |
+| **4. `PROCEDURE DIVISION`** | `PROCEDURE DIVISION USING x` | The executable code; `USING` lists the parameters | `def f(x):` |
 
 ## 3. Paragraphs, PERFORM, GOBACK, STOP RUN
 
