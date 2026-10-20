@@ -22,6 +22,7 @@ committed against the COBOL executable first.
 make build
 python3 -m unittest discover -s tests_policy -v                                   # COBOL
 MSP_COMMAND='python3 python/msp.py' python3 -m unittest discover -s tests_policy -v  # Python
+python3 tools/answer_key_table.py                                                 # readable view: all 72 cases, COBOL and Python, one line each
 ```
 
 ## Cross-check with the starter ledger (done after the derivation above)
