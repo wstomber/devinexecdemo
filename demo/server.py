@@ -244,7 +244,39 @@ class Handler(BaseHTTPRequestHandler):
         if STATIC not in target.parents or not target.is_file():
             return self.send(404, "not found", "text/plain")
         ctype = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
-        return self.send(200, target.read_bytes(), ctype)
+        data = target.read_bytes()
+        rng = self.headers.get("Range", "")
+        if rng.startswith("bytes="):
+            return self.send_range(data, ctype, rng[len("bytes="):])
+        return self.send(200, data, ctype)
+
+    def send_range(self, data, ctype, spec):
+        size = len(data)
+        start_s, _, end_s = spec.split(",")[0].strip().partition("-")
+        try:
+            if start_s:
+                start, end = int(start_s), int(end_s) if end_s else size - 1
+            else:
+                start, end = max(size - int(end_s), 0), size - 1
+        except ValueError:
+            return self.send(200, data, ctype)
+        end = min(end, size - 1)
+        if start > end or start >= size:
+            self.send_response(416)
+            self.send_header("Content-Range", f"bytes */{size}")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return None
+        part = data[start:end + 1]
+        self.send_response(206)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(len(part)))
+        self.end_headers()
+        self.wfile.write(part)
+        return None
 
     def do_POST(self):
         path = urlparse(self.path).path

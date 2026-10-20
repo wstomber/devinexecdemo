@@ -107,3 +107,44 @@ class RequireDevinKey(unittest.TestCase):
                 mock.patch.object(server, "ThreadingHTTPServer") as http:
             self.assertEqual(server.main(), 2)
             http.assert_not_called()
+
+
+class StaticRanges(unittest.TestCase):
+    def setUp(self):
+        import threading
+        self.httpd = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}/style.css"
+        self.body = (server.STATIC / "style.css").read_bytes()
+
+    def tearDown(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+    def get(self, rng=None):
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(self.url, headers={"Range": rng} if rng else {})
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return resp.status, dict(resp.headers), resp.read()
+        except urllib.error.HTTPError as err:
+            return err.code, dict(err.headers), b""
+
+    def test_full_file_without_range(self):
+        status, _, body = self.get()
+        self.assertEqual((status, body), (200, self.body))
+
+    def test_partial_content(self):
+        size = len(self.body)
+        for rng, start, end in (("bytes=0-9", 0, 9), ("bytes=5-", 5, size - 1), ("bytes=-4", size - 4, size - 1),
+                                (f"bytes=0-{size + 50}", 0, size - 1)):
+            status, headers, body = self.get(rng)
+            self.assertEqual(status, 206, rng)
+            self.assertEqual(headers["Content-Range"], f"bytes {start}-{end}/{size}", rng)
+            self.assertEqual(body, self.body[start:end + 1], rng)
+
+    def test_unsatisfiable_range(self):
+        status, headers, _ = self.get(f"bytes={len(self.body) + 10}-")
+        self.assertEqual(status, 416)
+        self.assertEqual(headers["Content-Range"], f"bytes */{len(self.body)}")
