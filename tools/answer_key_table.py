@@ -18,7 +18,7 @@ from fixtures import case_record, serialize_cwf  # noqa: E402
 
 LEDGER = json.loads((ROOT / "tests_policy/expectations.json").read_text())
 PROGRAMS = {"COBOL": [str(ROOT / "build/msp-batch")], "Python": shlex.split("python3 python/msp.py")}
-FIELDS = ["status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents"]
+FIELDS = ["claim_id", "status", "payment_cents", "reason", "cwf", "cwf_reason", "released_cents"]
 
 
 def run(command, directory):
@@ -44,12 +44,15 @@ def main():
     print(f"{'#':>2}  {'claim':<16} {'answer key: status / paid / CWF / released':<44} COBOL   Python")
     matched = 0
     for case in LEDGER["cases"]:
-        expected = {k: case["expected"][k] for k in FIELDS}
+        expected = {"claim_id": case["claim_id"], **{k: case["expected"][k] for k in FIELDS[1:]}}
         marks = ["match" if outputs[n].get(case["record_no"]) == expected else "DIFF" for n in PROGRAMS]
         matched += marks == ["match", "match"]
         print(f"{case['record_no']:>2}  {case['claim_id']:<16} {short(expected):<44} {marks[0]:<7} {marks[1]}")
     total = len(LEDGER["cases"])
-    print(f"\n{matched} / {total} hand-worked cases: COBOL and Python both match the answer key on every field")
+    if matched == total:
+        print(f"\n{matched} / {total} hand-worked cases: COBOL and Python both match the answer key on every field")
+    else:
+        print(f"\nFAIL: only {matched} / {total} hand-worked cases match the answer key in both programs (see DIFF rows)")
     return 0 if matched == total else 1
 
 
