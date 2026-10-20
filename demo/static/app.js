@@ -305,7 +305,7 @@ R.compare = async () => {
   <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
   <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   ${await mdBlock("docs/migration/05-cobol-to-python.md", "COBOL → Python translation guide")}
-  <h2 id="results">2. The same results, claim by claim</h2>
+  <h2 id="results" style="scroll-margin-top:140px">2. The same results, claim by claim</h2>
   <p>Reading the code is not proof, so both programs were run on the same claims and the same CWF reference file. For every claim they must agree on the calculated payment, the CWF decision and the amount released. The table below is rebuilt from both programs' raw output files.</p>
   <details class="card"><summary><b>Watch: COBOL vs Python validated live in a terminal (1 min)</b></summary><p class="small">Devin builds the COBOL, runs both programs on the same claims, shows the files are byte-identical, runs the strict verifier, runs all ${E.expectations?.cases?.length ?? "?"} answer-key cases on both versions, and shows the CWF-rejected claims releasing $0.</p><video controls preload="metadata" src="cobol-vs-python-validation-1min.mp4" style="width:100%;max-height:560px;background:#000"></video></details>
   ${bugBanner() ? "" : breakCard()}
