@@ -468,7 +468,7 @@ document.addEventListener("click", async ev => {
 });
 document.addEventListener("input", ev => { if (ev.target.id === "cmpq") { cmpQuery = ev.target.value; cmpPage = 0; clearTimeout(window._q); window._q = setTimeout(async () => { await render(); const i = $("#cmpq"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); } });
 document.addEventListener("toggle", async ev => { const d = ev.target; if (d.dataset?.md && d.open && !d.dataset.loaded) { d.dataset.loaded = 1; d.querySelector("div").outerHTML = md(await file(d.dataset.md)); } }, true);
-document.addEventListener("keydown", ev => { if (ev.target.tagName === "INPUT") return; const idx = VIEWS.findIndex(v => v[0] === route);
+document.addEventListener("keydown", ev => { if (["INPUT", "TEXTAREA", "SELECT", "VIDEO"].includes(ev.target.tagName)) return; const idx = VIEWS.findIndex(v => v[0] === route);
   if (ev.key === "ArrowRight" && idx < VIEWS.length - 1) location.hash = VIEWS[idx + 1][0]; if (ev.key === "ArrowLeft" && idx > 0) location.hash = VIEWS[idx - 1][0];
   if (ev.key === "Escape") $("#drawer").hidden = true; });
 window.addEventListener("hashchange", () => { $("#drawer").hidden = true; render(); window.scrollTo(0, 0); });
