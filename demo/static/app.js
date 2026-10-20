@@ -296,7 +296,7 @@ R.compare = async () => {
   <p class="lede">The original COBOL and the new Python were run on the same claims and the same CWF reference file. For every claim they must agree on the calculated payment, the CWF decision and the amount released. This table is rebuilt from both programs' raw output files.</p>
   ${bugBanner() || breakCard()}
   <div class="toolbar">${src.map(([k, v]) => `<button class="btn${k === cmpKey ? " on" : ""}" data-cmp="${k}">${k.startsWith("live") ? "LIVE" : "SAVED"} · ${esc(BATCH[k.split(":")[1]]?.[0] || k.split(":")[1])} (${v.records?.python?.toLocaleString() ?? "?"})${k.startsWith("live") && E.live?.started_at ? ` · ${new Date(E.live.started_at).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})}` : ""}</button>`).join("")}</div>
-  <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <b class="small">${c.kind === "live" ? `Run ${esc(when(E.live?.started_at))} (Run COBOL vs Python now)` : `Saved rehearsal, run ${esc(when(E.git.stages.stage4?.date))}`}</b> <span class="muted small">· ${esc(c.title)}</span></div>
+  <div>${c.kind === "live" ? LIVE : SAVED} ${badge(c.status, "OVERALL " + c.status)} <b class="small">${c.kind === "live" ? `Run ${esc(when(E.live?.started_at))} (Run COBOL vs Python now)` : `Saved rehearsal, recorded ${esc(when(E.git.stages.stage4?.date))}`}</b> <span class="muted small">· ${esc(c.title)}</span></div>
   ${BATCH[cmpKey.split(":")[1]] ? `<p class="small">${esc(BATCH[cmpKey.split(":")[1]][1])}</p>` : ""}
   ${c.problem ? `<div class="err">${esc(c.problem)}</div>` : ""}
   <div class="grid g4" style="margin-top:10px">
