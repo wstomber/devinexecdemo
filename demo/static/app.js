@@ -157,8 +157,8 @@ R.explain = async () => {
   <h2>For new engineers</h2>
   <p><a href="${esc(E.status?.deepwiki || "https://app.devin.ai/wiki/wstomber/devinexecdemo")}" target="_blank">Open the DeepWiki</a> — Devin's generated guide: COBOL for new engineers, each program explained, COBOL→Python mapping.</p>
   ${await mdBlock("docs/migration/03-cobol-primer.md", "COBOL primer (written against this code)")}
-  ${await mdBlock("docs/migration/04-legacy-walkthrough.md", "Line-by-line walkthrough")}
-  ${await mdBlock("docs/migration/01-cobol-explanation.md", "Stage 1 explanation")}`;
+  ${await mdBlock("docs/migration/01-cobol-explanation.md", "Stage 1 explanation")}
+  ${await mdBlock("docs/migration/04-legacy-walkthrough.md", "Line-by-line walkthrough")}`;
 };
 R.tests = async () => {
   const x = E.expectations, p = E.git.tests_before_python, s2 = E.git.stages.stage2, s3 = E.git.stages.stage3;
