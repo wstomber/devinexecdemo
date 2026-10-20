@@ -343,15 +343,17 @@ R.security = async () => `<h1>7 · Security FAQ</h1>
   <p class="lede">Questions security engineers, architects and CIOs ask about running Devin in a CMS environment, with answers from Cognition's published documentation.</p>
   <div class="card">${md(await file("docs/presentation/security-and-data.md"))}</div>`;
 R.review = async () => {
+  if (!D) { try { D = await (await fetch("/api/devin-run")).json(); } catch (e) {} }
   const st = E.status || {}, ev = E.session_events || [];
   return `<h1>6 · Reviewable, and repeatable</h1>
   <p class="lede">Everything a human reviewer needs is in one pull request, and the process is saved as Playbooks so Devin can do it again — or keep maintaining the code.</p>
+  ${D?.session ? `<h2>Your live Devin run</h2><p>The run started with “Start Devin live” on the first page. Open the session to watch Devin work, or follow its pull request once it opens one.</p><div id="devinslot">${devinCard()}</div>` : ""}
   ${E.status_problem ? `<div class="err">demo/status.json ${esc(E.status_problem)}</div>` : `<p class="small muted">PR / Playbook status recorded ${esc(st.recorded_at)} — click through for the current state.</p>`}
   <h2>Pull requests</h2><div class="grid g2">${(st.pull_requests || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">#${p.number}</a> ${badge(p.state)}</h3>${esc(p.title)}<div class="small muted">${esc(p.role)}</div>${p.commits_url ? `<a class="small" href="${esc(p.commits_url)}" target="_blank">See the commit-by-commit order</a>` : ""}</div>`).join("")}</div>
   <h2>Commit history (this checkout)</h2><table><tbody>${E.git.commits.slice(0, 10).map(c => `<tr><td>${commit(c.sha)}</td><td class="small">${esc(c.date)}</td><td>${esc(c.subject)}</td></tr>`).join("")}</tbody></table>
   <h2>Playbooks — Devin can repeat this</h2><div class="grid g2">${(st.playbooks || []).map(p => `<div class="card"><h3><a href="${esc(p.url)}" target="_blank">${esc(p.title)}</a></h3><div class="small"><code>${esc(p.id)}</code> · starts from <code>${esc(p.start_ref)}</code> · source ${raw(p.source)}</div>
    <p>Rehearsal run: ${badge(p.fresh_run?.status || "UNKNOWN")} <a href="${esc(p.fresh_run?.session || "#")}" target="_blank">session</a>${p.fresh_run?.pr ? ` · <a href="${esc(p.fresh_run.pr)}" target="_blank">PR</a>` : ""}</p></div>`).join("")}</div>
-  <h2>Watch Devin do it again, live</h2><div id="devinslot">${devinCard()}</div>
+  ${D?.session ? "" : `<h2>Watch Devin do it again, live</h2><div id="devinslot">${devinCard()}</div>`}
   <h2>Assumptions &amp; limits</h2><ul><li>Synthetic, educational module based on public CMS rules — not CMS production code, not complete Medicare policy.</li><li>Parity is proven for the tested batches (curated ${E.saved.comparisons.curated?.records?.python ?? "?"}, synthetic ${(E.saved.comparisons.synthetic?.records?.python ?? 0).toLocaleString()}, edge ${E.saved.comparisons.edge?.records?.python ?? "?"}, fatal paths) — not for every possible input.</li><li>The CWF step is three illustrative pre-payment checks on synthetic reference data, not a copy of CWF.</li><li>Both versions stop on lines over 4,096 bytes or more than 10,000 claims, deliberately identical.</li><li>No performance or cost claims.</li></ul>
   ${(E.expectations?.interface_assumptions) ? `<details><summary>Interface assumptions Devin recorded</summary><pre>${esc(JSON.stringify(E.expectations.interface_assumptions, null, 1))}</pre></details>` : ""}
   ${await mdBlock("docs/migration/02-rule-map.md", "Rule map: policy → COBOL → test → Python")}
@@ -387,7 +389,9 @@ async function refreshDevin() {
   const gen = devinGen; let d;
   try { const r = await fetch("/api/devin-run"); d = await r.json(); } catch (e) { d = {configured: true, error: "Could not reach this app's server."}; }
   if (gen !== devinGen) return;
+  const moved = route === "review" && !!D?.session !== !!d.session;
   D = d;
+  if (moved) return render();
   const slot = $("#devinslot"); if (slot) slot.innerHTML = devinCard();
   if (!devinActive(D?.session)) { clearInterval(dpoll); dpoll = null; } else if (!dpoll) dpoll = setInterval(refreshDevin, 10000);
 }
