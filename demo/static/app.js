@@ -233,16 +233,26 @@ async function ruleMatch() {
 R.python = async () => {
   const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
   const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
-  const u = E.saved.python_unit_tests;
+  const u = E.saved.python_unit_tests, pt = E.saved.policy_tests_python;
   return `<h1>4 · The new Python, and its own tests</h1>
   <p class="lede">The same payment rule and CWF check, now in readable Python, held to the same independent tests.</p>
-  <p>The rules that decide what Medicare pays, one step per row: steps 1–6 calculate the payment, steps 7–10 are the CWF check that decides whether it is released. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows CMS-EX3 through each step.</p>
+  <h2>How the Python was tested, in plain English</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+   <div class="card"><h3>1. What was tested</h3><p><b>Two layers.</b> First, the <b>same answer key from screen 3</b> (${E.expectations?.cases?.length ?? "?"} hand-worked claims) was run, unchanged, against the Python. Then Devin wrote <b>${u.tests ?? "?"} unit tests</b> that check each piece of the Python on its own: how a line is read, the order of the validation checks, each payment branch, the CWF checks and their date boundaries, and how the CWF file is read.</p></div>
+   <div class="card"><h3>2. Why it matters</h3><p>A rewrite rarely fails on the main formula. It fails quietly on details: a check done in a different order, a rounding difference, a date one day off, a line with an extra character. Those mistakes pay the wrong amount without crashing. The unit tests aim straight at those details, so a future change that breaks one fails a named test instead of a claim.</p></div>
+   <div class="card"><h3>3. Does it work?</h3><p>Both layers pass on the Python. To show the tests can actually catch mistakes, <a href="#compare">screen 5</a>'s <b>Try to break it</b> plants four realistic bugs in a copy of the Python, and each one turns the answer-key tests red. While building, the tests also exposed a real difference from the COBOL (a file error code, 35 instead of 30), which was fixed before handover. It's listed under <i>Corrections</i> below.</p></div>
+   <div class="card"><h3>4. Why it was done this way</h3><ul>
+    <li><b>Keep the answer key unchanged.</b> The Python never got to grade itself. Its expected answers were written from the CMS manual and checked on the COBOL first.</li>
+    <li><b>Test the details, not just the totals.</b> Validation order, exact cents and boundary dates are where a migration can be wrong while every total still looks right.</li>
+    <li><b>Exact cents, standard library only.</b> Whole-number cents like COBOL's packed decimal, and no new third-party packages to vet.</li>
+    <li><b>Then compare everything.</b> Unit tests can miss what nobody thought of, so screen 5 also compares every claim's output with the COBOL's.</li></ul></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">${testStatus(pt, E.live?.policy_tests_python, "Answer key, run on Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests (live count includes the app's own tests)")}</div>
+  <p>The rules that decide what Medicare pays, one step per row: steps 1–6 calculate the payment, steps 7–10 are the CWF check that decides whether it is released. Each row shows the same step in the old COBOL and the new Python; read down and the steps come in the same order in both. The last column follows one example claim through each step.</p>
   ${await ruleMatch()}
   <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
   <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
-  <div class="grid g2" style="margin-top:14px">${testStatus(E.saved.policy_tests_python, E.live?.policy_tests_python, "Same independent tests against Python")}${testStatus(u, E.live?.python_unit_tests, "Python unit tests")}</div>
-  <p class="small muted">“Same independent tests” = the hand-worked answers from screen 3, now run against the Python. “Unit tests” = smaller checks of each piece of the Python on its own.</p>
-  <h2>What had to be preserved</h2><div class="grid g4">
+  <h2>What the tests hold the Python to</h2><div class="grid g4">
    <div class="card"><h3>Exact cents</h3>Whole-number cents everywhere — never floating point — like COBOL's packed decimal.</div>
    <div class="card"><h3>Optional contract</h3>“----------” means no contract; a number replaces the charges.</div>
    <div class="card"><h3>Same validation order</h3>The first problem found decides the reason code, so the order matters.</div>
