@@ -1,13 +1,13 @@
 {
   "repo_notes": [
     {
-      "content": "Audience: new CMS engineers who have never read COBOL and have lost the historical context of legacy claims code. Explain COBOL concepts in plain language, always tied to the actual lines in cobol/, and always compare them to the Python in python/msp.py. This is a SYNTHETIC educational Medicare Secondary Payer (MSP) example modeled on CMS Pub. 100-05 Ch. 5 §40.8-40.8.3 (payment) and Pub. 100-04 Ch. 27 §20 plus Pub. 100-05 Ch. 5 §10.1 (CWF pre-payment check). Each claim is processed in the documented order: the payment is calculated first (payment.cob / calculate), then a small synthetic Common Working File check (cwf.cob / cwf_check) accepts or rejects it — NOT_ENTITLED, DUPLICATE, MSP_PRIMARY_NOT_BILLED, else ACCEPTED (disposition 01) — and only an accepted claim's payment is released (released_cents). It is not CMS production source and not the real Common Working File; do not describe CMS internal systems, staffing, history, or performance. The central business case is CMS-EX3: $13,000 obligatory contractual acceptance (OTAF) minus $12,500 primary payment = $500 Medicare secondary payment; ignoring the OTAF gives $1,500 (a $1,000 overpayment). CWF accepts CMS-EX3 so $500 is released; look-alikes EX3-NOT-ENT, EX3-DUP and EX3-MSP-NOBL calculate a payment but CWF rejects them and $0 is released. Keep the three evidence layers distinct: (A) hand-derived policy/interface tests in tests_policy/, (B) Python unit tests in tests_python/, (C) exact COBOL-vs-Python parity in evidence/rehearsal/stage4-comparison/ and tools/verify.py. Parity proves equivalence to the COBOL on tested batches, not complete Medicare correctness. Human-written explanations in docs/migration/ (01 explanation, 02 rule map, 03 COBOL primer, 04 legacy walkthrough, 05 COBOL-to-Python guide, 06 maintaining, evidence-index) are authoritative; reuse their facts and cite file paths and line numbers."
+      "content": "Audience: external readers evaluating this work — federal engineers, architects and technical leaders (for example at CMS/HHS) — and the new engineers who would maintain it, many of whom have never read COBOL. Write for someone deciding whether this migration can be trusted: lead with what the system does, how the legacy code works, how the Python was proven equivalent, and how to reproduce the evidence. Do not single out any one claim as the headline; when a worked example helps, use one claim from fixtures/curated.json and present it as an example, not the business case. Avoid presentation or demo-coaching language. Explain COBOL concepts in plain language, always tied to the actual lines in cobol/, and always compare them to the Python in python/msp.py. This is a SYNTHETIC educational Medicare Secondary Payer (MSP) example modeled on CMS Pub. 100-05 Ch. 5 §40.8-40.8.3 (payment) and Pub. 100-04 Ch. 27 §20 plus Pub. 100-05 Ch. 5 §10.1 (CWF pre-payment check). Each claim is processed in the documented order: the payment is calculated first (payment.cob / calculate), then a small synthetic Common Working File check (cwf.cob / cwf_check) accepts or rejects it — NOT_ENTITLED, DUPLICATE, MSP_PRIMARY_NOT_BILLED, else ACCEPTED (disposition 01) — and only an accepted claim's payment is released (released_cents). It is not CMS production source and not the real Common Working File; do not describe CMS internal systems, staffing, history, or performance. Keep the three evidence layers distinct: (A) hand-derived policy/interface tests in tests_policy/, (B) Python unit tests in tests_python/, (C) exact COBOL-vs-Python parity in evidence/rehearsal/stage4-comparison/ and tools/verify.py. Parity proves equivalence to the COBOL on tested batches, not complete Medicare correctness. Human-written explanations in docs/migration/ (01 explanation, 02 rule map, 03 COBOL primer, 04 legacy walkthrough, 05 COBOL-to-Python guide, 06 maintaining, evidence-index) are authoritative; reuse their facts and cite file paths and line numbers."
     }
   ],
   "pages": [
     {
       "title": "Overview: a legacy MSP claim program (payment + CWF check) and its Python replacement",
-      "purpose": "Explain what the repository is, the customer problem (understanding and safely migrating opaque legacy COBOL), the synthetic scope, the documented order of work (calculate the MSP payment, then the CWF pre-payment check, then release), the CMS-EX3 $500 story and its CWF-rejected look-alikes, the repository layout (cobol/, python/, tests/, tests_policy/, tests_python/, tools/, docs/, evidence/), and how to build and run both programs."
+      "purpose": "Explain what the repository is, the customer problem (understanding and safely migrating opaque legacy COBOL), the synthetic scope, the documented order of work (calculate the MSP payment, then the CWF pre-payment check, then release), what was verified and how (tests written against the COBOL before any Python, then claim-by-claim parity), the repository layout (cobol/, python/, tests/, tests_policy/, tests_python/, tools/, docs/, evidence/), and how to build and run both programs."
     },
     {
       "title": "COBOL for new engineers",
@@ -38,7 +38,7 @@
     },
     {
       "title": "How the legacy payment calculation works (payment.cob)",
-      "purpose": "Explain calculate-prospective-payment against CMS Pub. 100-05 Ch. 5 §40.8.2: the four limits, why min(gross, charge basis) - max(primary, deductions) equals their minimum, the claim-has-contract branch where the OTAF replaces charges, zero-reason precedence, and a step-by-step trace of CMS-EX3 to $500 (and $1,500 without the OTAF). Compare with charge_basis, payment_cap and calculate in python/msp.py.",
+      "purpose": "Explain calculate-prospective-payment against CMS Pub. 100-05 Ch. 5 §40.8.2: the four limits, why min(gross, charge basis) - max(primary, deductions) equals their minimum, the claim-has-contract branch where the OTAF replaces charges, zero-reason precedence, and a step-by-step trace of one curated claim where the contract amount changes the result. Compare with charge_basis, payment_cap and calculate in python/msp.py.",
       "page_notes": [
         {
           "content": "Use docs/rules.md, docs/cms-example-3.md and docs/migration/04-legacy-walkthrough.md. Emphasize that the $13,000 is a total acceptance amount, not acceptance of the $12,500 primary payment in full (full=N)."
@@ -47,7 +47,7 @@
     },
     {
       "title": "How the legacy CWF check works (cwf.cob)",
-      "purpose": "Explain why the CWF check runs after the payment is calculated (CMS Pub. 100-04 Ch. 27 §20, §20.2.2: the contractor prices the claim, then CWF performs pre-payment validation and authorization, then the contractor pays or denies), and walk cwf-check line by line: the beneficiary table search with PERFORM VARYING, the inclusive entitlement period, the duplicate search over posted-claim history (same MBI, service date and charges), the MSP period from the MSP auxiliary file (Pub. 100-05 Ch. 5 §10.1) and the primary-not-billed rule, first-failure-wins via GOBACK, and released = payment only when ACCEPTED. Trace CMS-EX3 (accepted, $500 released) and EX3-NOT-ENT, EX3-DUP, EX3-MSP-NOBL (rejected, $0 released). Say clearly this is three illustrative checks on synthetic data, not all CWF edits; reject codes are demo-defined and only disposition 01 is a CWF code. Compare with load_cwf and cwf_check in python/msp.py.",
+      "purpose": "Explain why the CWF check runs after the payment is calculated (CMS Pub. 100-04 Ch. 27 §20, §20.2.2: the contractor prices the claim, then CWF performs pre-payment validation and authorization, then the contractor pays or denies), and walk cwf-check line by line: the beneficiary table search with PERFORM VARYING, the inclusive entitlement period, the duplicate search over posted-claim history (same MBI, service date and charges), the MSP period from the MSP auxiliary file (Pub. 100-05 Ch. 5 §10.1) and the primary-not-billed rule, first-failure-wins via GOBACK, and released = payment only when ACCEPTED. Trace one accepted claim (payment released) and one curated claim for each rejection reason (payment calculated but $0 released). Say clearly this is three illustrative checks on synthetic data, not all CWF edits; reject codes are demo-defined and only disposition 01 is a CWF code. Compare with load_cwf and cwf_check in python/msp.py.",
       "page_notes": [
         {
           "content": "Use README.md (CWF pre-payment check section), docs/rules.md and cobol/cwf.cob."
@@ -70,7 +70,7 @@
     },
     {
       "title": "Evidence and verification",
-      "purpose": "Explain the three evidence layers and the order they were produced (tests committed against COBOL before any Python existed), the hand-derived ledger in tests_policy/expectations.json, the Python unit tests, the COBOL-vs-Python comparisons (curated 33, synthetic 1,000, adversarial edge batch, fatal paths) on calculated payment, CWF decision and released amount with tools/verify.py and tools/demo_compare.py, the retained outputs under evidence/rehearsal/, and what parity does and does not prove. Include the seven-step presentation path from docs/migration/evidence-index.md."
+      "purpose": "Explain the three evidence layers and the order they were produced (tests committed against COBOL before any Python existed), the hand-derived ledger in tests_policy/expectations.json, the Python unit tests, the COBOL-vs-Python comparisons (curated 33, synthetic 1,000, adversarial edge batch, fatal paths) on calculated payment, CWF decision and released amount with tools/verify.py and tools/demo_compare.py, the retained outputs under evidence/rehearsal/, and what parity does and does not prove Point readers to docs/migration/evidence-index.md to find each artifact."
     },
     {
       "title": "Maintaining the system going forward",
@@ -80,6 +80,14 @@
           "content": "Base this on docs/migration/06-maintaining.md and docs/follow-up-exercise.md."
         }
       ]
+    },
+    {
+      "title": "Reproducing the results yourself",
+      "purpose": "Step-by-step instructions for an engineer to verify the claims independently on their own machine: prerequisites (GnuCOBOL, Python 3 standard library only, or the Dockerfile), make build / make baseline / make generate, running the three test suites (tests/, tests_policy/ against COBOL and against Python via MSP_COMMAND, tests_python/), make compare and tools/verify.py, and where outputs land. Explain what a PASS means and what a mismatch report looks like."
+    },
+    {
+      "title": "Security and deployment considerations",
+      "purpose": "Summarize docs/presentation/security-and-data.md for a federal security engineer or architect: what data this repository uses (synthetic only, no PHI/PII), and the published Devin controls it cites (deployment options including Outposts and dedicated deployments, Devin Connect, security profiles, identity and credentials, audit logs, compliance status), each with the source link from that file. Keep \"Confirm with Cognition\" wherever that file says so; do not add claims that file does not make."
     }
   ]
 }
