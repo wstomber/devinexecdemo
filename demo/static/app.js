@@ -294,14 +294,15 @@ R.compare = async () => {
   const shown = rows.slice(cmpPage * per, cmpPage * per + per);
   const stat = (n, l, s) => `<div class="card stat"><div class="n">${n}</div><div class="l">${l}</div>${s || ""}</div>`;
   const t = c.totals || {};
-  const py = await codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/);
-  const pay = await codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/);
+  let py = "", pay = "", rules;
+  try { [py, pay, rules] = await Promise.all([codeSnippet("python/msp.py", /^def charge_basis/, /SECONDARY_PAYABLE/), codeSnippet("cobol/payment.cob", /calculate-prospective-payment\./, /SECONDARY_PAYABLE/), ruleMatch()]); }
+  catch (e) { rules = `<div class="err">Could not load the code from this checkout (${esc(e.message)}). The claim-by-claim results below are unaffected.</div>`; }
   return `<h1>5 · Old vs new: same rules, same results</h1>
   <p class="lede">How the COBOL was turned into Python, and the proof that both behave the same: first the rules side by side in the code, then both programs run on the same claims.</p>
   ${bugBanner()}
   <h2>1. The same rules, in the old code and the new</h2>
   <p>Devin translated the COBOL one rule at a time, keeping the same order, so each step below can be read across. Steps 1–6 calculate the payment, and steps 7–10 are the CWF check that decides whether it is released. The last column follows one example claim through each step.</p>
-  ${await ruleMatch()}
+  ${rules}
   <p class="small muted">Numbers on the left of the code are line numbers in the real files. Python puts steps 2–3 into small named helper functions, which is why their line numbers sit above the rest. Steps 7–10 live in <code>cobol/cwf.cob</code> and in <code>cwf_check</code> in the Python.</p>
   <details><summary>See the full code side by side</summary><div class="grid g2"><div><h3>COBOL (before)</h3>${pay}</div><div><h3>Python (after)</h3>${py}</div></div></details>
   ${await mdBlock("docs/migration/05-cobol-to-python.md", "COBOL → Python translation guide")}
@@ -432,7 +433,10 @@ async function render() {
   $("#nav").innerHTML = VIEWS.map(([k, l]) => `<a href="#${k}" class="${k === route ? "on" : ""}">${l}</a>`).join("");
   const html = await R[route]();
   if (gen !== renderGen) return;
+  const vid = $("#view video"), vidOpen = vid?.closest("details")?.open;
   $("#view").innerHTML = html;
+  const nv = $("#view video");
+  if (vid && nv && vid.getAttribute("src") === nv.getAttribute("src")) { nv.replaceWith(vid); if (vidOpen) vid.closest("details").open = true; }
   const idx = VIEWS.findIndex(v => v[0] === route);
   $("#foot").innerHTML = `<span>${idx > 0 ? `<a class="btn" href="#${VIEWS[idx - 1][0]}">← ${esc(VIEWS[idx - 1][1])}</a>` : ""}</span>
    <span class="muted">Checkout ${commit(E.git.head)} on <code>${esc(E.git.branch)}</code> · evidence read ${esc(E.generated_at)}</span>
