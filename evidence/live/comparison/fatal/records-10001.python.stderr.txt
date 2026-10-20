@@ -1,0 +1,2 @@
+batch exceeds 10000 records
+fatal batch failure; discard outputs

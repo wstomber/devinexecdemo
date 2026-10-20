@@ -1,0 +1,95 @@
+[
+  {
+    "batch": "curated",
+    "records_cobol": 33,
+    "records_python": 33,
+    "match": 33,
+    "mismatch": 0,
+    "totals_match": true,
+    "byte_identical_outputs": true,
+    "totals_cobol": {
+      "records": "0000000033",
+      "paid": "0000000015",
+      "zero": "0000000009",
+      "invalid": "0000000009",
+      "payment_cents": "000010001694602",
+      "accepted": "0000000021",
+      "rejected": "0000000003",
+      "released_cents": "000010000450202"
+    },
+    "totals_python": {
+      "records": "0000000033",
+      "paid": "0000000015",
+      "zero": "0000000009",
+      "invalid": "0000000009",
+      "payment_cents": "000010001694602",
+      "accepted": "0000000021",
+      "rejected": "0000000003",
+      "released_cents": "000010000450202"
+    }
+  },
+  {
+    "batch": "synthetic",
+    "records_cobol": 1000,
+    "records_python": 1000,
+    "match": 1000,
+    "mismatch": 0,
+    "totals_match": true,
+    "byte_identical_outputs": true,
+    "totals_cobol": {
+      "records": "0000001000",
+      "paid": "0000000271",
+      "zero": "0000000729",
+      "invalid": "0000000000",
+      "payment_cents": "000485289809347",
+      "accepted": "0000000736",
+      "rejected": "0000000264",
+      "released_cents": "000344091123732"
+    },
+    "totals_python": {
+      "records": "0000001000",
+      "paid": "0000000271",
+      "zero": "0000000729",
+      "invalid": "0000000000",
+      "payment_cents": "000485289809347",
+      "accepted": "0000000736",
+      "rejected": "0000000264",
+      "released_cents": "000344091123732"
+    }
+  },
+  {
+    "batch": "edge",
+    "records_cobol": 3000,
+    "records_python": 3000,
+    "match": 3000,
+    "mismatch": 0,
+    "totals_match": true,
+    "byte_identical_outputs": true,
+    "totals_cobol": {
+      "records": "0000003000",
+      "paid": "0000000388",
+      "zero": "0000000947",
+      "invalid": "0000001665",
+      "payment_cents": "000060031743224",
+      "accepted": "0000000890",
+      "rejected": "0000000445",
+      "released_cents": "000030024243216"
+    },
+    "totals_python": {
+      "records": "0000003000",
+      "paid": "0000000388",
+      "zero": "0000000947",
+      "invalid": "0000001665",
+      "payment_cents": "000060031743224",
+      "accepted": "0000000890",
+      "rejected": "0000000445",
+      "released_cents": "000030024243216"
+    }
+  },
+  {
+    "batch": "fatal",
+    "cases": 21,
+    "match": 21,
+    "mismatch": 0
+  }
+]

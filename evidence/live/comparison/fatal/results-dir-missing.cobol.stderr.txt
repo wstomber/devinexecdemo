@@ -1,0 +1,2 @@
+fatal batch failure; discard outputs; file status 00/30/  
+libcob: cobol/batch.cob:267: warning: implicit CLOSE of claims-file ('<tmp>/in.dat')

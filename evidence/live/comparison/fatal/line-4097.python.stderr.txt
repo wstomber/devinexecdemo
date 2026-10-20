@@ -1,0 +1,2 @@
+input line exceeds 4096 bytes
+fatal batch failure; discard outputs
