@@ -56,7 +56,7 @@ Yes. On paid plans, opting out of training turns on ZDR with Cognition's model p
 Sources: [Security FAQ](https://docs.devin.ai/admin/security), [Federal compliance](https://docs.devin.ai/federal/compliance)
 
 ### How is data encrypted? Can we hold the keys?
-Data is encrypted in transit and at rest, by default with Cognition-managed keys. Customer-managed keys (your own AWS KMS key) are available with the Enterprise Assured deployment, a Customer Dedicated Deployment that adds them; they are set when the dedicated tenant is created.
+Data is encrypted in transit and at rest, by default with Cognition-managed keys. Customer-managed keys (your own AWS KMS key) are available with an Enterprise Assured deployment; they are set when the dedicated tenant is created and cannot be changed afterward.
 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Customer managed keys](https://docs.devin.ai/enterprise/security-access/security/customer-managed-keys)
 
