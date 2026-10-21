@@ -1,16 +1,16 @@
-Answers below are drawn from Cognition's published documentation (checked 17 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 21 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
 ### Is Devin FedRAMP authorized?
-Devin Desktop and Devin CLI are FedRAMP High authorized; Desktop's FedRAMP deployment runs on AWS GovCloud. Devin Cloud, the autonomous agent shown in this demo, is FedRAMP High **In Process**, not yet authorized. **Confirm the timeline with Cognition.**
+Cognition's federal documentation lists Devin Desktop and Devin CLI as FedRAMP High; Desktop's FedRAMP deployment runs on AWS GovCloud. Devin Cloud, the autonomous agent shown in this demo, is FedRAMP High **In Process**, and Cognition says Devin and Devin Review are slated for FedRAMP High authorization in 2026. On the FedRAMP Marketplace, the Cognition Platform listing shows **Agency Authorization In Process** (as of 6 Jul 2026) with no authorizations yet. **Confirm the timeline with Cognition.**
 
 Sources: [Federal compliance](https://docs.devin.ai/federal/compliance), [FedRAMP Marketplace](https://www.fedramp.gov/marketplace/products/FR2627211780/), [Desktop FedRAMP admin guide](https://docs.devin.ai/desktop/security/security-admin-guide)
 
 ### What other attestations does Cognition hold?
-SOC 2 Type II, since September 2024. Reports and policies are available through the Trust Center.
+SOC 2 Type II, since September 2024. The Trust Center also lists ISO/IEC 27001:2022 and CCPA. Reports and policies are available through the Trust Center after an access request and NDA.
 
-Sources: [Trust Center](https://trust.cognition.ai), [Federal compliance](https://docs.devin.ai/federal/compliance)
+Sources: [Trust Center](https://trust.cognition.ai), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
 
 ### Can Devin handle PII or PHI? Is a HIPAA BAA available?
 Cognition's public documentation does not address either. **Confirm with Cognition.** Until it is covered by contract, pilots should use synthetic or de-identified data, as this demonstration does.
@@ -36,7 +36,7 @@ Yes. With Outposts, your code, builds, tests and the commands Devin runs stay on
 Source: [Outposts](https://docs.devin.ai/cloud/outposts/overview)
 
 ### Where does model inference run?
-With Cognition's model providers, under zero-data-retention agreements.
+With Cognition's model providers. On paid plans that opt out of training, zero data retention is turned on with those providers. **Confirm the retention terms for a CMS deployment with Cognition.**
 
 Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
@@ -51,12 +51,12 @@ Not on Enterprise plans without your written consent. On paid plans, opting out 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Security FAQ](https://docs.devin.ai/admin/security)
 
 ### Is zero data retention (ZDR) available?
-Yes. Cognition has ZDR agreements with its model providers, and ZDR is on for every feature of Devin Desktop and Devin CLI in federal deployments. **Confirm the exact settings for a CMS deployment with Cognition.**
+Yes. On paid plans, opting out of training turns on ZDR with Cognition's model providers, and ZDR is on for every feature of Devin Desktop and Devin CLI in federal deployments. **Confirm the exact settings for a CMS deployment with Cognition.**
 
 Sources: [Security FAQ](https://docs.devin.ai/admin/security), [Federal compliance](https://docs.devin.ai/federal/compliance)
 
 ### How is data encrypted? Can we hold the keys?
-Data is encrypted in transit and at rest with AWS KMS. Customer-managed keys are available.
+Data is encrypted in transit and at rest, by default with Cognition-managed keys. Customer-managed keys (your own AWS KMS key) are available with the Enterprise Assured deployment, a Customer Dedicated Deployment that adds them; they are set when the dedicated tenant is created.
 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Customer managed keys](https://docs.devin.ai/enterprise/security-access/security/customer-managed-keys)
 
@@ -100,7 +100,7 @@ Sources: [SAML SSO](https://docs.devin.ai/enterprise/security-access/sso/saml), 
 ### How does Devin get credentials, and how are they scoped?
 Cloud access uses short-lived OIDC workload identity, so no static cloud keys are stored in Devin. Other secrets live in a secrets manager scoped per organization or repository, and repository access is limited to the repositories you select.
 
-Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
+Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Secrets](https://docs.devin.ai/product-guides/secrets), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
 
 ## Oversight, audit and incident response
 
@@ -120,7 +120,7 @@ Administrators can stop any session, and revoking the API key or service user st
 ### How are vulnerabilities and incidents handled?
 Report vulnerabilities to security@cognition.ai. Enterprise customers are notified of incidents under the terms of their agreement.
 
-Source: [Trust Center](https://trust.cognition.ai)
+Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Trust Center](https://trust.cognition.ai)
 
 ## About this demonstration
 

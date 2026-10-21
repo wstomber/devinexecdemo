@@ -22,7 +22,7 @@ Recorded 2026-10-17 by Devin. Re-check anything marked PENDING on the day.
 | Missing / malformed evidence never shows as a pass | `tests_python/test_demo_evidence.py` | PASSED |
 | Maintainability Playbook fresh run | Child session, PR #4 | PASSED, PR #4 open |
 | Migration Playbook fresh run from the COBOL-only starter | Separate child session, PR #5 | PASSED: 30 / 1,000 / 42 edge records, 0 mismatches, CMS-EX3 $500 |
-| Security screen facts | Each row links to the published Cognition / AWS / FedRAMP source, checked 17 Oct 2026 | Unanswered items marked "Confirm with Cognition" |
+| Security screen facts | Each row links to the published Cognition / AWS / FedRAMP source, checked 21 Oct 2026 | Unanswered items marked "Confirm with Cognition" |
 
 ## Pending / blocked
 

@@ -1,11 +1,11 @@
 {
-  "recorded_at": "2026-10-18T18:45:00Z",
+  "recorded_at": "2026-10-21T11:30:00Z",
   "note": "Recorded by Devin from GitHub and Devin session status at recorded_at. Open the links for current state.",
   "deepwiki": "https://app.devin.ai/wiki/wstomber/devinexecdemo",
   "pull_requests": [
     {
       "number": 2,
-      "title": "[rehearsal] MSP COBOL to Python with evidence",
+      "title": "[rehearsal] MSP COBOL → Python with evidence",
       "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/2",
       "commits_url": "https://github.com/wstomber/devinexecdemo/pull/2/commits",
@@ -13,21 +13,21 @@
     },
     {
       "number": 3,
-      "title": "Fix Devin Review findings from #2",
+      "title": "Fix Devin Review findings from #2 (handle leak, demo_compare stale/relative paths)",
       "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/3",
       "role": "Devin Review found 3 tooling bugs after merge; fixed with regression tests (no payment change)"
     },
     {
       "number": 4,
-      "title": "Optional --summary-json (maintainability Playbook run)",
+      "title": "[maintainability] --summary-json for python/msp.py",
       "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/4",
       "role": "Maintainability follow-up: tests first, then code; CSV outputs byte-identical"
     },
     {
       "number": 5,
-      "title": "Playbook rehearsal: fresh migration from the COBOL-only starter",
+      "title": "[live run] MSP COBOL → Python with evidence",
       "state": "CLOSED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/5",
       "commits_url": "https://github.com/wstomber/devinexecdemo/pull/5/commits",
@@ -35,18 +35,34 @@
     },
     {
       "number": 6,
-      "title": "Migration Evidence app (this app)",
+      "title": "Migration Evidence app for the live demo (make demo)",
       "state": "MERGED",
       "url": "https://github.com/wstomber/devinexecdemo/pull/6",
       "role": "The app you are looking at"
     },
     {
       "number": 23,
-      "title": "[live run] MSP COBOL → Python with evidence (CWF step)",
+      "title": "[live run] MSP COBOL → Python with evidence",
       "state": "OPEN",
       "url": "https://github.com/wstomber/devinexecdemo/pull/23",
       "commits_url": "https://github.com/wstomber/devinexecdemo/pull/23/commits",
       "role": "A separate Devin session ran the migration Playbook from scratch on demo/starter-be0b00e (payment + CWF check); its evidence is the saved rehearsal. Rehearsal only, never merged"
+    },
+    {
+      "number": 28,
+      "title": "[live run] MSP COBOL → Python with evidence",
+      "state": "MERGED",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/28",
+      "commits_url": "https://github.com/wstomber/devinexecdemo/pull/28/commits",
+      "role": "A later live run of the migration Playbook on demo/starter-be0b00e; merged into that branch, not main. The branch now points back at the COBOL-only starter be0b00e"
+    },
+    {
+      "number": 40,
+      "title": "[live run] MSP COBOL → Python with evidence",
+      "state": "CLOSED",
+      "url": "https://github.com/wstomber/devinexecdemo/pull/40",
+      "commits_url": "https://github.com/wstomber/devinexecdemo/pull/40/commits",
+      "role": "Another live run of the migration Playbook on demo/starter-be0b00e; closed without merging"
     }
   ],
   "playbooks": [
