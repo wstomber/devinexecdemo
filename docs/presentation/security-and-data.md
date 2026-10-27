@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 26 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 27 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
@@ -118,9 +118,9 @@ Source: [Audit logs](https://docs.devin.ai/api-reference/v3/audit-logs/enterpris
 Administrators can stop any session, and revoking the API key or service user stops automated starts.
 
 ### How are vulnerabilities and incidents handled?
-Report vulnerabilities to security@cognition.ai. Cognition has a dedicated team that responds to security incidents and will share details of its incident-response practices on request. **Confirm incident-notification terms with Cognition.**
+Report vulnerabilities to security@cognition.ai. Cognition notifies Enterprise customers of security incidents that may affect their environments, under the reporting obligations in the customer agreement. A dedicated team responds to security incidents and will share details of its incident-response practices on request. **Confirm the notification terms for a CMS agreement with Cognition.**
 
-Sources: [Security FAQ](https://docs.devin.ai/admin/security), [Trust Center](https://trust.cognition.ai)
+Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Trust Center](https://trust.cognition.ai)
 
 ## About this demonstration
 
