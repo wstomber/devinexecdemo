@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 27 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 28 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
@@ -8,9 +8,9 @@ Devin Desktop and Devin CLI are FedRAMP High authorized; Desktop's FedRAMP deplo
 Sources: [Federal compliance](https://docs.devin.ai/federal/compliance), [FedRAMP Marketplace](https://www.fedramp.gov/marketplace/products/FR2627211780/), [Desktop FedRAMP admin guide](https://docs.devin.ai/desktop/security/security-admin-guide)
 
 ### What other attestations does Cognition hold?
-SOC 2 Type II, since September 2024, and ISO/IEC 27001:2022. Reports and policies are available through the Trust Center.
+SOC 2 Type II, since September 2024. The Public Sector Trust Center also lists ISO/IEC 27001:2022. Reports and policies are available through the Trust Center.
 
-Sources: [Trust Center](https://trust.cognition.ai), [Security FAQ](https://docs.devin.ai/admin/security)
+Sources: [Trust Center](https://trust.cognition.ai), [Public Sector Trust Center](https://trust.cognition.ai/?product=cognitionpublicsector), [Security FAQ](https://docs.devin.ai/admin/security)
 
 ### Can Devin handle PII or PHI? Is a HIPAA BAA available?
 Cognition's public documentation does not address either. **Confirm with Cognition.** Until it is covered by contract, pilots should use synthetic or de-identified data, as this demonstration does.
