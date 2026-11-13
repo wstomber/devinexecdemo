@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 12 Nov 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 13 Nov 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
@@ -73,7 +73,7 @@ Only what you allow. **Devin Connect** is a default-deny proxy that runs inside 
 Source: [Devin Connect](https://docs.devin.ai/enterprise/deployment/devin-connect)
 
 ### How are individual sessions restricted?
-**Security profiles** set a per-session network allowlist enforced at the VM, read-only git access, an allowlist of MCP tools, and removal of GitHub tokens. An administrator can make a profile mandatory; sessions can then only tighten it, never loosen it, even mid-session.
+**Security profiles** set a per-session network allowlist enforced at the VM, read-only git access, an allowlist of MCP servers, and removal of the GitHub CLI token. An administrator can make a profile mandatory; sessions can then only tighten it, never loosen it, even mid-session.
 
 Source: [Security profiles](https://docs.devin.ai/product-guides/security-profiles)
 
