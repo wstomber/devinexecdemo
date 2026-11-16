@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 13 Nov 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Answers below are drawn from Cognition's published documentation (checked 16 Nov 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
 
 ## Compliance and assurance
 
