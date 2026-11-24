@@ -1,4 +1,4 @@
-Cognition's published documentation was checked on 23 Nov 2026. Product answers link to their sources. Where a detail depends on your agreement or deployment, **Confirm with Cognition**.
+Cognition's published documentation was checked on 24 Nov 2026. Product answers link to their sources. Where a detail depends on your agreement or deployment, **Confirm with Cognition**.
 
 ## Compliance and assurance
 
