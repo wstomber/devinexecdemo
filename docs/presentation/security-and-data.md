@@ -1,4 +1,4 @@
-Answers below are drawn from Cognition's published documentation (checked 17 Oct 2026); each one links to its source. Where public documentation is silent, the answer says **Confirm with Cognition**.
+Cognition's published documentation was checked on 27 Nov 2026. Product answers link to their sources. Where a detail depends on your agreement or deployment, **Confirm with Cognition**.
 
 ## Compliance and assurance
 
@@ -8,9 +8,9 @@ Devin Desktop and Devin CLI are FedRAMP High authorized; Desktop's FedRAMP deplo
 Sources: [Federal compliance](https://docs.devin.ai/federal/compliance), [FedRAMP Marketplace](https://www.fedramp.gov/marketplace/products/FR2627211780/), [Desktop FedRAMP admin guide](https://docs.devin.ai/desktop/security/security-admin-guide)
 
 ### What other attestations does Cognition hold?
-SOC 2 Type II, since September 2024. Reports and policies are available through the Trust Center.
+SOC 2 Type II, since September 2024. The Public Sector Trust Center also lists ISO/IEC 27001:2022. Reports and policies are available through the Trust Center.
 
-Sources: [Trust Center](https://trust.cognition.ai), [Federal compliance](https://docs.devin.ai/federal/compliance)
+Sources: [Trust Center](https://trust.cognition.ai), [Public Sector Trust Center](https://trust.cognition.ai/?product=cognitionpublicsector), [Security FAQ](https://docs.devin.ai/admin/security)
 
 ### Can Devin handle PII or PHI? Is a HIPAA BAA available?
 Cognition's public documentation does not address either. **Confirm with Cognition.** Until it is covered by contract, pilots should use synthetic or de-identified data, as this demonstration does.
@@ -20,7 +20,7 @@ Cognition's public documentation does not address either. **Confirm with Cogniti
 ### How is Devin built?
 Two parts: a stateless "brain" in Cognition's cloud that plans and calls the model, and an isolated virtual machine (the "Devbox") for each session, where code is checked out, built and tested. Sessions are isolated from one another.
 
-Source: [Devin's architecture](https://docs.devin.ai/enterprise/deployment/overview#devins-architecture)
+Source: [Devin's architecture](https://docs.devin.ai/enterprise/deployment/overview#devin%E2%80%99s-architecture)
 
 ### What deployment options are there?
 - **Multi-tenant cloud:** the standard Devin service.
@@ -36,7 +36,7 @@ Yes. With Outposts, your code, builds, tests and the commands Devin runs stay on
 Source: [Outposts](https://docs.devin.ai/cloud/outposts/overview)
 
 ### Where does model inference run?
-With Cognition's model providers, under zero-data-retention agreements.
+With Cognition's model providers. On paid plans, opting out of model training turns on zero data retention with those providers.
 
 Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
@@ -51,39 +51,39 @@ Not on Enterprise plans without your written consent. On paid plans, opting out 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Security FAQ](https://docs.devin.ai/admin/security)
 
 ### Is zero data retention (ZDR) available?
-Yes. Cognition has ZDR agreements with its model providers, and ZDR is on for every feature of Devin Desktop and Devin CLI in federal deployments. **Confirm the exact settings for a CMS deployment with Cognition.**
+Yes. On paid plans, opting out of model training turns on ZDR with Cognition's model providers, and ZDR is on for every feature of Devin Desktop and Devin CLI in federal deployments. **Confirm the exact settings for a CMS deployment with Cognition.**
 
 Sources: [Security FAQ](https://docs.devin.ai/admin/security), [Federal compliance](https://docs.devin.ai/federal/compliance)
 
 ### How is data encrypted? Can we hold the keys?
-Data is encrypted in transit and at rest with AWS KMS. Customer-managed keys are available.
+Data is encrypted in transit and at rest, by default with Cognition-managed keys. Customer-managed keys (your own AWS KMS key) are available with the Enterprise Assured deployment.
 
 Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Customer managed keys](https://docs.devin.ai/enterprise/security-access/security/customer-managed-keys)
 
 ### What happens to our data when a pilot or contract ends?
-Cognition keeps data only for the length of the customer relationship unless agreed otherwise. Request deletion at the end of a pilot.
+Cognition says it retains data processed through Devin for the customer relationship unless otherwise specified. It may keep feedback and user-interaction data as long as needed. **Confirm with Cognition** when pilot data and backups are deleted under your agreement.
 
 Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
 ## Network and access controls
 
 ### What can Devin reach on our network?
-Only what you allow. **Devin Connect** is a default-deny proxy that runs inside your network, reached over AWS PrivateLink or an outbound-only tunnel, so nothing is opened inbound. Your TLS stays end to end, DNS stays on your resolvers, and every connection is audit-logged.
+**Devin Connect** is a default-deny proxy inside your network. Devin reaches it over AWS PrivateLink through an internal listener or through a tunnel the proxy opens outbound. Your application TLS stays end to end, DNS stays on your resolvers, and the proxy logs connection activity.
 
 Source: [Devin Connect](https://docs.devin.ai/enterprise/deployment/devin-connect)
 
 ### How are individual sessions restricted?
-**Security profiles** set a per-session network allowlist enforced at the VM, read-only git access, an allowlist of MCP tools, and removal of GitHub tokens. An administrator can make a profile mandatory; sessions can then only tighten it, never loosen it, even mid-session.
+**Security profiles** can set a session network allowlist, restrict Git to read-only, allow only selected MCP servers, and remove the GitHub CLI token. A mandatory profile sets the limit even when someone grants access during a session. Devin enforces the network allowlist on Devin-managed VMs. With Outposts, your infrastructure must enforce it.
 
 Source: [Security profiles](https://docs.devin.ai/product-guides/security-profiles)
 
 ### What stops a prompt-injection attack, such as a planted file telling Devin to send data out?
-The backstop is the network and tool allowlists: even if an instruction fools the agent, it cannot reach hosts or tools you have not allowed. AI guardrails add detection on top (log, warn or block). Every change still arrives as a pull request that a person reviews.
+Enforced network and MCP allowlists limit what a session can reach if it follows a malicious instruction. AI Guardrails screen incoming user messages and can log, warn or block. In this demo, a person reviews changes through a pull request.
 
 Sources: [Security profiles](https://docs.devin.ai/product-guides/security-profiles), [AI guardrails](https://docs.devin.ai/enterprise/features/ai-guardrails)
 
 ### Can Devin change production or merge code on its own?
-You decide what it can reach. Devin works on branches and opens pull requests; branch protection and required human review stop it from merging. Cognition's documentation recommends both.
+Devin's access depends on the credentials and network access you give it. Cognition recommends code review and branch protection. Configure required human approvals in your code host before allowing changes to merge.
 
 Source: [Security FAQ](https://docs.devin.ai/admin/security)
 
@@ -95,32 +95,34 @@ The same review that checks any engineer's work: new dependencies show up in the
 ### How do users sign in, and who can do what?
 SSO with SAML or OIDC, custom roles, and enterprise IP access lists.
 
-Sources: [SAML SSO](https://docs.devin.ai/enterprise/security-access/sso/saml), [Custom roles](https://docs.devin.ai/enterprise/security-access/custom-roles), [IP access lists](https://docs.devin.ai/enterprise/security-access/ip-access-lists)
+Sources: [SAML SSO](https://docs.devin.ai/enterprise/security-access/sso/saml), [OIDC SSO](https://docs.devin.ai/enterprise/security-access/sso/oidc), [Custom roles](https://docs.devin.ai/enterprise/security-access/custom-roles), [IP access lists](https://docs.devin.ai/enterprise/security-access/ip-access-lists)
 
 ### How does Devin get credentials, and how are they scoped?
-Cloud access uses short-lived OIDC workload identity, so no static cloud keys are stored in Devin. Other secrets live in a secrets manager scoped per organization or repository, and repository access is limited to the repositories you select.
+You can configure short-lived OIDC workload identity for supported cloud services in place of static cloud keys. Devin Secrets supports organization and repository scopes. Choose which repositories Devin can access when configuring the source-control integration.
 
-Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
+Sources: [OIDC](https://docs.devin.ai/product-guides/oidc), [Secrets](https://docs.devin.ai/product-guides/secrets), [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security)
 
 ## Oversight, audit and incident response
 
 ### What is logged?
-Every session keeps a full timeline of what Devin did. Enterprise administrators also have an audit-log API and AI-guardrail events. Devin Connect logs every network connection.
+The enterprise audit-log API lists events such as AI Guardrail violations for callers with the required permission. Devin Connect separately logs connection opens, closes and denials, including the destination.
 
 Sources: [Audit logs](https://docs.devin.ai/api-reference/v3/audit-logs/enterprise-audit-logs), [AI guardrails](https://docs.devin.ai/enterprise/features/ai-guardrails), [Devin Connect](https://docs.devin.ai/enterprise/deployment/devin-connect)
 
 ### Can audit events go into our SIEM?
-The enterprise audit-log API lets your monitoring tools pull events. **Confirm supported formats and streaming options with Cognition.**
+Your monitoring tools can pull paginated JSON events from the enterprise audit-log API. Devin Connect emits JSON lines to standard output when it runs without an interactive terminal, so your existing log collector can forward them. **Confirm with Cognition** which other export or streaming options are available for your deployment.
 
-Source: [Audit logs](https://docs.devin.ai/api-reference/v3/audit-logs/enterprise-audit-logs)
+Sources: [Audit logs](https://docs.devin.ai/api-reference/v3/audit-logs/enterprise-audit-logs), [Devin Connect logging](https://docs.devin.ai/enterprise/deployment/devin-connect#logging-and-siem-integration)
 
 ### How do we stop Devin in an emergency?
-Administrators can stop any session, and revoking the API key or service user stops automated starts.
+An authorized administrator can manage other users' sessions and revoke the credentials used by an automated launcher. **Confirm with Cognition** which roles and controls your deployment uses to stop active sessions.
+
+Source: [Custom roles and permissions](https://docs.devin.ai/enterprise/security-access/custom-roles)
 
 ### How are vulnerabilities and incidents handled?
-Report vulnerabilities to security@cognition.ai. Enterprise customers are notified of incidents under the terms of their agreement.
+Report vulnerabilities to security@cognition.ai. Cognition notifies Enterprise customers of security incidents that may affect their environments, under the reporting obligations in the customer agreement. A dedicated team responds to security incidents and will share details of its incident-response practices on request. **Confirm the notification terms for a CMS agreement with Cognition.**
 
-Source: [Trust Center](https://trust.cognition.ai)
+Sources: [Enterprise security](https://docs.devin.ai/enterprise/security-access/security/enterprise-security), [Trust Center](https://trust.cognition.ai)
 
 ## About this demonstration
 
